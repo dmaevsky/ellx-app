@@ -1,11 +1,17 @@
-const http = require('http');
-const WebSocket = require('ws');
-const commandLineArgs = require('command-line-args');
-const { join } = require('path');
-const polka = require("polka");
+import http from 'http';
+import WebSocket from 'ws';
+import commandLineArgs from 'command-line-args';
+import { join, dirname } from 'path';
+import polka from 'polka';
+
+import serve from 'serve-static';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+import { startDevPipe } from './dev_pipe.js';
 
 const publicDir = join(__dirname, '../dist');
-const serve = require('serve-static')(publicDir);
 
 // first - parse the main command
 const mainDefinitions = [
@@ -27,7 +33,7 @@ if (mainOptions.command === 'start') {
   const server = http.createServer();
 
   polka({ server })
-    .use(serve)
+    .use(serve(publicDir))
     .listen(config.port, err => {
       if (err) throw err;
       console.log(`> Running on localhost:${config.port}`);
@@ -35,13 +41,7 @@ if (mainOptions.command === 'start') {
 
   const wss = new WebSocket.Server({ server, path: '/@@dev' });
 
-  wss.on('connection', ws => {
-    ws.on('message', message => {
-      console.log('received: %s', message);
-    });
-
-    ws.send('ping');
-  });
+  wss.on('connection', ws => startDevPipe(ws, process.cwd() + '/src'));
 }
 else {
   console.log(`Please specify a command:

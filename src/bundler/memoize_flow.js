@@ -1,3 +1,5 @@
+import { whenFinished } from 'conclure';
+
 export default (fn, expiry = 0, cache = {}) => function(key, ...args) {
   if (key in cache) {
     return cache[key];

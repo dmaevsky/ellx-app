@@ -34,9 +34,17 @@
     store.commit(SET_ACTIVE_CONTENT, { contentId });
   }
 
-  function listen({ data: { type, args } }) {
-    if (type in actions) {
-      actions[type](...args);
+  function listen({ data }) {
+    try {
+      const { type, args } = JSON.parse(data);
+
+      if (type in actions) {
+        actions[type](...args);
+      }
+      else throw new Error('Unknown action', type);
+    }
+    catch (error) {
+      console.error(error.message);
     }
   }
 

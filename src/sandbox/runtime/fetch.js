@@ -1,12 +1,14 @@
 import { whenFinished } from 'conclure';
+import fetch from 'node-fetch';
+import AbortController from 'node-abort-controller';
 import memoize from '../../bundler/memoize_flow';
 
-export function* fetchFile(url, logByLevel = console.debug) {
+export const fetchFile = memoize(function* doFetch(url, logByLevel = console.debug, options = {}) {
   try {
     logByLevel('info', 'Fetching ' + url);
 
     const controller = new AbortController();
-    const promise = fetch(url, { signal: controller.signal });
+    const promise = fetch(url, { ...options, signal: controller.signal });
 
     whenFinished(promise, ({ cancelled }) => cancelled && controller.abort());
 
@@ -28,7 +30,7 @@ export function* fetchFile(url, logByLevel = console.debug) {
     logByLevel('info', err.message, url);
     throw err;
   }
-}
+}, typeof self !== 'undefined' ? 0 : Infinity); // In the browser rely on browser cache instead
 
 function exists(path, files) {
   const parts = path.split('/').filter(Boolean);

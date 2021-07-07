@@ -1,10 +1,17 @@
+import postcssImport from 'postcss-import';
+import autoprefixer from 'autoprefixer';
+import tailwind from 'tailwindcss';
+
+import cssnano from 'cssnano';
+import purgecss from '@fullhuman/postcss-purgecss';
+
 export default (purgePaths, purge) => ({
   plugins: [
-    require('postcss-import'),
-    require('autoprefixer')(),
-    require('tailwindcss'),
-    purge && require('cssnano')(),
-    purge && require('@fullhuman/postcss-purgecss')({
+    postcssImport,
+    autoprefixer(),
+    tailwind,
+    purge && cssnano(),
+    purge && purgecss({
       content: purgePaths,
 
       whitelistPatterns: [/svelte-/, /#md/],
