@@ -3,8 +3,9 @@ import applyMiddleware from 'tinyx/middleware';
 import { enableUndoRedo } from 'tinyx/middleware/undo_redo';
 import { makeStore } from './utils/make_store';
 import cgConnect from './cg_connect';
-import { graphs } from './hydrated';
 import { toObservable } from './adapters';
+import { observableMap } from './observable_map';
+import { observable } from 'quarx';
 
 const store = makeStore({
   contents: new Map(),
@@ -25,7 +26,12 @@ export function logByLevel(level, ...messages) {
 
 export default store;
 
-window.ellxStore = store;
+export const graphs = observableMap();
+export const namespaces = observable.box(null, { name: 'namespaces' });
+
+window.__ellx = {
+  store, graphs, namespaces
+};
 
 export const getSheet = (contentId) => applyMiddleware(
   select(store, () => ['contents', contentId]),

@@ -9,7 +9,9 @@
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
 
   import store, { devServer, contents, getSheet, notifyParent } from '../runtime/store';
-  import { graphs, resolveSiblings, resolveRequire } from '../runtime/hydrated';
+  import CalcGraph from '../runtime/engine/calc_graph';
+  import { graphs } from '../runtime/store';
+  import { resolveSiblings, resolveRequire } from '../runtime/hydrated';
 
   const htmlContentId = 'mainApp';
 
@@ -20,6 +22,8 @@
 
   graphs.set(htmlContentId, htmlCalcGraph);
   htmlCalcGraph.autoCalc.set(true);
+
+  setActiveContent(htmlContentId);
 
   let darkMode = false;
 
@@ -56,7 +60,7 @@
     if (digit === '0') {
       setActiveContent(htmlContentId);
     }
-    else {
+    else if (digit <= sheets.length) {
       const contentId = sheets[digit - 1];
       setActiveContent(contentId);
       tick().then(() => focus(contentId));
@@ -131,7 +135,6 @@
 
 <div id="md" class:hidden={htmlContentId !== activeContentId}>
   <div data-ellx-node-name="init" data-ellx-node-formula="app()">
-    <h1>Welcome to Ellx</h1>
   </div>
 
   <MarkdownOutput cg={htmlCalcGraph}/>

@@ -1,12 +1,8 @@
 import { observable, computed, createAtom } from 'quarx';
-import { observableMap } from './observable_map';
 import { STALE_BUNDLE } from './engine/quack';
-import { logByLevel } from './store';
+import { logByLevel, graphs, namespaces } from './store';
 import getRequire from './tokamak_dynamic';
 import { exportCalcGraph } from './engine/calc_graph_export';
-
-export const graphs = observableMap();
-export const namespaces = observable.box(null, { name: 'namespaces' });
 
 const getCalcGraphByUrl = url => {
   if (!url.startsWith('ellx://')) {

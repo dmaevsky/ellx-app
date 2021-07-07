@@ -1,14 +1,12 @@
 import throttle from 'lodash-es/throttle';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
 import objectId from './utils/object_id';
-import store, { getSheet, notifyParent } from './store';
-import * as hydrated from './hydrated';
+import store, { getSheet, notifyParent, graphs as hydratedGraphs, namespaces as hydratedNamespaces } from './store';
+import { resolveSiblings, resolveRequire, requireGraph } from './hydrated';
 
 import CalcGraph from './engine/calc_graph';
 
 import { buildBlocks, saveBody } from './body_parse';
-
-const { resolveSiblings, resolveRequire, requireGraph } = hydrated;
 
 const autoSave = new Map();
 
@@ -26,7 +24,7 @@ export function init(contentId, contents) {
     resolveRequire('ellx', contentId)
   );
 
-  hydrated.graphs.set(contentId, cg);
+  hydratedGraphs.set(contentId, cg);
 
   store.commit(UPDATE_CONTENT, {
     contentId,
@@ -64,10 +62,10 @@ export function dispose(contentId) {
   if (typeof unsubscribe === 'function') unsubscribe();
   autoSave.delete(contentId);
 
-  const cg = hydrated.graphs.get(contentId);
+  const cg = hydratedGraphs.get(contentId);
   if (cg && cg.dispose) cg.dispose();
 
-  hydrated.graphs.delete(contentId);
+  hydratedGraphs.delete(contentId);
 
   store.commit(REMOVE_CONTENT, { contentId });
 }
@@ -79,5 +77,5 @@ export function bundle(g) {
 
 export function namespaces(families) {
   console.debug('received namespaces in the frame ***', families);
-  hydrated.namespaces.set(families);
+  hydratedNamespaces.set(families);
 }
