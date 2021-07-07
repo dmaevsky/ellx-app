@@ -1,0 +1,69 @@
+{
+  "name": "@ellx/app",
+  "version": "0.0.1",
+  "description": "Ellx app framework",
+  "main": "src/index.js",
+  "bin": {
+    "ellx": "./src/index.js"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "ava -v"
+  },
+  "ava": {
+    "files": [
+      "**/*.spec.js",
+      "!cypress"
+    ],
+    "require": [
+      "esm"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmaevsky/ellx-app.git"
+  },
+  "keywords": [
+    "Ellx"
+  ],
+  "author": "Ellxoft",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/dmaevsky/ellx-app/issues"
+  },
+  "homepage": "https://github.com/dmaevsky/ellx-app#readme",
+  "dependencies": {
+    "binary-search": "^1.3.6",
+    "command-line-args": "^5.1.1",
+    "conclure": "^1.2.1",
+    "conclure-quarx": "^0.2.3",
+    "lodash-es": "^4.17.21",
+    "polka": "^0.5.2",
+    "quarx": "^3.3.1",
+    "rd-parse": "^3.3.1",
+    "rd-parse-jsexpr": "^2.0.1",
+    "serve-static": "^1.14.1",
+    "tinyx": "^2.1.1",
+    "ws": "^7.5.1"
+  },
+  "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^4.0.3",
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "acorn": "^8.4.1",
+    "autoprefixer": "^10.2.6",
+    "ava": "^3.15.0",
+    "cssnano": "^5.0.6",
+    "postcss": "^8.3.5",
+    "postcss-import": "^14.0.2",
+    "rollup": "^2.52.3",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-modify": "^3.0.0",
+    "rollup-plugin-svelte": "^7.1.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "svelte": "^3.38.3",
+    "svelte-preprocess": "^4.7.3",
+    "tailwindcss": "^2.2.4",
+    "tinycolor2": "^1.4.2"
+  }
+}

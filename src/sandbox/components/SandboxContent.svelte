@@ -1,0 +1,140 @@
+<script>
+  import { onMount, tick } from 'svelte';
+  import * as actions from '../runtime/lifecycle';
+  import Worksheet from './Worksheet';
+  import NodeNavigator from './NodeNavigator';
+  import MarkdownOutput from './MarkdownOutput';
+  import Tailwind from './Tailwind';
+  import { combination } from '../runtime/utils/mod_keys';
+  import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
+
+  import store, { devServer, contents, getSheet, notifyParent } from '../runtime/store';
+  import { graphs, resolveSiblings, resolveRequire } from '../runtime/hydrated';
+
+  const htmlContentId = 'mainApp';
+
+  const htmlCalcGraph = new CalcGraph(
+    resolveSiblings('html', htmlContentId),
+    resolveRequire('html', htmlContentId)
+  );
+
+  graphs.set(htmlContentId, htmlCalcGraph);
+  htmlCalcGraph.autoCalc.set(true);
+
+  let darkMode = false;
+
+  $: activeContentId = $store.activeContentId;
+  $: sheets = [...$contents.keys()];
+
+  function setActiveContent(contentId) {
+    store.commit(SET_ACTIVE_CONTENT, { contentId });
+  }
+
+  function listen({ data: { type, args } }) {
+    if (type in actions) {
+      actions[type](...args);
+    }
+  }
+
+  onMount(() => {
+    devServer.addEventListener('message', listen);
+    return () => devServer.removeEventListener('message', listen);
+  });
+
+  function kbListen(e) {
+    const shortcut = combination(e);
+
+    if (shortcut === 'Alt+D') {
+      toggleDark(darkMode = !darkMode);
+      e.preventDefault();
+      return;
+    }
+
+    const digit = (/^Alt\+Digit([0-9])$/.exec(shortcut) || [])[1];
+    if (!digit) return;
+
+    if (digit === '0') {
+      setActiveContent(htmlContentId);
+    }
+    else {
+      const contentId = sheets[digit - 1];
+      setActiveContent(contentId);
+      tick().then(() => focus(contentId));
+    }
+
+    e.preventDefault();
+  }
+
+  function goToLine({ detail }) {
+    // notifyParent({
+    //   line: detail,
+    //   type: 'go-to-line',
+    // })
+  }
+
+  function navigate({ detail }) {
+    // detail === 'ellx|md|html'
+    // can use to navigate to node definition in VS code extension
+
+    // notifyParent({
+    //   type: 'anchor',
+    //   href: process.env.CLIENT_URL
+    //     + '/'
+    //     + $activeTab.replace(/\.[^.]*$/, '.' + detail)
+    // });
+  }
+
+  function toggleDark(v) {
+    if (v) {
+      document.body.classList.add('mode-dark');
+    } else {
+      document.body.classList.remove('mode-dark');
+    }
+  }
+
+  function focus(contentId) {
+    const container = document.querySelector(`#sheet-${contentId} .grid__container`);
+    if (container) container.focus();
+  }
+
+</script>
+
+<svelte:window
+  on:keydown={kbListen}
+/>
+
+<style>
+  /*! purgecss start ignore */
+  :global(html), :global(body) {
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+  }
+  .sheet {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+  /*! purgecss end ignore */
+</style>
+
+<NodeNavigator
+  on:goToLine={goToLine}
+  on:navigate={navigate}
+/>
+
+{#each sheets as contentId (contentId)}
+  <div class="sheet" id="sheet-{contentId}" class:hidden={contentId !== activeContentId}>
+    <Worksheet store={getSheet(contentId)}/>
+  </div>
+{/each}
+
+<div id="md" class:hidden={htmlContentId !== activeContentId}>
+  <div data-ellx-node-name="init" data-ellx-node-formula="app()">
+    <h1>Welcome to Ellx</h1>
+  </div>
+
+  <MarkdownOutput cg={htmlCalcGraph}/>
+</div>
+
+<Tailwind />
