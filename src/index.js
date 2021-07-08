@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import http from 'http';
 import WebSocket from 'ws';
 import commandLineArgs from 'command-line-args';
