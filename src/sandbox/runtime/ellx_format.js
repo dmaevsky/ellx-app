@@ -1,6 +1,6 @@
 import { Ignore, All, Any, Optional, Star, Node } from 'rd-parse';
 import Grammar, { IdentifierToken, StringToken } from 'rd-parse-jsexpr';
-import { fromAST } from './serialize';
+import { fromAST } from './serialize.js';
 
 const Scanner = Rule => Ignore(/^[ \t]+/, Rule);   // Ignore horizontal whitespace
 const LineBreak = /^[\r\n]+/;

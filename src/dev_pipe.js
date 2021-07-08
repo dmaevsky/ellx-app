@@ -1,44 +1,59 @@
 import { join, basename } from 'path';
-import fs from 'fs';
+// import { observable, computed } from 'quarx';
+import { tx, derived } from 'tinyx';
+import { logger } from 'tinyx/middleware/logger.js'
+import { SET, UPDATE } from 'tinyx/middleware/writable_traits.js';
+import { promises as fs } from 'fs';
 import { nanoid } from 'nanoid';
-
-const { stat, readFile, readdir, mkdir, writeFile, rmdir, unlink, rename, copyFile } = fs.promises;
-
-// import { observableMap } from './sandbox/runtime/observable_map.js';
-
 import chokidar from 'chokidar';
+import debounce from 'lodash-es/debounce.js';
 
-async function collectAppFiles(dir) {
-  const items = await readdir(dir, { withFileTypes: true });
+import { loadBody } from './sandbox/runtime/body_parse.js';
+import { deepEqual } from './sandbox/runtime/utils/object_id.js';
 
-  const files = await Promise.all(items.map(async item => {
-    const fullname = join(dir, item.name);
-
-    if (item.isDirectory()) {
-      return collectAppFiles(fullname);
-    }
-
-    if (item.isFile() && /\.(ellx|js|svelte)$/.test(item.name)) {
-      return [[fullname, nanoid()]];
-    }
-  }));
-  return files.filter(Boolean).flat();
+function REMOVE(path) {
+  return ({ remove }) => remove(path);
 }
 
-
 export async function startDevPipe(ws, dir) {
-  // const projectKey = 'external/' + basename(dir);
+  const send = what => ws.send(JSON.stringify(what));
 
-  const files = await collectAppFiles(dir);
-  console.log(files);
+  const projectKey = 'external/' + basename(dir);
+
+  const projectItems = logger(console.log)(tx(new Map()));
 
   console.log(`[ellx-app]: watching ${dir} for changes`);
 
-  // const globs = ['js', 'svelte'].map(ext => `${dir}/**/*.${ext}`);
+  const globs = ['js', 'svelte', 'html', 'ellx', 'md'].map(ext => `${dir}/**/*.${ext}`);
 
-  // const watcher = chokidar.watch(globs);
+  const watcher = chokidar.watch(globs);
 
-  const send = what => ws.send(JSON.stringify(what));
+  const add = async path => {
+    const contentId = nanoid();
+    projectItems.commit(SET, { contentId, hash: 0 }, path);
+
+    if (path.endsWith('.ellx')) {
+      const body = await fs.readFile(path, 'utf8');
+
+      send({
+        type: 'init',
+        args: [contentId, loadBody(body.trim() || 'version: 1.1\nnodes:\nlayout:\n[]')]
+      });
+    }
+  }
+
+  watcher
+    .on('add', add)
+    .on('change', path => projectItems.commit(UPDATE, hash => hash + 1, path, 'hash'))
+    .on('unlink', path => projectItems.commit(REMOVE, path));
+
+  const bundleFiles = derived(
+    projectItems,
+    items => [...items]
+      .map(([path, { hash }]) => /\.(js|svelte)$/.test(path) && [path, hash])
+      .filter(Boolean),
+    deepEqual
+  );
 
 
   const graph = {

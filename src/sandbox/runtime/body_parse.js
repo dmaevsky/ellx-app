@@ -1,6 +1,6 @@
 import Parser from 'rd-parse';
-import EllxFile from './ellx_format';
-import { serialize, toJS, fromJS } from './serialize';
+import EllxFile from './ellx_format.js';
+import { serialize, toJS, fromJS } from './serialize.js';
 
 const v1_1 = Parser(EllxFile);
 
