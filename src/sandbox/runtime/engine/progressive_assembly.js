@@ -67,6 +67,7 @@ const assembler = node => {
       return f(...args);
     }
     catch (error) {
+      if (!(error instanceof Error)) throw error;
       throw new Error(error.message.replace(/\b_([0-9]+)\b/, (_, idx) => node.children[idx].text));
     }
   }

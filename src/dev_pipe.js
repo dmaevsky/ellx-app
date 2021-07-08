@@ -21,6 +21,7 @@ export async function startDevPipe(ws, dir) {
   const projectKey = 'external/' + basename(dir);
 
   const projectItems = logger(console.log)(tx(new Map()));
+  const hydratedSheets = new Map();
 
   console.log(`[ellx-app]: watching ${dir} for changes`);
 
@@ -39,13 +40,42 @@ export async function startDevPipe(ws, dir) {
         type: 'init',
         args: [contentId, loadBody(body.trim() || 'version: 1.1\nnodes:\nlayout:\n[]')]
       });
+      hydratedSheets.set(contentId, path);
     }
   }
 
+  const unlink = path => {
+    if (path.endsWith('.ellx')) {
+      const contentId = projectItems.get(path, 'contentId');
+
+      send({
+        type: 'dispose',
+        args: [contentId]
+      });
+      hydratedSheets.delete(contentId);
+    }
+    projectItems.commit(REMOVE, path);
+  }
+
+  ws.on('message', msg => {
+    try {
+      const { type, contentId, body } = JSON.parse(msg);
+      if (type !== 'serialize' || typeof body !== 'string') return;
+
+      const path = hydratedSheets.get(contentId);
+      if (!path) return;
+
+      fs.writeFile(path, body, 'utf8').catch(console.error);
+    }
+    catch {}
+  })
+
+  const change = path => projectItems.commit(UPDATE, hash => hash + 1, path, 'hash');
+
   watcher
     .on('add', add)
-    .on('change', path => projectItems.commit(UPDATE, hash => hash + 1, path, 'hash'))
-    .on('unlink', path => projectItems.commit(REMOVE, path));
+    .on('change', change)
+    .on('unlink', unlink);
 
   const bundleFiles = derived(
     projectItems,
@@ -80,62 +110,3 @@ export async function startDevPipe(ws, dir) {
     args: [graph]
   });
 }
-
-
-// ws => {
-//   ws.on('message', message => {
-//     console.log('received: %s', message);
-//   });
-
-// });
-
-
-
-// import { filterMessages, sendToFrame } from 'ellx/utils/messaging';
-// import { loadBody } from './body_parse';
-
-// export default function Spreadsheet(frameId, contentId) {
-//   const select = what => ({ contentId: cid, type }) => cid === contentId && type === what;
-
-//   function init(body, onChange) {
-//     sendToFrame(frameId, {
-//       type: 'init',
-//       args: [contentId, body && loadBody(body)]
-//     });
-
-//     const listener = filterMessages(
-//       frameId,
-//       select('serialize'),
-//       ({ body: b }) => onChange(b)
-//     );
-//     window.addEventListener('message', listener);
-
-//     serialize();
-
-//     return function dispose() {
-//       window.removeEventListener('message', listener);
-
-//       sendToFrame(frameId, {
-//         type: 'dispose',
-//         args: [contentId]
-//       });
-//     };
-//   }
-
-//   function update() {
-//     throw new Error('Update is not implemented for the sheet model');
-//   }
-
-//   async function serialize() {
-//     const { body } = await sendToFrame(
-//       frameId, {
-//         type: 'serialize',
-//         args: [contentId]
-//       },
-//       select('serialize')
-//     );
-//     return body;
-//   }
-
-//   return { init, serialize, update };
-// }

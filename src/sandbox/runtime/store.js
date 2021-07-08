@@ -18,7 +18,7 @@ if (window.location.origin === 'null') {
 
 export const devServer = new WebSocket(window.location.origin.replace(/^http/, 'ws') + '/@@dev');
 
-export const notifyParent = payload => devServer.send(payload);
+export const notifyParent = payload => devServer.send(JSON.stringify(payload));
 
 export function logByLevel(level, ...messages) {
   notifyParent({ type: 'log', messages, level });
