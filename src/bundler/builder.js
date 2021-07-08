@@ -40,7 +40,12 @@ function getFetchCloudFile() {
     const apiUrl = process.env.API_URL || 'https://api.ellx.io';
     const resourceUrl = `${apiUrl}/cdn?${paths.map(i => `paths=` + i).join('&')}`;
 
-    const { text } = yield fetchFile(resourceUrl, logByLevel);
+    const { text } = yield fetchFile(resourceUrl, logByLevel, {
+      credentials: 'include',
+      headers: {
+        'Cookie': 'samesite=1'
+      }
+    });
 
     if (!text) {
       throw new Error(`${fullpath} not found`);

@@ -1,4 +1,4 @@
-import { join, basename } from 'path';
+import { basename } from 'path';
 import { conclude } from 'conclure';
 import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
@@ -115,30 +115,35 @@ export async function startDevPipe(ws, dir) {
 
   }, 50));
 
+  const namespaces = derived(
+    projectItems,
+    items => {
+      const groupByNamespace = [...items]
+        .reduce((acc, [path, { contentId }]) => {
+          if (!contentId) return acc;
 
-  // const graph = {
-  //   'ellx://project/key/index.js': {
-  //     code: 'export const app = () => "Welcome to Ellx, yay!!"'
-  //   }
-  // }
+          const type = (/\.(js|md|ellx|html)$/.exec(path) || [])[1];
+          if (!type) return acc;
 
-  const indexContentId = projectItems.get(join(dir, 'index.js'))?.contentId;
+          const ns = projectKey + path.slice(dir.length, path.lastIndexOf('.'));
+          const nsRecord = acc.get(ns) || (ns === `${projectKey}/index` ? { html: 'mainApp' } : {});
 
-  const namespaces = [
-    {
-      fullpath: `${projectKey}/index`,
-      js: indexContentId,
-      html: 'mainApp'
-    }
-  ];
+          acc.set(ns, {
+            ...nsRecord,
+            [type]: contentId
+          });
+          return acc;
+        }, new Map());
 
-  send({
-    type: 'namespaces',
-    args: [namespaces]
-  });
+      return [...groupByNamespace].map(([fullpath, family]) => ({ fullpath, ...family }));
+    },
+    deepEqual
+  );
 
-  // send({
-  //   type: 'bundle',
-  //   args: [graph]
-  // });
+  namespaces.subscribe(debounce(nss => {
+    send({
+      type: 'namespaces',
+      args: [nss]
+    });
+  }, 10));
 }
