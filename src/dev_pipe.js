@@ -1,5 +1,6 @@
 import { join, basename } from 'path';
-// import { observable, computed } from 'quarx';
+import { conclude } from 'conclure';
+import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
 import { logger } from 'tinyx/middleware/logger.js'
 import { SET, UPDATE } from 'tinyx/middleware/writable_traits.js';
@@ -10,6 +11,7 @@ import debounce from 'lodash-es/debounce.js';
 
 import { loadBody } from './sandbox/runtime/body_parse.js';
 import { deepEqual } from './sandbox/runtime/utils/object_id.js';
+import { build } from './bundler/builder.js';
 
 function REMOVE(path) {
   return ({ remove }) => remove(path);
@@ -85,17 +87,47 @@ export async function startDevPipe(ws, dir) {
     deepEqual
   );
 
+  let cancelBundle;
 
-  const graph = {
-    'ellx://project/key/index.js': {
-      code: 'export const app = () => "Welcome to Ellx, yay!!"'
-    }
-  }
+  bundleFiles.subscribe(debounce(files => {
+    if (cancelBundle) cancelBundle();
+
+    console.log('Building a new bundle', files);
+
+    const jsFiles = files
+      .map(([path]) => 'ellx://' + projectKey + path.slice(dir.length))
+      .filter(id => id.endsWith('.js'));
+
+    cancelBundle = conclude(call(function* () {
+      // Signal stale bundle
+      send({
+        type: 'bundle',
+        args: [null]
+      });
+
+      const graph = yield build(jsFiles, dir);
+
+      send({
+        type: 'bundle',
+        args: [graph]
+      });
+    }), e => e && console.error(e));
+
+  }, 50));
+
+
+  // const graph = {
+  //   'ellx://project/key/index.js': {
+  //     code: 'export const app = () => "Welcome to Ellx, yay!!"'
+  //   }
+  // }
+
+  const indexContentId = projectItems.get(join(dir, 'index.js'))?.contentId;
 
   const namespaces = [
     {
-      fullpath: 'project/key/index',
-      js: 'mainBundle',
+      fullpath: `${projectKey}/index`,
+      js: indexContentId,
       html: 'mainApp'
     }
   ];
@@ -105,8 +137,8 @@ export async function startDevPipe(ws, dir) {
     args: [namespaces]
   });
 
-  send({
-    type: 'bundle',
-    args: [graph]
-  });
+  // send({
+  //   type: 'bundle',
+  //   args: [graph]
+  // });
 }

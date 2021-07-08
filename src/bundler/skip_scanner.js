@@ -1,4 +1,4 @@
-import WORD from './word_regex';
+import WORD from './word_regex.js';
 
 export default function($) {
   let { text, pos, sp } = $;

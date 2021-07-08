@@ -1,7 +1,7 @@
 import { allSettled } from 'conclure/combinators';
-import { transform } from './cjs';
-import resolveId from './resolve_id';
-import memoize from './memoize_flow';
+import { transform } from './cjs.js';
+import resolveId from './resolve_id.js';
+import memoize from './memoize_flow.js';
 
 export default ({ fetchModule, logger }, requireGraph = {}) => {
 

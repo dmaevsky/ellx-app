@@ -1,7 +1,7 @@
 import { Ignore, All, Any, Star, Plus, Optional, Y, Node } from 'rd-parse';
 
-import WORD from './word_regex';
-import skipScanner from './skip_scanner';
+import WORD from './word_regex.js';
+import skipScanner from './skip_scanner.js';
 // import OldSkipScanner from './old_skip_scanner';
 
 function locAt(text, newPos, { pos, line, column }) {

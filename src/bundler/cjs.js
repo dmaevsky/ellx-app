@@ -1,4 +1,4 @@
-import CodeFile from './imports_grammar';
+import CodeFile from './imports_grammar.js';
 import Parser from 'rd-parse';
 
 export const parse = Parser(CodeFile);

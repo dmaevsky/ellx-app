@@ -1,7 +1,7 @@
 import { whenFinished } from 'conclure';
 import fetch from 'node-fetch';
 import AbortController from 'node-abort-controller';
-import memoize from '../../bundler/memoize_flow';
+import memoize from '../../bundler/memoize_flow.js';
 
 export const fetchFile = memoize(function* doFetch(url, logByLevel = console.debug, options = {}) {
   try {

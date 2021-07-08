@@ -2,11 +2,11 @@ import { join } from 'path';
 import { promises as fs } from 'fs';
 import { getResult } from 'conclure';
 import { allSettled } from 'conclure/combinators';
-import svelte from 'svelte/compiler';
+import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
 
 import { DELIVR_CDN, getFetchFromJSDelivr, fetchFile } from '../sandbox/runtime/fetch.js';
-import tokamak from './tokamak';
+import tokamak from './tokamak.js';
 
 function parseAwsError(text) {
   return (/<Message>([^<]*)<\/Message>/.exec(text) || [])[1] || 'Network error';
