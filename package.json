@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "prepublishOnly": "yarn build",
     "test": "ava -v"
   },
   "ava": {
