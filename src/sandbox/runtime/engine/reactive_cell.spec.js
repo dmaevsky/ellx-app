@@ -1,8 +1,8 @@
 import test from 'ava';
 import { observable, autorun } from 'quarx';
 
-import { reactiveCell, asyncCell } from './reactive_cell';
-import { STALE, isStale } from './quack';
+import { reactiveCell, asyncCell } from './reactive_cell.js';
+import { STALE, isStale } from './quack.js';
 
 const evaluator = observable.box();
 

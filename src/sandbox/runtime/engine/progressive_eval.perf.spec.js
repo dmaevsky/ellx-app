@@ -1,8 +1,9 @@
-import { serial as test } from 'ava';
+import ava from 'ava';
+const test = ava.serial;
 
-import ProgressiveEval from './progressive_assembly';
-import * as environment from './reserved_words';
-import * as library from './library';
+import ProgressiveEval from './progressive_assembly.js';
+import * as environment from './reserved_words.js';
+import * as library from './library.js';
 
 const resolve = name => {
   if (name in library) return library[name];

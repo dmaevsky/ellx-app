@@ -1,6 +1,6 @@
 import test from 'ava';
 import Parser from 'rd-parse';
-import CodeFile from './imports_grammar';
+import CodeFile from './imports_grammar.js';
 
 const parse = Parser(CodeFile);
 

@@ -1,5 +1,5 @@
 import { isFlow } from 'conclure';
-import { isSubscribable } from './engine/quack';
+import { isSubscribable } from './engine/quack.js';
 
 export function* iterate(obj, maxEntries = Infinity) {
   let count = 0;

@@ -1,6 +1,6 @@
 import test from 'ava';
 import { writable } from 'tinyx';
-import CalcGraph from './calc_graph';
+import CalcGraph from './calc_graph.js';
 
 const store = writable(42);
 

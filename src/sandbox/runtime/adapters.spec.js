@@ -1,7 +1,7 @@
 import test from 'ava';
 import { autorun } from 'quarx';
 import { writable } from 'tinyx';
-import { toObservable } from './adapters';
+import { toObservable } from './adapters.js';
 
 test('toObservable', t => {
   const w = writable(42);

@@ -1,5 +1,5 @@
 import test from 'ava';
-import replaceAll from './replace_all';
+import replaceAll from './replace_all.js';
 
 const URLS = /\[([^\[]+)\]\(([^)]*)\)/g;
 const parseLinks = cell => replaceAll(cell, URLS, (_, text, href) => `<a href="${href}">${text}</a>`);

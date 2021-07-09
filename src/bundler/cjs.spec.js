@@ -3,7 +3,7 @@ import * as acorn from 'acorn';
 import { readFileSync } from 'fs';
 import { parse } from './cjs.js';
 
-import { transform } from './acorn_adapter';
+import { transform } from './acorn_adapter.js';
 
 
 const ignoreEnd = n => ({ ...n, end: 0 });
@@ -18,7 +18,7 @@ function testSingle(t, code) {
 }
 
 test('bundle_imports', t => {
-  testSingle(t, readFileSync('src/publishing/bundle_imports.js', 'utf8'));
+  testSingle(t, readFileSync('src/bundler/cjs.js', 'utf8'));
 })
 
 test('default', t => {

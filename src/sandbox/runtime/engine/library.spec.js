@@ -1,8 +1,8 @@
 import test from 'ava';
-import math from './math.mock';
+import math from './math.mock.js';
 
-import { range } from './library';
-import { unaryOp, binaryOp } from './transpile';
+import { range } from './library.js';
+import { unaryOp, binaryOp } from './transpile.js';
 
 test('default object / vector operator overloads', t => {
   let o1 = {a: 10, b: 20}, o2 = {a: 15, b: 15, c: 999};

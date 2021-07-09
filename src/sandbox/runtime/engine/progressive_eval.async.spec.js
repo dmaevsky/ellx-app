@@ -1,10 +1,11 @@
-import { serial as test } from 'ava';
+import ava from 'ava';
+const test = ava.serial;
 import { conclude } from 'conclure';
-import math from './math.mock';
+import math from './math.mock.js';
 
-import ProgressiveEval, { compile } from './progressive_assembly';
-import * as environment from './reserved_words';
-import * as library from './library';
+import ProgressiveEval, { compile } from './progressive_assembly.js';
+import * as environment from './reserved_words.js';
+import * as library from './library.js';
 
 const resolve = name => {
   if (name === 'math') return math;

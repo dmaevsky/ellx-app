@@ -1,6 +1,6 @@
 import { autorun, Quarx } from 'quarx';
-import { toObservable } from '../adapters';
-import { isSubscribable } from './quack';
+import { toObservable } from '../adapters.js';
+import { isSubscribable } from './quack.js';
 
 const subscribables = new WeakMap();
 const noop = () => {};

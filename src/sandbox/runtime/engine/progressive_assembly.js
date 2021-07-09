@@ -2,9 +2,9 @@ import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
 import { makeReactive } from 'conclure-quarx';
 import { isFlow, isIterator } from 'conclure';
-import { isStale, isSubscribable } from './quack';
-import { binaryOp, unaryOp, transpile } from './transpile';
-import { pull } from './pull';
+import { isStale, isSubscribable } from './quack.js';
+import { binaryOp, unaryOp, transpile } from './transpile.js';
+import { pull } from './pull.js';
 
 const parseFormula = Parser(Grammar);
 const Union = (...sets) => sets.reduce((acc, s) => (s ? new Set([...acc, ...s]) : acc), new Set());

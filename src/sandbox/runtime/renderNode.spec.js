@@ -1,6 +1,6 @@
 import test from 'ava';
-import { show } from './renderNode';
-import { STALE, STALE_BUNDLE } from './engine/quack';
+import { show } from './renderNode.js';
+import { STALE, STALE_BUNDLE } from './engine/quack.js';
 
 test('the show function', t => {
   t.is(show(new Error('test')), '#ERR: test');

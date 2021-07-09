@@ -1,7 +1,7 @@
 import { conclude, whenFinished, isFlow, inProgress } from 'conclure';
 import { createAtom, autorun } from 'quarx';
 
-import { STALE as DEFAULT_STALE, isStale } from './quack';
+import { STALE as DEFAULT_STALE, isStale } from './quack.js';
 
 export function asyncCell(it, options = {}) {
   const {

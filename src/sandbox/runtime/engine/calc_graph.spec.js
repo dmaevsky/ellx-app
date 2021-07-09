@@ -1,7 +1,8 @@
-import { serial as test } from 'ava';
+import ava from 'ava';
+const test = ava.serial;
 
-import CalcGraph from './calc_graph';
-import { STALE } from './quack';
+import CalcGraph from './calc_graph.js';
+import { STALE } from './quack.js';
 
 const bundle = {
   TestDate: Date

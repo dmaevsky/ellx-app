@@ -1,6 +1,6 @@
 import test from 'ava';
 import Parser from 'rd-parse';
-import EllxFile from './ellx_format';
+import EllxFile from './ellx_format.js';
 
 const parser = Parser(EllxFile);
 

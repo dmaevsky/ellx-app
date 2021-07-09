@@ -1,7 +1,7 @@
 import { isFlow } from 'conclure';
 import { all } from 'conclure/combinators';
-import { isSubscribable } from './quack';
-import { invokeSubs } from './transpile_subs';
+import { isSubscribable } from './quack.js';
+import { invokeSubs } from './transpile_subs.js';
 
 export function* invoke(fn, ...args) {
   args = yield all(args);

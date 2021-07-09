@@ -1,9 +1,9 @@
 import { observable, computed, batch } from 'quarx';
-import * as environment from './reserved_words';
-import { STALE, isStale } from './quack';
-import { pull } from './pull';
-import EventEmitter  from './event_emitter';
-import ProgressiveEval from './progressive_assembly';
+import * as environment from './reserved_words.js';
+import { STALE, isStale } from './quack.js';
+import { pull } from './pull.js';
+import EventEmitter  from './event_emitter.js';
+import ProgressiveEval from './progressive_assembly.js';
 
 const getComponent = obj => obj && obj.__EllxMeta__ && obj.__EllxMeta__.component;
 

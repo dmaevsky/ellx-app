@@ -19,7 +19,7 @@
     }
   }
 
-  async function goTo(node, type) {
+  function goTo(node, type) {
     dispatch('navigate', type);
 
     if (type === 'ellx') {

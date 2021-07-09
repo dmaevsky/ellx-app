@@ -1,5 +1,5 @@
 import { conclude, isFlow, inProgress } from 'conclure';
-import { STALE, isSubscribable } from './quack';
+import { STALE, isSubscribable } from './quack.js';
 
 export function pull(value, cb) {
   let inner, outer;

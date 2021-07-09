@@ -1,7 +1,7 @@
 import * as Conclude from 'conclure/combinators';
 import { delay } from 'conclure/effects';
-import { transpile, binaryOp } from './transpile';
-import { isIterable } from './quack';
+import { transpile, binaryOp } from './transpile.js';
+import { isIterable } from './quack.js';
 
 export const range = (start, end) => {
   if (end === undefined) {

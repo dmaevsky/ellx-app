@@ -17,7 +17,7 @@ function REMOVE(path) {
   return ({ remove }) => remove(path);
 }
 
-export async function startDevPipe(ws, dir) {
+export function startDevPipe(ws, dir) {
   const send = what => ws.send(JSON.stringify(what));
 
   const projectKey = 'external/' + basename(dir);

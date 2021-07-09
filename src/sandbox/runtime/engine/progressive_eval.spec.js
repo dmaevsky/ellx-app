@@ -1,9 +1,9 @@
 import test from 'ava';
-import math from './math.mock';
+import math from './math.mock.js';
 
-import ProgressiveEval, { compile } from './progressive_assembly';
-import * as environment from './reserved_words';
-import * as library from './library';
+import ProgressiveEval, { compile } from './progressive_assembly.js';
+import * as environment from './reserved_words.js';
+import * as library from './library.js';
 
 const resolve = name => {
   if (name === 'math') return math;

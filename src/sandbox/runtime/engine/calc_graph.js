@@ -1,10 +1,10 @@
 import { observable, computed, autorun, batch, untracked } from 'quarx';
-import { observableMap } from '../observable_map';
+import { observableMap } from '../observable_map.js';
 
-import CalcNode from './calc_node';
-import { STALE } from './quack';
-import * as environment from './reserved_words';
-import * as library from './library';
+import CalcNode from './calc_node.js';
+import { STALE } from './quack.js';
+import * as environment from './reserved_words.js';
+import * as library from './library.js';
 
 // This will only subscribe to the nodes map if the name is not currently resolvable -> no recalculation on rename
 // runTime = false is used when statically checking for circular dependencies (and hence recalculated on node rename as well)

@@ -1,6 +1,6 @@
 import { isFlow, inProgress, finished, getResult } from 'conclure';
-import { STALE, STALE_BUNDLE, STALE_REQUIRE, isSubscribable } from './engine/quack';
-import { iterate } from './iterate';
+import { STALE, STALE_BUNDLE, STALE_REQUIRE, isSubscribable } from './engine/quack.js';
+import { iterate } from './iterate.js';
 
 function constructorName(input) {
   if (input.constructor) return `[${input.constructor.name}]`;
