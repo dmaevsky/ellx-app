@@ -3,7 +3,7 @@ import { transform } from './cjs.js';
 import resolveId from './resolve_id.js';
 import memoize from './memoize_flow.js';
 
-export default ({ fetchModule, logger }, requireGraph = {}) => {
+export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
 
   const loadCached = memoize(load, Infinity, requireGraph);
 
@@ -18,7 +18,7 @@ export default ({ fetchModule, logger }, requireGraph = {}) => {
   }
 
   function* loadModule(url, baseUrl, loadStack = []) {
-    const id = resolveId(url, baseUrl);
+    const id = yield resolveId(url, baseUrl, rootDir);
 
     try {
       const node = yield loadCached(id);

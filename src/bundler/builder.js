@@ -1,117 +1,39 @@
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import { getResult } from 'conclure';
 import { allSettled } from 'conclure/combinators';
 import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
 
+import { fetchEllxProject } from './ellx_module_loader.js';
 import { DELIVR_CDN, getFetchFromJSDelivr, fetchFile } from '../sandbox/runtime/fetch.js';
 import tokamak from './tokamak.js';
-
-function parseAwsError(text) {
-  return (/<Message>([^<]*)<\/Message>/.exec(text) || [])[1] || 'Network error';
-}
 
 function logByLevel(level, ...messages) {
   console.log(`[${level.toUpperCase()}]`, ...messages);
 }
 
-function getFetchCloudFile() {
-  const cache = new Map();
-
-  function fromFetchCache(path) {
-    return cache.get(path) || cache.get(path + '.js')
-      || cache.get(path + '/index.js');
-  }
-
-  function setFetchCache(path, value) {
-    [path, path + '.js', path + '/index.js'].forEach(i => cache.set(i, value));
-  }
-
-  function* fetchFromEllxCDN(fullpath) {
-    let paths = [fullpath];
-
-    if (/\/[^.]+$/.test(fullpath)) {
-      const isNotRoot = fullpath.split('/')[2];
-
-      paths = [isNotRoot && fullpath + '.js', fullpath + '/index.js'].filter(Boolean);
-    }
-
-    const apiUrl = process.env.API_URL || 'https://api.ellx.io';
-    const resourceUrl = `${apiUrl}/cdn?${paths.map(i => `paths=` + i).join('&')}`;
-
-    const { text } = yield fetchFile(resourceUrl, logByLevel, {
-      credentials: 'include',
-      headers: {
-        'Cookie': 'samesite=1'
-      }
-    });
-
-    if (!text) {
-      throw new Error(`${fullpath} not found`);
-    }
-
-    const item = JSON.parse(text).find(a => a.hash);
-    if (!item) {
-      throw new Error(`${fullpath} not found`);
-    }
-    if (item.error) {
-      throw new Error(item.error);
-    }
-    return item;
-  }
-
-  return function* fetchCloudFile(id) {
-    const fullpath = (/^ellx:\/\/(.+)/.exec(id) || [])[1];
-    if (!fullpath) throw new Error(`${id} is not an Ellx cloud URL`);
-
-
-    const fromCache = fromFetchCache(fullpath);
-    const flow = fromCache || fetchFromEllxCDN(fullpath);
-
-    if (!fromCache) {
-      setFetchCache(fullpath, flow);
-    }
-
-    const {
-      url: awsUrl,
-      fullpath: resolved,
-      hash,
-    } = yield flow;
-
-    if (resolved !== fullpath) {
-      return { url: 'ellx://' + resolved };
-    }
-
-    if (!awsUrl) {
-      throw new Error('Could not get a URL for ' + fullpath);
-    }
-
-    const headers = awsUrl.endsWith(hash) ? {} : {
-      'If-Match': hash
-    };
-
-    try {
-      const { text } = yield fetchFile(awsUrl, logByLevel, { headers });
-
-      return {
-        text,
-        url: 'ellx://' + resolved,
-      };
-    }
-    catch (error) {
-      throw new Error(parseAwsError(error.message));
-    }
-  }
-}
-
 function* fetchLocally(id, rootDir) {
-  const path = (/^ellx:\/\/external\/[^/]+(\/.+)/.exec(id) || [])[1];
-  if (!path) throw new Error(`${id} is not a local file`);
+  const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)(.+)/.exec(id) || []).slice(1);
 
-  const filename = join(rootDir, path);
+  if (projectKey) {
+    let packageDir;
 
-  return fs.readFile(filename, 'utf8');
+    if (projectKey.startsWith('external/')) {
+      packageDir = rootDir;
+    }
+    else {
+      packageDir = join(rootDir, 'node_modules/~' + projectKey);
+      yield fetchEllxProject(projectKey, packageDir);
+    }
+
+    id = join(packageDir, path);
+  }
+  else {
+    id = fileURLToPath(id);
+  }
+  return fs.readFile(id, 'utf8');
 }
 
 function appendStyle(str) {
@@ -174,7 +96,6 @@ function transformModule(id, text) {
 export function* build(entryPoints, rootDir) {
   const requireGraph = {};
 
-  const fetchCloudFile = getFetchCloudFile();
   const fetchFromJSDelivr = getFetchFromJSDelivr(requireGraph, logByLevel);
 
   function* fetchModule(url) {
@@ -183,17 +104,14 @@ export function* build(entryPoints, rootDir) {
     if (url.startsWith('npm://') || url.startsWith(DELIVR_CDN)) {
       fetched = yield fetchFromJSDelivr(url);
     }
-    else if (!url.startsWith('ellx://')) {
-      fetched = yield fetchFile(url);
-    }
-    else if (url.startsWith('ellx://external/')) {
+    else if (url.startsWith('ellx://') || url.startsWith('file://')) {
       fetched = {
         url,
         text: yield fetchLocally(url, rootDir)
       };
     }
     else {
-      fetched = yield fetchCloudFile(url);
+      fetched = yield fetchFile(url);
     }
 
     if (fetched.url !== url) return fetched;  // redirect
@@ -204,7 +122,7 @@ export function* build(entryPoints, rootDir) {
     };
   }
 
-  const loadModule = tokamak({ fetchModule, logger: logByLevel }, requireGraph);
+  const loadModule = tokamak({ fetchModule, logger: logByLevel }, requireGraph, rootDir);
 
   yield allSettled(entryPoints.map(id => loadModule(id)));
 

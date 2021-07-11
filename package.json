@@ -4,6 +4,9 @@
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=14.17.0"
+  },
   "bin": {
     "ellx": "./src/index.js"
   },

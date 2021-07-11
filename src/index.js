@@ -42,7 +42,7 @@ if (mainOptions.command === 'start') {
 
   const wss = new WebSocket.Server({ server, path: '/@@dev' });
 
-  wss.on('connection', ws => startDevPipe(ws, process.cwd() + '/src'));
+  wss.on('connection', ws => startDevPipe(ws, process.cwd()));
 }
 else {
   console.log(`Please specify a command:
