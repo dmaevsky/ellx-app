@@ -19,7 +19,7 @@ function REMOVE(path) {
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
-  const projectKey = 'local/ROOT_DIR';
+  const projectKey = 'local/root';
 
   const projectItems = logger(console.log)(tx(new Map()));
   const hydratedSheets = new Map();
