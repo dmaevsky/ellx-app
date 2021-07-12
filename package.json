@@ -9,12 +9,12 @@
   },
   "imports": {
     "#url": {
-      "node": "url",
-      "default": "./src/browser_polyfills/url.js"
+      "node": "./src/polyfills/url-node.js",
+      "default": "./src/polyfills/url-browser.js"
     },
     "#fs": {
-      "node": "fs",
-      "default": "./src/browser_polyfills/fs.js"
+      "node": "./src/polyfills/fs-node.js",
+      "default": "./src/polyfills/fs-browser.js"
     }
   },
   "bin": {
