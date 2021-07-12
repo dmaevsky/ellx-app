@@ -7,6 +7,16 @@
   "engines": {
     "node": ">=14.17.0"
   },
+  "imports": {
+    "#url": {
+      "node": "url",
+      "default": "./src/browser_polyfills/url.js"
+    },
+    "#fs": {
+      "node": "fs",
+      "default": "./src/browser_polyfills/fs.js"
+    }
+  },
   "bin": {
     "ellx": "./src/index.js"
   },

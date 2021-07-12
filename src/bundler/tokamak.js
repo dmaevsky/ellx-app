@@ -28,12 +28,12 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
   }
 
   function* loadModule(url, baseUrl, loadStack = []) {
-    try {
-      const id = yield resolveCached(`${url}=>${baseUrl}`);
-      if (!id) {
-        throw new Error(`Failed to resolve ${url} from ${baseUrl}`);
-      }
+    const id = yield resolveCached(`${url}=>${baseUrl}`);
+    if (!id) {
+      throw new Error(`Failed to resolve ${url} from ${baseUrl}`);
+    }
 
+    try {
       const node = yield loadCached(id);
 
       if (typeof node === 'string') {

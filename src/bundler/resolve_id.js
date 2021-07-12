@@ -1,4 +1,4 @@
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from '#url';
 
 import {
   PACKAGE_RESOLVE,

@@ -1,7 +1,7 @@
 // Following https://nodejs.org/api/esm.html#esm_resolver_algorithm_specification
 
-import { promises as fs } from 'fs';
-import { fileURLToPath } from 'url';
+import { promises as fs } from '#fs';
+import { fileURLToPath } from '#url';
 
 export const defaultConditions = ['node', 'import'];
 
