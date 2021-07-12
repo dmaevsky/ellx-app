@@ -6,7 +6,7 @@ import memoize from './memoize_flow.js';
 export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
 
   const resolveCached = memoize(function* resolveCached(fromTo) {
-    const [url, baseUrl] = fromTo.split('=>');
+    const [baseUrl, url] = fromTo.split('=>');
     try {
       return yield resolveId(url, baseUrl, rootDir);
     }
@@ -28,7 +28,7 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
   }
 
   function* loadModule(url, baseUrl, loadStack = []) {
-    const id = yield resolveCached(`${url}=>${baseUrl}`);
+    const id = yield resolveCached(`${baseUrl || ''}=>${url}`);
     if (!id) {
       throw new Error(`Failed to resolve ${url} from ${baseUrl}`);
     }
