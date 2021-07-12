@@ -36,20 +36,20 @@ export default function* resolveId(importee, importer, rootDir) {
       return 'npm://' + importee;
     }
 
-    const rootURL = pathToFileURL(rootDir);
+    const rootURL = pathToFileURL(rootDir).href;
 
     if (importer.startsWith('ellx://')) {
-      const projectKey = (/^ellx:\/\/([^/]+\/[^/]+)/.exec(importer) || [])[1];
+      const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)\/(.+)/.exec(importer) || []).slice(1);
 
       if (!projectKey) {
         throw new Error(`Assertion failure: invalid ellx URL (${importer})`);
       }
 
       if (projectKey.startsWith('external/')) {
-        importer = rootURL;
+        importer = new URL(path, rootURL).href;
       }
       else {
-        importer = new URL('node_modules/~' + projectKey, rootURL).href;
+        importer = new URL(`node_modules/~${projectKey}/${path}`, rootURL).href;
       }
     }
 

@@ -14,7 +14,7 @@ export function isValidURL(url) {
   }
 }
 
-export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL = 'file:///') {
+export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL) {
 
   const [packageName, version] = (/^((?:@[^/]+\/)?[^/@]+)(@[0-9][^/]*)?/.exec(packageSpecifier) || []).slice(1);
 
@@ -31,19 +31,30 @@ export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL = 'file://
   const selfUrl = yield PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL);
   if (selfUrl) return selfUrl;
 
-  if (packageSubpath === '.' && nodeBuiltIns.includes(packageName)) {
-    return 'node:' + packageSpecifier;
+  // if (packageSubpath === '.' && nodeBuiltIns.includes(packageName)) {
+  //   return 'node:' + packageSpecifier;
+  // }
+
+  parentURL = new URL('./', parentURL).href;
+
+  if (!parentURL.startsWith(rootURL)) {
+    throw new Error(`Assertion failure: parentURL ${parentURL} is outside rootURL ${rootURL}`);
   }
 
-  while (parentURL !== rootURL) {
-    const packageURL = new URL('node_modules/' + packageName, parentURL).href;
-    parentURL = new URL('..', parentURL).href;
+  while (true) {
+    const packageURL = new URL('node_modules/' + packageName + '/', parentURL).href;
 
     try {
       const stats = yield fs.stat(fileURLToPath(packageURL));
-      if (!stats.isDirectory()) continue;
+      if (!stats.isDirectory()) throw new Error('Not a diretory');
     }
-    catch { continue; }
+    catch {
+      if (parentURL === rootURL) {
+        throw new Error(`Module Not Found (${packageSpecifier})`);
+      }
+      parentURL = new URL('../', parentURL).href;
+      continue;
+    }
 
     const pjson = yield READ_PACKAGE_JSON(packageURL);
 
@@ -58,15 +69,13 @@ export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL = 'file://
     }
     else return new URL(packageSubpath, packageURL).href;
   }
-
-  throw new Error(`Module Not Found (${packageSpecifier})`);
 }
 
-function* PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL = 'file:///') {
-  const packageURL = yield READ_PACKAGE_SCOPE(parentURL, rootURL);
-  if (!packageURL) return undefined;
+function* PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL) {
+  const scope = yield READ_PACKAGE_SCOPE(parentURL, rootURL);
+  if (!scope) return undefined;
 
-  const pjson = yield READ_PACKAGE_JSON(packageURL);
+  const { pjson, packageURL } = scope;
   if (!pjson?.exports) return undefined;
 
   if (pjson.name === packageName) {
@@ -76,7 +85,7 @@ function* PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL =
   return undefined;
 }
 
-function *PACKAGE_EXPORTS_RESOLVE(packageURL, subpath, exports, conditions, rootURL = 'file:///') {
+function *PACKAGE_EXPORTS_RESOLVE(packageURL, subpath, exports, conditions, rootURL) {
   const exportsKeys = exports && typeof exports === 'object' && Object.keys(exports);
 
   if (exportsKeys && exportsKeys.some(key => key[0] === '.') && exportsKeys.some(key => key[0] !== '.')) {
@@ -100,16 +109,16 @@ function *PACKAGE_EXPORTS_RESOLVE(packageURL, subpath, exports, conditions, root
     }
   }
   else if (exportsKeys && exportsKeys.every(key => key[0] === '.')) {
-    const matchKey = './' + subpath;
+    const matchKey = subpath;
     const resolvedMatch = yield PACKAGE_IMPORTS_EXPORTS_RESOLVE(matchKey, exports, packageURL, false, conditions, rootURL);
 
     if (resolvedMatch.resolved) return resolvedMatch;
   }
 
-  throw new Error(`Package Path Not Exported (${packageURL + subpath})`);
+  throw new Error(`Package Path Not Exported (${subpath} in ${packageURL})`);
 }
 
-export function* PACKAGE_IMPORTS_RESOLVE(specifier, parentURL, conditions, rootURL = 'file:///') {
+export function* PACKAGE_IMPORTS_RESOLVE(specifier, parentURL, conditions, rootURL) {
   if (specifier[0] !== '#') {
     throw new Error(`Assertion failure: specifier should start with #. Got: ${specifier}`);
   }
@@ -118,9 +127,9 @@ export function* PACKAGE_IMPORTS_RESOLVE(specifier, parentURL, conditions, rootU
     throw new Error(`Invalid Module Specifier (${specifier})`);
   }
 
-  const packageURL = yield READ_PACKAGE_SCOPE(parentURL, rootURL);
-  if (packageURL) {
-    const pjson = yield READ_PACKAGE_JSON(packageURL);
+  const scope = yield READ_PACKAGE_SCOPE(parentURL, rootURL);
+  if (scope) {
+    const { pjson, packageURL } = scope;
 
     const imports = pjson?.imports;
     if (imports && typeof imports === 'object') {
@@ -131,7 +140,7 @@ export function* PACKAGE_IMPORTS_RESOLVE(specifier, parentURL, conditions, rootU
   throw new Error(`Package Import Not Defined (${specifier})`);
 }
 
-function* PACKAGE_IMPORTS_EXPORTS_RESOLVE(matchKey, matchObj, packageURL, isImports, conditions, rootURL = 'file:///') {
+function* PACKAGE_IMPORTS_EXPORTS_RESOLVE(matchKey, matchObj, packageURL, isImports, conditions, rootURL) {
   if (matchKey in matchObj && !matchKey.endsWith('*')) {
     const target = matchObj[matchKey];
     const resolved = yield PACKAGE_TARGET_RESOLVE(packageURL, target, "", false, isImports, conditions, rootURL);
@@ -166,7 +175,7 @@ function* PACKAGE_IMPORTS_EXPORTS_RESOLVE(matchKey, matchObj, packageURL, isImpo
   return { resolved: null, exact: true };
 }
 
-function* PACKAGE_TARGET_RESOLVE(packageURL, target, subpath, pattern, internal, conditions, rootURL = 'file:///') {
+function* PACKAGE_TARGET_RESOLVE(packageURL, target, subpath, pattern, internal, conditions, rootURL) {
   if (typeof target === 'string') {
     if (pattern === false && subpath.length && !target.endsWith('/')) {
       throw new Error(`Invalid Module Specifier ${packageURL}`);
@@ -241,7 +250,7 @@ function* PACKAGE_TARGET_RESOLVE(packageURL, target, subpath, pattern, internal,
   throw new Error(`Invalid Package Target (${target})`);
 }
 
-function* ESM_FORMAT(url, rootURL = 'file:///') {
+function* ESM_FORMAT(url, rootURL) {
   // Assert: url corresponds to an existing file.
   const stats = yield fs.stat(fileURLToPath(url));
   if (!stats.isFile()) {
@@ -251,25 +260,33 @@ function* ESM_FORMAT(url, rootURL = 'file:///') {
   if (url.endsWith('.mjs')) return 'module';
   if (url.endsWith('.cjs')) return 'commonjs';
 
-  const pjson = yield READ_PACKAGE_SCOPE(url, rootURL);
+  const scope = yield READ_PACKAGE_SCOPE(url, rootURL);
 
-  if (pjson?.type === 'module') {
+  if (scope?.pjson?.type === 'module') {
     if (url.endsWith('.js')) return 'module';
   }
   throw new Error(`Unsupported File Extension (${url})`);
 }
 
-function* READ_PACKAGE_SCOPE(url, rootURL = 'file:///') {
-  let scopeURL = url;
+function* READ_PACKAGE_SCOPE(url, rootURL) {
+  let scopeURL = new URL('./', url).href;
 
-  while (scopeURL !== rootURL) {
-    scopeURL = new URL('..', scopeURL).href;
+  if (!scopeURL.startsWith(rootURL)) {
+    throw new Error(`Assertion failure: scopeURL ${scopeURL} is outside rootURL ${rootURL}`);
+  }
+
+  while (true) {
     if (scopeURL.endsWith('/node_modules/')) return null;
 
     const pjson = yield READ_PACKAGE_JSON(scopeURL);
-    if (pjson !== null) return pjson;
+    if (pjson !== null) {
+      return { pjson, packageURL: scopeURL };
+    }
+    else if (scopeURL === rootURL) {
+      return null;
+    }
+    scopeURL = new URL('../', scopeURL).href;
   }
-  return null;
 }
 
 function* READ_PACKAGE_JSON(packageURL) {

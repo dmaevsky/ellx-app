@@ -122,7 +122,7 @@ export function* build(entryPoints, rootDir) {
     };
   }
 
-  const loadModule = tokamak({ fetchModule, logger: logByLevel }, requireGraph, rootDir);
+  const loadModule = tokamak({ fetchModule, logger: logByLevel }, requireGraph, rootDir + '/');
 
   yield allSettled(entryPoints.map(id => loadModule(id)));
 

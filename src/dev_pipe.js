@@ -21,14 +21,13 @@ export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
   const projectKey = 'external/' + basename(rootDir);
-  const srcDir = rootDir + '/src';
 
   const projectItems = logger(console.log)(tx(new Map()));
   const hydratedSheets = new Map();
 
-  console.log(`[ellx-app]: watching ${srcDir} for changes`);
+  console.log(`[ellx-app]: watching ${rootDir}/src for changes`);
 
-  const globs = ['js', 'svelte', 'html', 'ellx', 'md'].map(ext => `${srcDir}/**/*.${ext}`);
+  const globs = ['js', 'svelte', 'html', 'ellx', 'md'].map(ext => `${rootDir}/src/**/*.${ext}`);
 
   const watcher = chokidar.watch(globs);
 
@@ -96,7 +95,7 @@ export function startDevPipe(ws, rootDir) {
     console.log('Building a new bundle', files);
 
     const jsFiles = files
-      .map(([path]) => 'ellx://' + projectKey + path.slice(srcDir.length))
+      .map(([path]) => 'ellx://' + projectKey + path.slice(rootDir.length))
       .filter(id => id.endsWith('.js'));
 
     cancelBundle = conclude(call(function* () {
@@ -126,7 +125,7 @@ export function startDevPipe(ws, rootDir) {
           const type = (/\.(js|md|ellx|html)$/.exec(path) || [])[1];
           if (!type) return acc;
 
-          const ns = projectKey + path.slice(srcDir.length, path.lastIndexOf('.'));
+          const ns = projectKey + path.slice(rootDir.length, path.lastIndexOf('.'));
           const nsRecord = acc.get(ns) || (ns === `${projectKey}/index` ? { html: 'mainApp' } : {});
 
           acc.set(ns, {
