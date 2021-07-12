@@ -20,7 +20,7 @@ function* fetchLocally(id, rootDir) {
   if (projectKey) {
     let packageDir;
 
-    if (projectKey.startsWith('external/')) {
+    if (projectKey === 'local/ROOT_DIR') {
       packageDir = rootDir;
     }
     else {
@@ -31,7 +31,7 @@ function* fetchLocally(id, rootDir) {
     id = join(packageDir, path);
   }
   else {
-    id = fileURLToPath(id);
+    id = fileURLToPath(id.replace('$ROOT_DIR/', rootDir));
   }
   return fs.readFile(id, 'utf8');
 }

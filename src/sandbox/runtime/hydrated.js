@@ -77,7 +77,7 @@ export const resolveSiblings = (type, contentId) => precedence.map(member => () 
 export const resolveRequire = (type, contentId) => url => {
   const require = dynamicRequire.get();
 
-  if (url && !/^(\.|~|\/|ellx:\/\/)/.test(url)) {
+  if (url && !/^(\.|~|\/)/.test(url)) {
     return require(url);
   }
 

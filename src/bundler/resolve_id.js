@@ -45,7 +45,7 @@ export default function* resolveId(importee, importer, rootDir) {
         throw new Error(`Assertion failure: invalid ellx URL (${importer})`);
       }
 
-      if (projectKey.startsWith('external/')) {
+      if (projectKey === 'local/ROOT_DIR') {
         importer = new URL(path, rootURL).href;
       }
       else {
@@ -60,6 +60,7 @@ export default function* resolveId(importee, importer, rootDir) {
       // Note: importee is now a bare specifier.
       resolved = yield PACKAGE_RESOLVE(importee, importer, rootURL);
     }
+    resolved = 'file://$ROOT_DIR/' + resolved.slice(rootURL.length);
   }
 
   if (resolved.includes('%2f') || resolved.includes('%5C')) {

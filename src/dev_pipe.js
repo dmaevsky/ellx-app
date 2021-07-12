@@ -1,4 +1,3 @@
-import { basename } from 'path';
 import { conclude } from 'conclure';
 import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
@@ -20,7 +19,7 @@ function REMOVE(path) {
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
-  const projectKey = 'external/' + basename(rootDir);
+  const projectKey = 'local/ROOT_DIR';
 
   const projectItems = logger(console.log)(tx(new Map()));
   const hydratedSheets = new Map();
