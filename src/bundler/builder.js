@@ -65,6 +65,11 @@ function transformModule(id, text) {
     return result.js.code;
   }
 
+  // TODO: write a proper loader for sheets instead of a runtime Proxy mumbo-jumbo
+  if (id.endsWith('.ellx')) {
+    return '';
+  }
+
   if (id.endsWith('.json')) {
     return `module.exports = ${text}`;
   }

@@ -55,7 +55,7 @@ const resolveCalcGraph = id => {
 export const requireGraph = observable.box(null, { name: 'requireGraph' });
 
 const combinedRequireGraph = computed(() => new Proxy(requireGraph.get() || {}, {
-  get: (target, id) => /\.(html|md|ellx)$/.test(id)
+  get: (target, id) => !id.includes('=>') && /\.(html|md|ellx)$/.test(id)
     ? resolveCalcGraph(id)
     : target[id]
 }), { name: 'combinedRequireGraph' });
