@@ -55,7 +55,7 @@ const resolveCalcGraph = id => {
 export const requireGraph = observable.box(null, { name: 'requireGraph' });
 
 const combinedRequireGraph = computed(() => new Proxy(requireGraph.get() || {}, {
-  get: (target, id) => /\.(html|md|ellx)$/.test(id)
+  get: (target, id) => !id.includes('=>') && /\.(html|md|ellx)$/.test(id)
     ? resolveCalcGraph(id)
     : target[id]
 }), { name: 'combinedRequireGraph' });
@@ -77,7 +77,7 @@ export const resolveSiblings = (type, contentId) => precedence.map(member => () 
 export const resolveRequire = (type, contentId) => url => {
   const require = dynamicRequire.get();
 
-  if (url && !/^(\.|~|\/|ellx:\/\/)/.test(url)) {
+  if (url && !/^(\.|~|\/)/.test(url)) {
     return require(url);
   }
 

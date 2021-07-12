@@ -1,4 +1,3 @@
-import { basename } from 'path';
 import { conclude } from 'conclure';
 import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
@@ -17,17 +16,17 @@ function REMOVE(path) {
   return ({ remove }) => remove(path);
 }
 
-export function startDevPipe(ws, dir) {
+export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
-  const projectKey = 'external/' + basename(dir);
+  const projectKey = 'local/root';
 
   const projectItems = logger(console.log)(tx(new Map()));
   const hydratedSheets = new Map();
 
-  console.log(`[ellx-app]: watching ${dir} for changes`);
+  console.log(`[ellx-app]: watching ${rootDir}/src for changes`);
 
-  const globs = ['js', 'svelte', 'html', 'ellx', 'md'].map(ext => `${dir}/**/*.${ext}`);
+  const globs = ['js', 'svelte', 'html', 'ellx', 'md'].map(ext => `${rootDir}/src/**/*.${ext}`);
 
   const watcher = chokidar.watch(globs);
 
@@ -95,7 +94,7 @@ export function startDevPipe(ws, dir) {
     console.log('Building a new bundle', files);
 
     const jsFiles = files
-      .map(([path]) => 'ellx://' + projectKey + path.slice(dir.length))
+      .map(([path]) => 'ellx://' + projectKey + path.slice(rootDir.length))
       .filter(id => id.endsWith('.js'));
 
     cancelBundle = conclude(call(function* () {
@@ -105,7 +104,7 @@ export function startDevPipe(ws, dir) {
         args: [null]
       });
 
-      const graph = yield build(jsFiles, dir);
+      const graph = yield build(jsFiles, rootDir);
 
       send({
         type: 'bundle',
@@ -125,8 +124,8 @@ export function startDevPipe(ws, dir) {
           const type = (/\.(js|md|ellx|html)$/.exec(path) || [])[1];
           if (!type) return acc;
 
-          const ns = projectKey + path.slice(dir.length, path.lastIndexOf('.'));
-          const nsRecord = acc.get(ns) || (ns === `${projectKey}/index` ? { html: 'mainApp' } : {});
+          const ns = projectKey + path.slice(rootDir.length, path.lastIndexOf('.'));
+          const nsRecord = acc.get(ns) || (ns === `${projectKey}/src/index` ? { html: 'mainApp' } : {});
 
           acc.set(ns, {
             ...nsRecord,

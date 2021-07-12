@@ -1,9 +1,22 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=14.17.0"
+  },
+  "imports": {
+    "#url": {
+      "node": "./src/polyfills/url-node.js",
+      "default": "./src/polyfills/url-browser.js"
+    },
+    "#fs": {
+      "node": "./src/polyfills/fs-node.js",
+      "default": "./src/polyfills/fs-browser.js"
+    }
+  },
   "bin": {
     "ellx": "./src/index.js"
   },

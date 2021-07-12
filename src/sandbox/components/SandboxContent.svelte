@@ -56,25 +56,25 @@
   function kbListen(e) {
     const shortcut = combination(e);
 
-    if (shortcut === 'Alt+D') {
-      toggleDark(darkMode = !darkMode);
+    if (shortcut === 'Alt+KeyD') {
       e.preventDefault();
+      toggleDark(darkMode = !darkMode);
       return;
     }
 
-    const digit = (/^Alt\+Digit([0-9])$/.exec(shortcut) || [])[1];
+    const digit = (/^Alt\+Digit([1-9])$/.exec(shortcut) || [])[1];
     if (!digit) return;
 
-    if (digit === '0') {
+    e.preventDefault();
+
+    if (digit === '1') {
       setActiveContent(htmlContentId);
     }
-    else if (digit <= sheets.length) {
-      const contentId = sheets[digit - 1];
+    else if (digit - 2 < sheets.length) {
+      const contentId = sheets[digit - 2];
       setActiveContent(contentId);
       tick().then(() => focus(contentId));
     }
-
-    e.preventDefault();
   }
 
   function goToLine({ detail }) {
