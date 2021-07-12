@@ -37,6 +37,7 @@ export default function* resolveId(importee, importer, rootDir) {
     }
 
     const rootURL = pathToFileURL(rootDir).href;
+    const localPrefix = 'file://local/root/';
 
     if (importer.startsWith('ellx://')) {
       const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)\/(.+)/.exec(importer) || []).slice(1);
@@ -52,6 +53,10 @@ export default function* resolveId(importee, importer, rootDir) {
         importer = new URL(`node_modules/~${projectKey}/${path}`, rootURL).href;
       }
     }
+    else if (importer.startsWith(localPrefix)) {
+      importer = rootURL + importer.slice(localPrefix.length);
+    }
+    else return null;
 
     if (importee[0] === '#') {
       ({ resolved } = yield PACKAGE_IMPORTS_RESOLVE(importee, importer, defaultConditions, rootURL));
@@ -60,7 +65,7 @@ export default function* resolveId(importee, importer, rootDir) {
       // Note: importee is now a bare specifier.
       resolved = yield PACKAGE_RESOLVE(importee, importer, rootURL);
     }
-    resolved = 'file://local/root/' + resolved.slice(rootURL.length);
+    resolved = localPrefix + resolved.slice(rootURL.length);
   }
 
   if (resolved.includes('%2f') || resolved.includes('%5C')) {

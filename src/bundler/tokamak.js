@@ -29,7 +29,7 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
 
   function* loadModule(url, baseUrl, loadStack = []) {
     const id = yield resolveCached(`${baseUrl || ''}=>${url}`);
-    if (!id) {
+    if (!id || typeof id !== 'string') {
       throw new Error(`Failed to resolve ${url} from ${baseUrl}`);
     }
 

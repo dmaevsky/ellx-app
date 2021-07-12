@@ -125,7 +125,7 @@ export function startDevPipe(ws, rootDir) {
           if (!type) return acc;
 
           const ns = projectKey + path.slice(rootDir.length, path.lastIndexOf('.'));
-          const nsRecord = acc.get(ns) || (ns === `${projectKey}/index` ? { html: 'mainApp' } : {});
+          const nsRecord = acc.get(ns) || (ns === `${projectKey}/src/index` ? { html: 'mainApp' } : {});
 
           acc.set(ns, {
             ...nsRecord,
