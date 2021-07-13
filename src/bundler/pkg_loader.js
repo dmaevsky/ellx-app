@@ -105,7 +105,7 @@ function *PACKAGE_EXPORTS_RESOLVE(packageURL, subpath, exports, conditions, root
 
     if (mainExport !== undefined) {
       const resolved = yield PACKAGE_TARGET_RESOLVE(packageURL, mainExport, "", false, false, conditions, rootURL);
-      if (resolved) return resolved;
+      if (resolved) return { resolved };
     }
   }
   else if (exportsKeys && exportsKeys.every(key => key[0] === '.')) {
