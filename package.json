@@ -1,6 +1,6 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
