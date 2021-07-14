@@ -1,4 +1,4 @@
-import throttle from 'lodash-es/throttle';
+import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
 import objectId from './utils/object_id';
 import store, { getSheet, notifyParent, graphs as hydratedGraphs, namespaces as hydratedNamespaces } from './store';
@@ -28,7 +28,7 @@ export function init(contentId, contents) {
 
   store.commit(UPDATE_CONTENT, {
     contentId,
-    // Map(blockId -> { position: [startRow, startCol, endRow, endCol], expansion: { vertical: Bool, secondary: Bool }, value, formula, node })
+    // Map(blockId -> { position: [startRow, startCol, endRow, endCol], expansion: { vertical: Bool, secondary: Bool }, (static)value, formula, node })
     blocks: new Map(),
     // Map(blockId -> { value, component })
     calculated: new Map(),
@@ -40,6 +40,7 @@ export function init(contentId, contents) {
   });
 
   const thisSheet = getSheet(contentId);
+  const thisSheetBlocks = derived(thisSheet, sh => sh.blocks);
 
   if (contents) {
     const blocks = buildBlocks(contents);
@@ -51,8 +52,7 @@ export function init(contentId, contents) {
 
   cg.autoCalc.set(true);
 
-  const subscription = thisSheet.subscribe(
-    throttle(({ blocks }) => sendContent(contentId, blocks), 1000));
+  const subscription = thisSheetBlocks.subscribe(blocks => sendContent(contentId, blocks));
 
   autoSave.set(contentId, subscription);
 }
