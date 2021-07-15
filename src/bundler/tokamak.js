@@ -69,7 +69,7 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
         error
       ].filter(Boolean).join(' ');
 
-      logger('info', message);
+      logger('info', error, url, baseUrl, loadStack);
 
       return {
         id,

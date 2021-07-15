@@ -15,9 +15,13 @@ function logByLevel(level, ...messages) {
 }
 
 function* fetchLocally(id, rootDir) {
-  const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)(.+)/.exec(id) || []).slice(1);
+  if (id.startsWith('ellx://')) {
+    const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)\/(.+)/.exec(id) || []).slice(1);
 
-  if (projectKey) {
+    if (!projectKey) {
+      throw new Error(`Ellx URL ${id} does not correspond to a file`);
+    }
+
     let packageDir;
 
     if (projectKey === 'local/root') {

@@ -56,20 +56,67 @@ export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL) {
       continue;
     }
 
-    const pjson = yield READ_PACKAGE_JSON(packageURL);
+    const resolved = yield RESOLVE_FROM_PACKAGE_JSON(packageURL, packageSubpath, rootURL);
+    if (resolved) return resolved;
 
-    if (pjson?.exports) {
-      const { resolved } = yield PACKAGE_EXPORTS_RESOLVE(packageURL, packageSubpath, pjson.exports, defaultConditions, rootURL);
-      return resolved;
-    }
-    else if (packageSubpath === '.') {
-      // Return the result applying the legacy LOAD_AS_DIRECTORY CommonJS resolver to packageURL
-      const entryPoint = pjson && (pjson.main || pjson.module || pjson.svelte) || 'index.js';
-      return new URL(entryPoint, packageURL).href;
-    }
-    else return new URL(packageSubpath, packageURL).href;
+    if (packageSubpath === '.') return RESOLVE_AS_INDEX(packageURL);
+
+    return RESOLVE_AS_FILE_OR_DIRECTORY(new URL(packageSubpath, packageURL).href, rootURL);
   }
 }
+
+export const RESOLVE_AS_FILE_OR_DIRECTORY = (url, rootURL) => RESOLVE_FIRST_OF([
+  RESOLVE_AS_FILE(url),
+  RESOLVE_AS_DIRECTORY(url, rootURL)
+]);
+
+function* RESOLVE_FROM_PACKAGE_JSON(packageURL, packageSubpath, rootURL) {
+  const pjson = yield READ_PACKAGE_JSON(packageURL);
+
+  if (pjson?.exports) {
+    const { resolved } = yield PACKAGE_EXPORTS_RESOLVE(packageURL, packageSubpath, pjson.exports, defaultConditions, rootURL);
+    return resolved;
+  }
+  else if (packageSubpath === '.') {
+    // Return the result applying the legacy LOAD_AS_DIRECTORY CommonJS resolver to packageURL
+    if (!pjson?.main) return undefined;
+    const entryPoint = new URL(pjson.main, packageURL).href;
+
+    return RESOLVE_FIRST_OF([
+      RESOLVE_AS_FILE(entryPoint),
+      RESOLVE_AS_INDEX(entryPoint)
+    ]);
+  }
+  return undefined;
+}
+
+const RESOLVE_AS_DIRECTORY = (url, rootURL) => RESOLVE_FIRST_OF([
+  RESOLVE_FROM_PACKAGE_JSON(url, '.', rootURL),
+  RESOLVE_AS_INDEX(url)
+]);
+
+function *RESOLVE_EXACT(url) {
+  try {
+    const stats = yield fs.stat(fileURLToPath(url));
+    if (stats.isFile()) return url;
+  }
+  catch {};
+  return undefined;
+}
+
+function* RESOLVE_FIRST_OF(flows) {
+  for (let flow of flows) {
+    const resolved = yield flow;
+    if (resolved) return resolved;
+  }
+  return undefined;
+}
+
+const RESOLVE_SUFFIXES = (url, suffixes) => RESOLVE_FIRST_OF(suffixes.map(suffix => RESOLVE_EXACT(url + suffix)));
+
+const RESOLVE_AS_FILE = url => RESOLVE_SUFFIXES(url, ['', '.js', '.json']);
+const RESOLVE_AS_INDEX = url => RESOLVE_SUFFIXES(url, ['/index.js', '/index.json']);
+
 
 function* PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL) {
   const scope = yield READ_PACKAGE_SCOPE(parentURL, rootURL);

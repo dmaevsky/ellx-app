@@ -1,13 +1,25 @@
 import { pathToFileURL } from '#url';
 
 import {
+  RESOLVE_AS_FILE_OR_DIRECTORY,
   PACKAGE_RESOLVE,
   PACKAGE_IMPORTS_RESOLVE,
   defaultConditions,
   isValidURL
 } from './pkg_loader.js';
 
+const localPrefix = 'file://local/root/';
+
 export default function* resolveId(importee, importer, rootDir) {
+  const rootURL = rootDir && pathToFileURL(rootDir).href;
+
+  if (importer.startsWith(localPrefix)) {
+    if (!rootURL) {
+      throw new Error(`Assertion failure: resolving ${importee} from ${importer}: rootURL must be present`);
+    }
+    importer = rootURL + importer.slice(localPrefix.length);
+  }
+
   let resolved;
 
   if (isValidURL(importee)) {
@@ -29,15 +41,25 @@ export default function* resolveId(importee, importer, rootDir) {
       resolved = new URL(importee, importer).href;
     }
   }
+
+  if (resolved) {
+    if (resolved.startsWith('file://')) {
+
+      if (!resolved.startsWith(rootURL)) {
+        throw new Error(`Resolving ${importee} from ${importer}: got ${resolved} which is outside the rootURL ${rootURL}`);
+      }
+
+      resolved = yield RESOLVE_AS_FILE_OR_DIRECTORY(resolved, rootURL);
+    }
+  }
   else {
-    // NPM module
+    // Bare module specifier
     if (typeof self !== 'undefined') {
       // In a browser
       return 'npm://' + importee;
     }
 
     const rootURL = pathToFileURL(rootDir).href;
-    const localPrefix = 'file://local/root/';
 
     if (importer.startsWith('ellx://')) {
       const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)\/(.+)/.exec(importer) || []).slice(1);
@@ -53,10 +75,9 @@ export default function* resolveId(importee, importer, rootDir) {
         importer = new URL(`node_modules/~${projectKey}/${path}`, rootURL).href;
       }
     }
-    else if (importer.startsWith(localPrefix)) {
-      importer = rootURL + importer.slice(localPrefix.length);
+    else if (!importer.startsWith(rootURL)) {
+      return null;
     }
-    else return null;
 
     if (importee[0] === '#') {
       ({ resolved } = yield PACKAGE_IMPORTS_RESOLVE(importee, importer, defaultConditions, rootURL));
@@ -64,6 +85,12 @@ export default function* resolveId(importee, importer, rootDir) {
     else {
       // Note: importee is now a bare specifier.
       resolved = yield PACKAGE_RESOLVE(importee, importer, rootURL);
+    }
+  }
+
+  if (resolved.startsWith('file://')) {
+    if (!resolved.startsWith(rootURL)) {
+      throw new Error(`Assertion failure: resolving ${importee} from ${importer}: got ${resolved} which is outside of ${rootURL}`);
     }
     resolved = localPrefix + resolved.slice(rootURL.length);
   }
