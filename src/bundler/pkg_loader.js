@@ -28,8 +28,10 @@ export function* PACKAGE_RESOLVE(packageSpecifier, parentURL, rootURL) {
 
   const packageSubpath = '.' + packageSpecifier.slice(packageName.length);
 
-  const selfUrl = yield PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL);
-  if (selfUrl) return selfUrl;
+  // TODO!!!!!!!!!!!TODO!!!!!!!!!!!TODO!!!!!!!!!!!TODO!!!!!!!!!!!TODO!!!!!!!!!!!
+  // Also commenting this out for now since it is dependent on PACKAGE_EXPORTS_RESOLVE
+  // const selfUrl = yield PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL);
+  // if (selfUrl) return selfUrl;
 
   // if (packageSubpath === '.' && nodeBuiltIns.includes(packageName)) {
   //   return 'node:' + packageSpecifier;
@@ -73,11 +75,15 @@ export const RESOLVE_AS_FILE_OR_DIRECTORY = (url, rootURL) => RESOLVE_FIRST_OF([
 function* RESOLVE_FROM_PACKAGE_JSON(packageURL, packageSubpath, rootURL) {
   const pjson = yield READ_PACKAGE_JSON(packageURL);
 
-  if (pjson?.exports) {
+  // TODO!!!!TODO!!!!TODO!!!!TODO!!!!TODO!!!!
+  // Temporarily comment this out because the bundler does not currently support ESM circular dependencies and global variable exports
+  // So we prefer CJS modules for now (except for conclure)
+  if (packageURL.endsWith('conclure/') && pjson?.exports) {
     const { resolved } = yield PACKAGE_EXPORTS_RESOLVE(packageURL, packageSubpath, pjson.exports, defaultConditions, rootURL);
     return resolved;
   }
-  else if (packageSubpath === '.') {
+  else
+  if (packageSubpath === '.') {
     // Return the result applying the legacy LOAD_AS_DIRECTORY CommonJS resolver to packageURL
     if (!pjson?.main) return undefined;
     const entryPoint = new URL(pjson.main, packageURL).href;
@@ -90,10 +96,14 @@ function* RESOLVE_FROM_PACKAGE_JSON(packageURL, packageSubpath, rootURL) {
   return undefined;
 }
 
-const RESOLVE_AS_DIRECTORY = (url, rootURL) => RESOLVE_FIRST_OF([
-  RESOLVE_FROM_PACKAGE_JSON(url, '.', rootURL),
-  RESOLVE_AS_INDEX(url)
-]);
+const RESOLVE_AS_DIRECTORY = (url, rootURL) => {
+  if (!url.endsWith('/')) url += '/';
+
+  return RESOLVE_FIRST_OF([
+    RESOLVE_FROM_PACKAGE_JSON(url, '.', rootURL),
+    RESOLVE_AS_INDEX(url)
+  ]);
+}
 
 function *RESOLVE_EXACT(url) {
   try {
@@ -115,7 +125,11 @@ function* RESOLVE_FIRST_OF(flows) {
 const RESOLVE_SUFFIXES = (url, suffixes) => RESOLVE_FIRST_OF(suffixes.map(suffix => RESOLVE_EXACT(url + suffix)));
 
 const RESOLVE_AS_FILE = url => RESOLVE_SUFFIXES(url, ['', '.js', '.json']);
-const RESOLVE_AS_INDEX = url => RESOLVE_SUFFIXES(url, ['/index.js', '/index.json']);
+
+const RESOLVE_AS_INDEX = url => {
+  if (!url.endsWith('/')) url += '/';
+  return RESOLVE_SUFFIXES(url, ['index.js', 'index.json']);
+}
 
 
 function* PACKAGE_SELF_RESOLVE(packageName, packageSubpath, parentURL, rootURL) {
