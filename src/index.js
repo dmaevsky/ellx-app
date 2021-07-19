@@ -2,11 +2,12 @@
 import http from 'http';
 import WebSocket from 'ws';
 import commandLineArgs from 'command-line-args';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import polka from 'polka';
 
 import serve from 'serve-static';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,6 +36,9 @@ if (mainOptions.command === 'start') {
 
   polka({ server })
     .use(serve(publicDir))
+    .get('*', function (req, res) {
+      res.end(readFileSync(resolve(publicDir, 'index.html')));
+    })
     .listen(config.port, err => {
       if (err) throw err;
       console.log(`> Running on localhost:${config.port}`);
