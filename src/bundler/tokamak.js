@@ -46,11 +46,17 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
       }
 
       if (!node.imports) {
-        Object.assign(node, {
-          imports: {},
-          required: [],
-          ...transform(node.code)     // node.code is either esm, umd or cjs
-        });
+        const {
+          code,
+          imports = {},
+          required = []
+        } = transform(node.code);     // node.code is either esm, umd or cjs
+
+        Object.assign(node, { code, imports, required });
+      }
+      else if (node.src && node.code === undefined) {
+        const { text } = yield loadCached(node.src);
+        node.code = text;
       }
 
       loadStack = loadStack.concat(id);

@@ -5,3 +5,6 @@
 
 # testing
 /tests
+*.spec.js
+*.spec.js.md
+*.spec.js.snap

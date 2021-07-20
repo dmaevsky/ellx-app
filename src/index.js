@@ -7,10 +7,14 @@ import polka from 'polka';
 
 import serve from 'serve-static';
 import { fileURLToPath } from 'url';
+import { readFile } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import { startDevPipe } from './dev_pipe.js';
+import { deploy } from './deploy.js';
+
+import { conclude } from 'conclure';
 
 const publicDir = join(__dirname, '../dist');
 
@@ -35,6 +39,10 @@ if (mainOptions.command === 'start') {
 
   polka({ server })
     .use(serve(publicDir))
+    .get('*', (req, res, next) => readFile(join(publicDir, 'index.html'), 'utf8', (error, body) => {
+      if (error) next(error);
+      else res.end(body);
+    }))
     .listen(config.port, err => {
       if (err) throw err;
       console.log(`> Running on localhost:${config.port}`);
@@ -43,6 +51,20 @@ if (mainOptions.command === 'start') {
   const wss = new WebSocket.Server({ server, path: '/@@dev' });
 
   wss.on('connection', ws => startDevPipe(ws, process.cwd()));
+}
+else if (mainOptions.command === 'deploy') {
+  const deployDefinitions = [
+    { name: 'domain', alias: 'd', type: String }
+  ];
+
+  const config = commandLineArgs(deployDefinitions, { argv });
+
+  conclude(deploy(process.cwd(), config.domain), (err) => {
+    if (err) throw err;
+
+    console.log(`Deployed to ${config.domain}`);
+    console.log(`It shoud be available in a few minutes`);
+  });
 }
 else {
   console.log(`Please specify a command:
