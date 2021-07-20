@@ -7,7 +7,7 @@ import polka from 'polka';
 
 import serve from 'serve-static';
 import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
+import { readFile } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -37,7 +37,13 @@ if (mainOptions.command === 'start') {
   polka({ server })
     .use(serve(publicDir))
     .get('*', function (req, res) {
-      res.end(readFileSync(resolve(publicDir, 'index.html')));
+      readFile(resolve(publicDir, 'index.html'), (err, data) => {
+        if (err) {
+          console.error('Error reading index.html', err);
+        } else {
+          res.end(data);
+        }
+      })
     })
     .listen(config.port, err => {
       if (err) throw err;
