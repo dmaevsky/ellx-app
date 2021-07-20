@@ -29,7 +29,7 @@ export function *deploy(rootDir, domain) {
   const env = process.env.NODE_ENV || 'staging';
   const { apiUrl, appId, token, assetUrl } = authJson[env] || {};
 
-  if (!appUrl || !appId || !token || !assetUrl) {
+  if (!apiUrl || !appId || !token || !assetUrl) {
     throw new Error(`Environment ${env} not found or incomplete in .ellx_auth.json`);
   }
 
@@ -43,16 +43,20 @@ export function *deploy(rootDir, domain) {
     .map(path => localPrefix + path)
     .filter(id => id.endsWith('.js'));
 
+  console.log('Start bundling...');
+
   const graph = yield build(jsFiles, rootDir);
 
+  console.log(`Bundle ready. Generated ${Object.keys(graph).length} entries`);
+
   // Extract the files to deploy and calculate their hashes
-  const toDeploy = [];
+  const toDeploy = new Map();
 
   const appendFile = (path, code) => {
     const hash = md5(code);
-    const hashedPath = path.replace(/\.[^.]*$/, ext => '-' + hash + ext);
+    const hashedPath = path.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
 
-    toDeploy.push({ path: hashedPath, code });
+    toDeploy.set(hashedPath, code);
     return `${assetUrl}/${appId}` + hashedPath;
   }
 
@@ -76,9 +80,9 @@ export function *deploy(rootDir, domain) {
     )
   );
 
-  const requireGraphSrc = appendFile('/requireGraph.json', 'var requireGraph = ' + JSON.stringify(graph));
-  const sheetsSrc = appendFile('/sheets.json', 'var sheets = ' + JSON.stringify(sheets));
-  const runtimeSrc = appendFile('/Runtime.js', yield readFile(join(rootDir, 'dist/runtime.js'), 'utf8'));
+  const requireGraphSrc = appendFile('/requireGraph.js', 'var requireGraph = ' + JSON.stringify(graph));
+  const sheetsSrc = appendFile('/sheets.js', 'var sheets = ' + JSON.stringify(sheets));
+  const runtimeSrc = appendFile('/Runtime.js', yield readFile(join(rootDir, 'node_modules/@ellx/app/dist/runtime.js'), 'utf8'));
 
   // Prepare index.html body
   const injection = `
@@ -90,22 +94,38 @@ export function *deploy(rootDir, domain) {
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
     .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection);
 
-  console.log(indexHtml, toDeploy);
+  toDeploy.set('/index.html', indexHtml);
 
-  // const publishUrl = `${apiUrl}/publish/${appId}`;
+  console.log(`Deploying ${toDeploy.size} files...`);
+  console.log('Get deployment URLs...');
 
-  // const { body } = yield abortableFetch(publishUrl, {
-  //   method: 'POST',
-  //   credentials: 'include',
-  //   headers: {
-  //     'Cookie': `samesite=1; token=${token}`
-  //   },
-  //   body: JSON.stringify({
-  //     files: ['/index.html', '/runtime.js', ...Object.keys(graph)],
-  //     domain,
-  //     enable: true
-  //   })
-  // });
+  const publishUrl = `${apiUrl}/publish/${appId}`;
 
-  // const toDeploy = JSON.parse(text);
+  const { body } = yield abortableFetch(publishUrl, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Cookie': `samesite=1; token=${token}`
+    },
+    body: JSON.stringify({
+      files: [...toDeploy].map(([path]) => path),
+      domain,
+      enable: true
+    })
+  });
+
+  console.log('Deploy to S3...');
+
+  yield all(JSON.parse(body)
+    .map(({ path, url }) => abortableFetch(url, {
+      method: 'PUT',
+      body: toDeploy.get(path),
+      headers: {
+        'Content-Type': path.endsWith('html') ? 'text/html' : 'application/javascript',
+        'Cache-Control': path === '/index.html' ? 'max-age=0' : 'max-age=31536000'
+      },
+    })
+  ));
+
+  console.log('Done!');
 }
