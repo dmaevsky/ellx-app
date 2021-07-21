@@ -1,10 +1,10 @@
 <script>
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
   import GridLayout from './GridLayout.svelte';
-  import query from '../runtime/blocks';
-  import { setSelection } from '../runtime/actions/edit';
-  import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys';
-  import CellEditor from './CellEditor';
+  import query from '../runtime/blocks.js';
+  import { setSelection } from '../runtime/actions/edit.js';
+  import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys.js';
+  import CellEditor from './CellEditor.svelte';
 
   export let blocks;
   export let calculated;

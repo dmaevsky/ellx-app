@@ -3,27 +3,40 @@ import fetch from 'node-fetch';
 import AbortController from 'node-abort-controller';
 import memoize from '../../bundler/memoize_flow.js';
 
+export function* abortableFetch(url, options) {
+  const controller = new AbortController();
+
+  const promise = fetch(url, { ...options, signal: controller.signal });
+  whenFinished(promise, ({ cancelled }) => cancelled && controller.abort());
+
+  const res = yield promise;
+  const contentType = res.headers.get('Content-Type');
+
+  const body = yield res.text();
+  const isJSON = contentType && contentType.includes('application/json');
+
+  if (!res.ok) {
+    throw new Error(isJSON && JSON.parse(body).error || res.statusText);
+  }
+
+  return {
+    url: res.url,
+    body,
+    isJSON
+  };
+}
+
 export const fetchFile = memoize(function* doFetch(url, logByLevel = console.debug, options = {}) {
+  logByLevel('info', 'Fetching ' + url);
+
   try {
-    logByLevel('info', 'Fetching ' + url);
-
-    const controller = new AbortController();
-    const promise = fetch(url, { ...options, signal: controller.signal });
-
-    whenFinished(promise, ({ cancelled }) => cancelled && controller.abort());
-
-    const res = yield promise;
-    const body = yield res.text();
-
-    if (!res.ok) {
-      throw new Error(body);
-    }
+    const { url: actualUrl, body } = yield abortableFetch(url, options);
 
     logByLevel('info', 'Fetched ' + url);
 
     return {
-      url: res.url,
-      text: res.url === url && body
+      url: actualUrl,
+      text: actualUrl === url && body
     };
   }
   catch (err) {

@@ -3,6 +3,7 @@ import { promises as fs } from '#fs';
 import { allSettled } from 'conclure/combinators';
 import { fetchFile } from '../sandbox/runtime/fetch.js';
 import memoize from './memoize_flow.js';
+import apiUrl from '../api_url.js';
 
 // TODO: get it from a Dependency Injection service
 function logByLevel(level, ...messages) {
@@ -46,17 +47,15 @@ export const fetchEllxProject = memoize(function* fetchEllxProject(projectKey, p
 
   // Package directory does not exist -> download from cloud
 
-  const apiUrl = process.env.API_URL || 'https://api.ellx.io';
   const resourceUrl = `${apiUrl}/resource/${projectKey}`;
 
-  const { error, text } = yield fetchFile(resourceUrl, logByLevel, {
+  const { text } = yield fetchFile(resourceUrl, logByLevel, {
     credentials: 'include',
     headers: {
       'Cookie': 'samesite=1'
     }
   });
 
-  if (error) throw new Error(error);
   const { files } = JSON.parse(text);
 
   const results = yield allSettled(

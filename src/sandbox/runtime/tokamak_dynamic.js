@@ -5,8 +5,15 @@ import { asyncCell } from './engine/reactive_cell';
 import { STALE_REQUIRE } from './engine/quack';
 import { conclude } from 'conclure';
 
-function evalUMD(code) {
-  return new Function('module', 'exports', 'process', 'global', 'require', code);
+function evalUMD(id, code) {
+  const script = document.createElement('script');
+  script.id = id;
+  script.append(`//@ sourceURL=${id}\nwindow["${id}"] = function(module, exports, process, global, require){\n${code}\n}`);
+  document.body.append(script);
+
+  const result = window[id];
+  delete window[id];
+  return result;
 }
 
 function instantiateModule(node, _require) {
@@ -80,7 +87,7 @@ export default (options = {}) => {
     }
 
     if (typeof code !== 'function') {
-      node.code = evalUMD(code);
+      node.code = evalUMD(id, code);
     }
 
     // Check static dependencies are present
@@ -98,7 +105,11 @@ export default (options = {}) => {
     return node.code.exports;
   }
 
-  requireModule.hydrate = (dependencies, cb) => conclude(all(dependencies.map(id => loadModule(id))), cb);
+  requireModule.hydrate = (cb) => conclude(all(
+    Object.keys(graph)
+      .filter(id => !id.includes('=>'))
+      .map(id => loadModule(id))
+  ), cb);
 
   return requireModule;
 }

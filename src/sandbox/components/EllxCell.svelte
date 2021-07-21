@@ -1,8 +1,8 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { show } from '../runtime/renderNode';
-  import { STALE } from '../runtime/engine/quack';
-  import Spinner from './Spinner';
+  import { show } from '../runtime/renderNode.js';
+  import { STALE } from '../runtime/engine/quack.js';
+  import Spinner from './Spinner.svelte';
 
   export let cg;
   export let identifier;
@@ -82,7 +82,10 @@
   }
 
   function toggleError(on) {
-    nodes.forEach(node => node.classList[on ? 'add' : 'remove']('ellx-cell-error'));
+    nodes.forEach(node => {
+      if (on) node.style.color = 'red';
+      else node.style.removeProperty('color');
+    });
   }
 
   $: if (nodes) {
@@ -92,9 +95,3 @@
   onDestroy(dispose);
 
 </script>
-
-<style>
-  :global(.ellx-cell-error) {
-    color: red;
-  }
-</style>
