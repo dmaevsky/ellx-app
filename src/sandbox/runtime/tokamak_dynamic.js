@@ -16,7 +16,7 @@ function evalUMD(id, code) {
   return result;
 }
 
-function instantiateModule(node, _require) {
+function instantiateModule(node, _require, environment) {
   const instantiate = node.code;
 
   const module = node.code = {
@@ -25,7 +25,7 @@ function instantiateModule(node, _require) {
 
   const process = {
     env: {
-      NODE_ENV: 'production'
+      NODE_ENV: environment
     },
     cwd: () => '.'
   };
@@ -46,7 +46,8 @@ function instantiateModule(node, _require) {
 export default (options = {}) => {
   const {
     graph = {},
-    logger = console.debug
+    logger = console.debug,
+    environment
   } = options;
 
   const fetchFromJSDelivr = getFetchFromJSDelivr(graph, logger);
@@ -101,7 +102,7 @@ export default (options = {}) => {
       }
     }
 
-    instantiateModule(node, p => requireModule(p, id));
+    instantiateModule(node, p => requireModule(p, id), environment);
     return node.code.exports;
   }
 

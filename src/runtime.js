@@ -3,11 +3,11 @@ import getRequire from './sandbox/runtime/tokamak_dynamic.js';
 import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 
-export default function initializeEllxApp(requireGraph, sheets) {
+export default function initializeEllxApp(requireGraph, sheets, environment) {
   const localPrefix = 'ellx://local/root';
   const rootNamespace = localPrefix + '/src/index';
 
-  const require = getRequire({ graph: requireGraph });
+  const require = getRequire({ graph: requireGraph, environment });
 
   require.hydrate(err => {
     if (err) throw err;

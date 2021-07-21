@@ -9,7 +9,7 @@ const cgConnect = cg => (inner) => {
     inner.commit(UPDATE_CALCULATED, { blockId, ...updated });
   };
 
-  const logger = process.env.NODE_ENV === 'development' ? message => console.debug(message) : () => {};
+  const logger = process.env.NODE_ENV !== 'production' ? message => console.debug(message) : () => {};
 
   return {
     ...inner,

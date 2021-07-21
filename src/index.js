@@ -61,9 +61,6 @@ else if (mainOptions.command === 'deploy') {
 
   conclude(deploy(process.cwd(), config.env), (err) => {
     if (err) throw err;
-
-    console.log(`Deployed to ${config.domain}`);
-    console.log(`It shoud be available in a few minutes`);
   });
 }
 else {
@@ -71,7 +68,7 @@ else {
     start
     login (WIP)
     publish (WIP)
-    deploy (WIP)
+    deploy
   `);
   process.exit(1);
 }

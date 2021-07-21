@@ -92,7 +92,7 @@ export function *deploy(rootDir, env) {
   const injection = `
       <script src="${requireGraphSrc}" defer></script>
       <script src="${sheetsSrc}" defer></script>
-      <script src="${runtimeSrc}" defer onload="Runtime(requireGraph, sheets)"></script>
+      <script src="${runtimeSrc}" defer onload="Runtime(requireGraph, sheets, '${env}')"></script>
   `;
 
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
@@ -134,5 +134,6 @@ export function *deploy(rootDir, env) {
     })
   ));
 
-  console.log('Done!');
+  console.log(`Deployed to ${domain}`);
+  console.log(`It should be available in a few minutes`);
 }
