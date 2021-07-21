@@ -5,7 +5,7 @@ import memoize from './memoize_flow.js';
 
 export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
 
-  const resolveCached = memoize(function* resolveCached(fromTo) {
+  const memoResolveId = memoize(function* memoResolveId(fromTo) {
     const [baseUrl, url] = fromTo.split('=>');
     try {
       return yield resolveId(url, baseUrl, rootDir);
@@ -14,6 +14,14 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
       return null;
     }
   }, Infinity, requireGraph);
+
+  const resolveCached = fromTo => {
+    if (fromTo.startsWith('=>')) {
+      const id = fromTo.slice(2);
+      if (id in requireGraph) return id;
+    }
+    return memoResolveId(fromTo);
+  }
 
   const loadCached = memoize(load, Infinity, requireGraph);
 

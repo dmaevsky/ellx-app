@@ -105,7 +105,11 @@ export default (options = {}) => {
     return node.code.exports;
   }
 
-  requireModule.hydrate = (cb) => conclude(all(Object.keys(graph).map(id => loadModule(id))), cb);
+  requireModule.hydrate = (cb) => conclude(all(
+    Object.keys(graph)
+      .filter(id => !id.includes('=>'))
+      .map(id => loadModule(id))
+  ), cb);
 
   return requireModule;
 }

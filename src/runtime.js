@@ -1,6 +1,7 @@
 import MarkdownOutput from './sandbox/components/MarkdownOutput.svelte';
 import getRequire from './sandbox/runtime/tokamak_dynamic.js';
 import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
+import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 
 export default function initializeEllxApp(requireGraph, sheets) {
   const localPrefix = 'ellx://local/root';

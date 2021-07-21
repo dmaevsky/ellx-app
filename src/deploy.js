@@ -65,7 +65,12 @@ export function *deploy(rootDir, domain) {
 
     if (code !== undefined) {
       delete graph[id].code;
-      graph[id].src = appendFile(id.slice(localPrefix.length), code);
+
+      const path = id.startsWith('ellx://') && !id.startsWith('ellx://local/root/')
+        ? '/node_modules/~' + id.slice(7)
+        : id.slice(localPrefix.length);
+
+      graph[id].src = appendFile(path, code);
     }
   }
 
@@ -88,7 +93,7 @@ export function *deploy(rootDir, domain) {
   const injection = `
       <script src="${requireGraphSrc}" defer></script>
       <script src="${sheetsSrc}" defer></script>
-      <script src="${runtimeSrc}" defer onload=()=>Runtime.initializeEllxApp(requireGraph, sheets)></script>
+      <script src="${runtimeSrc}" defer onload="Runtime(requireGraph, sheets)"></script>
   `;
 
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
@@ -105,7 +110,8 @@ export function *deploy(rootDir, domain) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Cookie': `samesite=1; token=${token}`
+      'Cookie': `samesite=1; token=${token}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       files: [...toDeploy].map(([path]) => path),
@@ -121,8 +127,8 @@ export function *deploy(rootDir, domain) {
       method: 'PUT',
       body: toDeploy.get(path),
       headers: {
-        'Content-Type': path.endsWith('html') ? 'text/html' : 'application/javascript',
-        'Cache-Control': path === '/index.html' ? 'max-age=0' : 'max-age=31536000'
+        'Content-Type': path.endsWith('.html') ? 'text/html' : 'application/javascript',
+        'Cache-Control': path === '/index.html' ? 'max-age=60' : 'max-age=31536000'
       },
     })
   ));
