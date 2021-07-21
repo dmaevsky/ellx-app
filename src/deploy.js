@@ -23,13 +23,12 @@ function* collectEntryPoints(dir) {
   return files.filter(Boolean).flat();
 }
 
-export function *deploy(rootDir, domain) {
+export function *deploy(rootDir, env) {
   const authJson = JSON.parse(yield readFile(`${rootDir}/.ellx_auth.json`, 'utf8'));
 
-  const env = process.env.NODE_ENV || 'staging';
-  const { apiUrl, appId, token, assetUrl } = authJson[env] || {};
+  const { apiUrl, appId, token, domain } = authJson[env] || {};
 
-  if (!apiUrl || !appId || !token || !assetUrl) {
+  if (!apiUrl || !appId || !token || !domain) {
     throw new Error(`Environment ${env} not found or incomplete in .ellx_auth.json`);
   }
 
@@ -57,7 +56,7 @@ export function *deploy(rootDir, domain) {
     const hashedPath = path.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
 
     toDeploy.set(hashedPath, code);
-    return `${assetUrl}/${appId}` + hashedPath;
+    return 'https://' + domain + hashedPath;
   }
 
   for (let id in graph) {
@@ -97,7 +96,9 @@ export function *deploy(rootDir, domain) {
   `;
 
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
-    .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection);
+    .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection)
+    .replace('</body>', `<div id="ellx-app"><div data-ellx-node-name="init" data-ellx-node-formula="app()"></div></div>
+      </body>`);
 
   toDeploy.set('/index.html', indexHtml);
 

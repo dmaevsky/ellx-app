@@ -54,12 +54,12 @@ if (mainOptions.command === 'start') {
 }
 else if (mainOptions.command === 'deploy') {
   const deployDefinitions = [
-    { name: 'domain', alias: 'd', type: String }
+    { name: 'env', defaultOption: true, default: process.env.NODE_ENV || 'staging', type: String }
   ];
 
   const config = commandLineArgs(deployDefinitions, { argv });
 
-  conclude(deploy(process.cwd(), config.domain), (err) => {
+  conclude(deploy(process.cwd(), config.env), (err) => {
     if (err) throw err;
 
     console.log(`Deployed to ${config.domain}`);

@@ -63,8 +63,8 @@ export default ({ fetchModule, logger }, requireGraph = {}, rootDir = '/') => {
         Object.assign(node, { code, imports, required });
       }
       else if (node.src && node.code === undefined) {
-        const { text } = yield loadCached(node.src);
-        node.code = text;
+        const { code } = yield loadCached(node.src);
+        node.code = code;
       }
 
       loadStack = loadStack.concat(id);
