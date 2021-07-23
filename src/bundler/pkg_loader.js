@@ -85,8 +85,10 @@ function* RESOLVE_FROM_PACKAGE_JSON(packageURL, packageSubpath, rootURL) {
   else
   if (packageSubpath === '.') {
     // Return the result applying the legacy LOAD_AS_DIRECTORY CommonJS resolver to packageURL
-    if (!pjson?.main) return undefined;
-    const entryPoint = new URL(pjson.main, packageURL).href;
+    const entrySpecifier = pjson && (pjson.browser || pjson.main);
+    if (!entrySpecifier) return undefined;
+
+    const entryPoint = new URL(entrySpecifier, packageURL).href;
 
     return RESOLVE_FIRST_OF([
       RESOLVE_AS_FILE(entryPoint),

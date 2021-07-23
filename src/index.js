@@ -60,7 +60,7 @@ else if (mainOptions.command === 'deploy') {
   const config = commandLineArgs(deployDefinitions, { argv });
 
   conclude(deploy(process.cwd(), config.env), (err) => {
-    if (err) throw err;
+    if (err) console.error(err);
   });
 }
 else {

@@ -60,16 +60,21 @@ export function *deploy(rootDir, env) {
   }
 
   for (let id in graph) {
-    const { code } = graph[id];
+    const node = graph[id];
+    if (!node) {
+      throw new Error(`${id} could not be resolved`);
+    }
+
+    const { code } = node;
 
     if (code !== undefined) {
-      delete graph[id].code;
+      delete node.code;
 
       const path = id.startsWith('ellx://') && !id.startsWith('ellx://local/root/')
         ? '/node_modules/~' + id.slice(7)
         : id.slice(localPrefix.length);
 
-      graph[id].src = appendFile(path, code);
+      node.src = appendFile(path, code);
     }
   }
 
