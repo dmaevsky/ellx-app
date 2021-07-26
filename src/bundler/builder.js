@@ -19,14 +19,14 @@ const ellxProjectPrefix = 'file:///node_modules/~';
 function* preloadEllxProject(id, rootDir) {
   if (!id.startsWith(ellxProjectPrefix)) return;
 
-  const projectKey = (/^[^/]+\/[^/]+/.exec(id.slice(ellxProjectPrefix.length)) || [])[0];
+  const [owner, project] = id.slice(ellxProjectPrefix.length).split('/');
 
-  if (!projectKey) {
-    throw new Error(`Failed to resolve ${id} as belonging to an Ellx project`);
+  if ([undefined, 'package.json', 'index.js', 'node_modules'].includes(project)) {
+    return 'partial';
   }
 
-  const packageDir = join(rootDir, 'node_modules/~' + projectKey);
-  yield fetchEllxProject(projectKey, packageDir);
+  const packageDir = join(rootDir, `node_modules/~${owner}/${project}`);
+  yield fetchEllxProject(`${owner}/${project}`, packageDir);
 }
 
 function* fetchLocally(id, rootDir) {
@@ -36,7 +36,7 @@ function* fetchLocally(id, rootDir) {
 }
 
 function* isDirectory(id, rootDir) {
-  yield preloadEllxProject(id, rootDir);
+  if ((yield preloadEllxProject(id, rootDir)) === 'partial') return true;
 
   try {
     const stats = yield fs.stat(join(rootDir, fileURLToPath(id)));
