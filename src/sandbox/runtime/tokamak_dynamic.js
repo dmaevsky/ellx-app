@@ -9,9 +9,22 @@ export default ({
   logger = console.debug,
   environment
 }) => {
+
+  function* hydrateNode(node) {
+    const { text } = yield fetchFile(node.src, logger);
+    node.code = text;
+  }
+
   const loader = {
     *load(id) {
-      if (id in graph) return graph[id];
+      if (id in graph) {
+        const node = graph[id];
+
+        if (node.src && node.code === undefined) {
+          yield hydrateNode(node);
+        }
+        return node;
+      }
 
       if (id.startsWith('file://')) {
         throw new Error(`Don't know how to load ${id}`);
@@ -37,11 +50,6 @@ export default ({
   const onStale = () => { throw STALE_REQUIRE };
 
   const requireModule = tokamak_dynamic({ loader, onStale, logger, environment });
-
-  function* hydrateNode(node) {
-    const { text } = yield fetchFile(node.src, logger);
-    node.code = text;
-  }
 
   requireModule.hydrate = cb => conclude(all(Object.values(graph).map(hydrateNode)), cb);
 

@@ -12,9 +12,13 @@ export default function initializeEllxApp(requireGraph, sheets, environment) {
     if (err) throw err;
   });
 
+  const resolveRequire = bundleId => url => url
+    ? require(url, bundleId)
+    : requireGraph[bundleId] && require(bundleId);
+
   const htmlCalcGraph = new CalcGraph(
     [() => sheets[rootNamespace + '.ellx']],
-    url => require(url, rootNamespace + '.js')
+    resolveRequire(rootNamespace + '.js')
   );
 
   htmlCalcGraph.autoCalc.set(true);
@@ -24,12 +28,7 @@ export default function initializeEllxApp(requireGraph, sheets, environment) {
     const ns = sheetId.slice(0, sheetId.lastIndexOf('.'));
     const siblings = ns === rootNamespace ? [() => htmlCalcGraph] : [];
 
-    const bundleId = ns + '.js';
-
-    const cg = new CalcGraph(siblings, url => url
-      ? require(url, bundleId)
-      : requireGraph[bundleId] && require(bundleId)
-    );
+    const cg = new CalcGraph(siblings, resolveRequire(ns + '.js'));
 
     const nodes = sheets[sheetId];
 
