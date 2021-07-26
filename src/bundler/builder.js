@@ -3,41 +3,60 @@ import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import { getResult } from 'conclure';
 import { allSettled } from 'conclure/combinators';
+import tokamak from 'tokamak';
 import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
 
 import { fetchEllxProject } from './ellx_module_loader.js';
-import { DELIVR_CDN, getFetchFromJSDelivr, fetchFile } from '../sandbox/runtime/fetch.js';
-import tokamak from './tokamak.js';
+import memoize from '../common/memoize_flow.js';
 
 function logByLevel(level, ...messages) {
   console.log(`[${level.toUpperCase()}]`, ...messages);
 }
 
+const ellxProjectPrefix = 'file:///node_modules/~';
+
+function* preloadEllxProject(id, rootDir) {
+  if (!id.startsWith(ellxProjectPrefix)) return;
+
+  const projectKey = (/^[^/]+\/[^/]+/.exec(id.slice(ellxProjectPrefix.length)) || [])[0];
+
+  if (!projectKey) {
+    throw new Error(`Failed to resolve ${id} as belonging to an Ellx project`);
+  }
+
+  const packageDir = join(rootDir, 'node_modules/~' + projectKey);
+  yield fetchEllxProject(projectKey, packageDir);
+}
+
 function* fetchLocally(id, rootDir) {
-  if (id.startsWith('ellx://')) {
-    const [projectKey, path] = (/^ellx:\/\/([^/]+\/[^/]+)\/(.+)/.exec(id) || []).slice(1);
+  yield preloadEllxProject(id, rootDir);
 
-    if (!projectKey) {
-      throw new Error(`Ellx URL ${id} does not correspond to a file`);
-    }
+  return fs.readFile(join(rootDir, fileURLToPath(id)), 'utf8');
+}
 
-    let packageDir;
+function* isDirectory(id, rootDir) {
+  yield preloadEllxProject(id, rootDir);
 
-    if (projectKey === 'local/root') {
-      packageDir = rootDir;
-    }
-    else {
-      packageDir = join(rootDir, 'node_modules/~' + projectKey);
-      yield fetchEllxProject(projectKey, packageDir);
-    }
-
-    id = join(packageDir, path);
+  try {
+    const stats = yield fs.stat(join(rootDir, fileURLToPath(url)));
+    return stats.isDirectory();
   }
-  else {
-    id = fileURLToPath(id.replace('file://local/root', 'file://' + rootDir));
+  catch {
+    return false;
   }
-  return fs.readFile(id, 'utf8');
+}
+
+function* isFile(id, rootDir) {
+  yield preloadEllxProject(id, rootDir);
+
+  try {
+    const stats = yield fs.stat(join(rootDir, fileURLToPath(url)));
+    return stats.isFile();
+  }
+  catch {
+    return false;
+  }
 }
 
 function appendStyle(str) {
@@ -75,7 +94,7 @@ function transformModule(id, text) {
   }
 
   if (id.endsWith('.json')) {
-    return `module.exports = ${text}`;
+    return JSON.parse(text);  // NOT returning a string but an already evaluated code
   }
 
   if (id.endsWith('.css')) {
@@ -90,14 +109,6 @@ function transformModule(id, text) {
     return jsx(text, { transforms: ['jsx'] }).code;
   }
 
-  // if (id.endsWith('.vue')) {
-  //   if (!self.vue) {
-  //     importScripts("$(CLIENT_URL)/module/VueTransform");
-  //   }
-
-  //   return self.vue(text, id, appendStyle);
-  // }
-
   return text;
 }
 
@@ -105,33 +116,39 @@ function transformModule(id, text) {
 export function* build(entryPoints, rootDir) {
   const requireGraph = {};
 
-  const fetchFromJSDelivr = getFetchFromJSDelivr(requireGraph, logByLevel);
+  const loader = {
+    load: memoize(function* load(url) {
+      if (!url.startsWith('file://')) {
+        throw new Error(`Don't know how to load ${url}`);
+      }
 
-  function* fetchModule(url) {
-    let fetched;
+      return {
+        id: url,
+        code: transformModule(url, yield fetchLocally(url, rootDir))
+      }
+    }, Infinity, requireGraph),
 
-    if (url.startsWith('npm://') || url.startsWith(DELIVR_CDN)) {
-      fetched = yield fetchFromJSDelivr(url);
+    isDirectory(url) {
+      if (!url.endsWith('/')) url += '/';
+
+      if (Object.keys(requireGraph).some(id => id.startsWith(url))) {
+        return true;
+      }
+
+      return isDirectory(url, rootDir);
+    },
+
+    isFile(url) {
+      if (url in requireGraph) return true;
+
+      return isFile(url, rootDir);
     }
-    else if (url.startsWith('ellx://') || url.startsWith('file://')) {
-      fetched = {
-        url,
-        text: yield fetchLocally(url, rootDir)
-      };
-    }
-    else {
-      fetched = yield fetchFile(url);
-    }
+  };
 
-    if (fetched.url !== url) return fetched;  // redirect
-
-    return {
-      url,
-      text: transformModule(url, fetched.text)
-    };
-  }
-
-  const loadModule = tokamak({ fetchModule, logger: logByLevel }, requireGraph, rootDir + '/');
+  const loadModule = tokamak({
+    loader,
+    logger: logByLevel
+  });
 
   yield allSettled(entryPoints.map(id => loadModule(id)));
 
@@ -140,7 +157,10 @@ export function* build(entryPoints, rootDir) {
   for (let id in requireGraph) {
     const { error, result } = getResult(requireGraph[id]);
     if (error) {
-      output[id] = { code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})` };
+      output[id] = {
+        id,
+        code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})`
+      };
     }
     else output[id] = result;
   }

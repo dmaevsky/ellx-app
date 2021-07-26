@@ -4,8 +4,7 @@ import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 
 export default function initializeEllxApp(requireGraph, sheets, environment) {
-  const localPrefix = 'ellx://local/root';
-  const rootNamespace = localPrefix + '/src/index';
+  const rootNamespace = 'file:///src/index';
 
   const require = getRequire({ graph: requireGraph, environment });
 
@@ -25,7 +24,12 @@ export default function initializeEllxApp(requireGraph, sheets, environment) {
     const ns = sheetId.slice(0, sheetId.lastIndexOf('.'));
     const siblings = ns === rootNamespace ? [() => htmlCalcGraph] : [];
 
-    const cg = new CalcGraph(siblings, url => require(url, ns + '.js'));
+    const bundleId = ns + '.js';
+
+    const cg = new CalcGraph(siblings, url => url
+      ? require(url, bundleId)
+      : requireGraph[bundleId] && require(bundleId)
+    );
 
     const nodes = sheets[sheetId];
 

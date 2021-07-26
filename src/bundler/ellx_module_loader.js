@@ -1,8 +1,8 @@
 import { join } from 'path';
-import { promises as fs } from '#fs';
+import { promises as fs } from 'fs';
 import { allSettled } from 'conclure/combinators';
 import { fetchFile } from '../sandbox/runtime/fetch.js';
-import memoize from './memoize_flow.js';
+import memoize from '../common/memoize_flow.js';
 import apiUrl from '../api_url.js';
 
 // TODO: get it from a Dependency Injection service

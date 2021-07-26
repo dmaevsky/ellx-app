@@ -3281,6 +3281,13 @@ toidentifier@1.0.0:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.0.tgz#7e1be3470f1e77948bc43d94a3c8f4d7752ba553"
   integrity sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==
 
+tokamak@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/tokamak/-/tokamak-0.0.3.tgz#a7f88c37b3cc4923cd6a3efe8288e6d6cf0611d1"
+  integrity sha512-6OnEN6b3dFxVrVM+2JQNN3AfKBdxIu+wtzPoOcHetwNYN1dlJuoJD24c4uLIV5Zx+Dm8QrHQ9KmWKTqQ7WDwBQ==
+  dependencies:
+    rd-parse "^3.4.0"
+
 trim-off-newlines@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trim-off-newlines/-/trim-off-newlines-1.0.1.tgz#9f9ba9d9efa8764c387698bcbfeb2c848f11adb3"

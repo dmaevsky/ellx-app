@@ -1,3 +1,4 @@
+import { pathToFileURL, fileURLToPath } from 'url';
 import { conclude } from 'conclure';
 import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
@@ -19,7 +20,7 @@ function REMOVE(path) {
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
-  const projectKey = 'local/root';
+  const rootNamespace = 'file:///src/index';
 
   const projectItems = logger(console.log)(tx(new Map()));
   const hydratedSheets = new Map();
@@ -94,7 +95,7 @@ export function startDevPipe(ws, rootDir) {
     console.log('Building a new bundle', files);
 
     const jsFiles = files
-      .map(([path]) => 'ellx://' + projectKey + path.slice(rootDir.length))
+      .map(([path]) => pathToFileURL(path.slice(rootDir.length)))
       .filter(id => id.endsWith('.js'));
 
     cancelBundle = conclude(call(function* () {
@@ -124,8 +125,8 @@ export function startDevPipe(ws, rootDir) {
           const type = (/\.(js|md|ellx|html)$/.exec(path) || [])[1];
           if (!type) return acc;
 
-          const ns = projectKey + path.slice(rootDir.length, path.lastIndexOf('.'));
-          const nsRecord = acc.get(ns) || (ns === `${projectKey}/src/index` ? { html: 'mainApp' } : {});
+          const ns = pathToFileURL(path.slice(rootDir.length, path.lastIndexOf('.')));
+          const nsRecord = acc.get(ns) || (ns === rootNamespace ? { html: 'mainApp' } : {});
 
           acc.set(ns, {
             ...nsRecord,

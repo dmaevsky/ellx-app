@@ -1,6 +1,7 @@
 import { all } from 'conclure/combinators';
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
+import { pathToFileURL, fileURLToPath } from 'url';
 import md5 from 'md5';
 import { build } from './bundler/builder.js';
 import { abortableFetch } from './sandbox/runtime/fetch.js';
@@ -32,14 +33,12 @@ export function *deploy(rootDir, env) {
     throw new Error(`Environment ${env} not found or incomplete in .ellx_auth.json`);
   }
 
-  const localPrefix = 'ellx://local/root';
-
   const files = (yield collectEntryPoints(`${rootDir}/src`))
-    .map(path => path.slice(rootDir.length));
+    .map(path => path.slice(rootDir.length))
+    .map(pathToFileURL);
 
   // Make the bundle
   const jsFiles = files
-    .map(path => localPrefix + path)
     .filter(id => id.endsWith('.js'));
 
   console.log('Start bundling...');
@@ -51,12 +50,12 @@ export function *deploy(rootDir, env) {
   // Extract the files to deploy and calculate their hashes
   const toDeploy = new Map();
 
-  const appendFile = (path, code) => {
+  const appendFile = (urlPath, code) => {
     const hash = md5(code);
-    const hashedPath = path.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
+    const hashedUrlPath = urlPath.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
 
-    toDeploy.set(hashedPath, code);
-    return 'https://' + domain + hashedPath;
+    toDeploy.set(hashedUrlPath, code);
+    return 'https://' + domain + hashedUrlPath;
   }
 
   for (let id in graph) {
@@ -69,22 +68,17 @@ export function *deploy(rootDir, env) {
 
     if (code !== undefined) {
       delete node.code;
-
-      const path = id.startsWith('ellx://') && !id.startsWith('ellx://local/root/')
-        ? '/node_modules/~' + id.slice(7)
-        : id.slice(localPrefix.length);
-
-      node.src = appendFile(path, code);
+      node.src = appendFile(id.slice(7), code);
     }
   }
 
   // Load all sheets
   const sheets = Object.fromEntries(
     yield all(files
-      .filter(path => path.endsWith('.ellx'))
-      .map(function* loadSheet(path) {
-        const { nodes } = parseEllx(yield readFile(join(rootDir, path), 'utf8'));
-        return [localPrefix + path, nodes];
+      .filter(id => id.endsWith('.ellx'))
+      .map(function* loadSheet(id) {
+        const { nodes } = parseEllx(yield readFile(join(rootDir, fileURLToPath(id)), 'utf8'));
+        return [id, nodes];
       })
     )
   );

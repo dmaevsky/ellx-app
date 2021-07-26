@@ -1,11 +1,11 @@
 import { observable, computed, createAtom } from 'quarx';
-import { STALE_BUNDLE } from './engine/quack';
-import { logByLevel, graphs, namespaces } from './store';
-import getRequire from './tokamak_dynamic';
-import { exportCalcGraph } from './engine/calc_graph_export';
+import { STALE_BUNDLE } from './engine/quack.js';
+import { logByLevel, graphs, namespaces } from './store.js';
+import getRequire from './tokamak_dynamic.js';
+import { exportCalcGraph } from './engine/calc_graph_export.js';
 
 const getCalcGraphByUrl = url => {
-  if (!url.startsWith('ellx://')) {
+  if (!url.startsWith('file://') || !url.endsWith('.ellx')) {
     throw new Error(`Don't know how to resolve ${id} ¯\_(ツ)_/¯`);
   }
 
@@ -55,7 +55,7 @@ const resolveCalcGraph = id => {
 export const requireGraph = observable.box(null, { name: 'requireGraph' });
 
 const combinedRequireGraph = computed(() => new Proxy(requireGraph.get() || {}, {
-  get: (target, id) => !id.includes('=>') && /\.(html|md|ellx)$/.test(id)
+  get: (target, id) => /\.(html|md|ellx)$/.test(id)
     ? resolveCalcGraph(id)
     : target[id]
 }), { name: 'combinedRequireGraph' });
@@ -86,6 +86,11 @@ export const resolveRequire = (type, contentId) => url => {
 
   if (!family || family.js && !requireGraph.get()) throw STALE_BUNDLE;
 
-  const bundleId = 'ellx://' + family.fullpath + '.js';
+  const bundleId = 'file://' + family.fullpath + '.js';
+
+  if (!url) {
+    return requireGraph.get()[bundleId] && require(bundleId);
+  }
+
   return require(url, bundleId);
 }

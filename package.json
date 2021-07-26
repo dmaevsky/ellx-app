@@ -1,21 +1,11 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
   "engines": {
     "node": ">=14.17.0"
-  },
-  "imports": {
-    "#url": {
-      "node": "./src/polyfills/url-node.js",
-      "default": "./src/polyfills/url-browser.js"
-    },
-    "#fs": {
-      "node": "./src/polyfills/fs-node.js",
-      "default": "./src/polyfills/fs-browser.js"
-    }
   },
   "bin": {
     "ellx": "./src/index.js"
@@ -63,6 +53,7 @@
     "sucrase": "^3.20.0",
     "svelte": "^3.38.3",
     "tinyx": "^2.2.0",
+    "tokamak": "^0.0.3",
     "ws": "^7.5.1"
   },
   "devDependencies": {
