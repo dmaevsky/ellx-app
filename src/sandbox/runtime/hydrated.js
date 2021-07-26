@@ -86,7 +86,7 @@ export const resolveRequire = (type, contentId) => url => {
 
   if (!family || family.js && !requireGraph.get()) throw STALE_BUNDLE;
 
-  const bundleId = 'file://' + family.fullpath + '.js';
+  const bundleId = family.fullpath + '.js';
 
   if (!url) {
     return requireGraph.get()[bundleId] && require(bundleId);

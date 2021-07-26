@@ -133,6 +133,6 @@ export function *deploy(rootDir, env) {
     })
   ));
 
-  console.log(`Deployed to ${domain}`);
+  console.log(`Deployed to https://${domain}`);
   console.log(`It should be available in a few minutes`);
 }
