@@ -21,7 +21,7 @@ function* preloadEllxProject(id, rootDir) {
 
   const [owner, project] = id.slice(ellxProjectPrefix.length).split('/');
 
-  if ([undefined, 'package.json', 'index.js', 'node_modules'].includes(project)) {
+  if (!project || ['package.json', 'index.js', 'node_modules'].includes(project)) {
     return 'partial';
   }
 
