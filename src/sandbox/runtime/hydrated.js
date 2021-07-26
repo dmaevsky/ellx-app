@@ -9,11 +9,9 @@ const getCalcGraphByUrl = url => {
     throw new Error(`Don't know how to resolve ${id} ¯\_(ツ)_/¯`);
   }
 
-  const fullpath = url.slice(7);
-
   for (let family of namespaces.get() || []) {
     for (let type in family) {
-      if (fullpath === family.fullpath + '.' + type) {
+      if (url === family.fullpath + '.' + type) {
         const cg = graphs.get(family[type]);
         if (!cg) {
           throw new Error(`${url} is not hydrated`);

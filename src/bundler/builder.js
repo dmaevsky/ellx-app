@@ -93,10 +93,6 @@ function transformModule(id, text) {
     return '';
   }
 
-  if (id.endsWith('.json')) {
-    return JSON.parse(text);  // NOT returning a string but an already evaluated code
-  }
-
   if (id.endsWith('.css')) {
     return appendStyle(text);
   }

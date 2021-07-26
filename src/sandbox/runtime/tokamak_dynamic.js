@@ -1,3 +1,5 @@
+import { conclude } from 'conclure';
+import { all } from 'conclure/combinators';
 import tokamak_dynamic from 'tokamak/dynamic';
 import { fetchFile } from './fetch';
 import { STALE_REQUIRE } from './engine/quack.js';
@@ -36,7 +38,12 @@ export default ({
 
   const requireModule = tokamak_dynamic({ loader, onStale, logger, environment });
 
-  return Object.assign(requireModule, {
-    hydrate: cb => requireModule.hydrate(Object.keys(graph), cb)
-  });
+  function* hydrateNode(node) {
+    const { text } = yield fetchFile(node.src, logger);
+    node.code = text;
+  }
+
+  requireModule.hydrate = cb => conclude(all(Object.values(graph).map(hydrateNode)), cb);
+
+  return requireModule;
 }
