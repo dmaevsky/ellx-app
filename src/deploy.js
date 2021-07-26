@@ -35,7 +35,7 @@ export function *deploy(rootDir, env) {
 
   const files = (yield collectEntryPoints(`${rootDir}/src`))
     .map(path => path.slice(rootDir.length))
-    .map(pathToFileURL);
+    .map(path => pathToFileURL(path).href);
 
   // Make the bundle
   const jsFiles = files

@@ -39,7 +39,7 @@ function* isDirectory(id, rootDir) {
   yield preloadEllxProject(id, rootDir);
 
   try {
-    const stats = yield fs.stat(join(rootDir, fileURLToPath(url)));
+    const stats = yield fs.stat(join(rootDir, fileURLToPath(id)));
     return stats.isDirectory();
   }
   catch {
@@ -51,7 +51,7 @@ function* isFile(id, rootDir) {
   yield preloadEllxProject(id, rootDir);
 
   try {
-    const stats = yield fs.stat(join(rootDir, fileURLToPath(url)));
+    const stats = yield fs.stat(join(rootDir, fileURLToPath(id)));
     return stats.isFile();
   }
   catch {

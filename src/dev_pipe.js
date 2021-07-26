@@ -1,4 +1,4 @@
-import { pathToFileURL, fileURLToPath } from 'url';
+import { pathToFileURL } from 'url';
 import { conclude } from 'conclure';
 import { call } from 'conclure/effects';
 import { tx, derived } from 'tinyx';
@@ -95,7 +95,7 @@ export function startDevPipe(ws, rootDir) {
     console.log('Building a new bundle', files);
 
     const jsFiles = files
-      .map(([path]) => pathToFileURL(path.slice(rootDir.length)))
+      .map(([path]) => pathToFileURL(path.slice(rootDir.length)).href)
       .filter(id => id.endsWith('.js'));
 
     cancelBundle = conclude(call(function* () {
@@ -125,7 +125,7 @@ export function startDevPipe(ws, rootDir) {
           const type = (/\.(js|md|ellx|html)$/.exec(path) || [])[1];
           if (!type) return acc;
 
-          const ns = pathToFileURL(path.slice(rootDir.length, path.lastIndexOf('.')));
+          const ns = pathToFileURL(path.slice(rootDir.length, path.lastIndexOf('.'))).href;
           const nsRecord = acc.get(ns) || (ns === rootNamespace ? { html: 'mainApp' } : {});
 
           acc.set(ns, {
