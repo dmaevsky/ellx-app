@@ -1,5 +1,6 @@
-import { conclude } from 'conclure';
+import { conclude, whenFinished } from 'conclure';
 import { all } from 'conclure/combinators';
+import { createAtom } from 'quarx';
 import tokamak_dynamic from 'tokamak/dynamic';
 import { fetchFile } from './fetch';
 import { STALE_REQUIRE } from './engine/quack.js';
@@ -47,7 +48,16 @@ export default ({
     }
   };
 
-  const onStale = () => { throw STALE_REQUIRE };
+  const onStale = (url, baseUrl, loadFlow, cancel) => {
+    const name = `[loadModule]:${baseUrl}=>${url}`;
+
+    const atom = createAtom(() => cancel, { name });
+    whenFinished(loadFlow, ({ cancelled }) => !cancelled && atom.reportChanged());
+
+    atom.reportObserved();
+
+    throw STALE_REQUIRE;
+  };
 
   const requireModule = tokamak_dynamic({ loader, onStale, logger, environment });
 
