@@ -21,8 +21,10 @@ function* preloadEllxProject(id, rootDir) {
 
   const [owner, project] = id.slice(ellxProjectPrefix.length).split('/');
 
-  if (!project || ['package.json', 'index.js', 'node_modules'].includes(project)) {
-    return 'partial';
+  if (!project) return 'yes';
+
+  if (['package.json', 'index.js', 'node_modules'].includes(project)) {
+    return 'no';
   }
 
   const packageDir = join(rootDir, `node_modules/~${owner}/${project}`);
@@ -36,7 +38,10 @@ function* fetchLocally(id, rootDir) {
 }
 
 function* isDirectory(id, rootDir) {
-  if ((yield preloadEllxProject(id, rootDir)) === 'partial') return true;
+  const isEllxProject = yield preloadEllxProject(id, rootDir);
+
+  if (isEllxProject === 'yes') return true;
+  if (isEllxProject === 'no') return false;
 
   try {
     const stats = yield fs.stat(join(rootDir, fileURLToPath(id)));
