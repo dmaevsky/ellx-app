@@ -72,6 +72,10 @@ export function dispose(contentId) {
 
 export function bundle(g) {
   console.debug('received bundle in the frame ***', g);
+
+  document.querySelectorAll('script[id^="file:///"]')
+    .forEach(script => script.remove());
+
   requireGraph.set(g);
 }
 
