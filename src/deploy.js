@@ -95,9 +95,7 @@ export function *deploy(rootDir, env) {
   `;
 
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
-    .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection)
-    .replace('</body>', `<div id="ellx-app"><div data-ellx-node-name="init" data-ellx-node-formula="app()"></div></div>
-      </body>`);
+    .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection);
 
   toDeploy.set('/index.html', indexHtml);
 

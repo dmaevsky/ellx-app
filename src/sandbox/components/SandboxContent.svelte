@@ -3,15 +3,15 @@
   import * as actions from '../runtime/lifecycle';
   import Worksheet from './Worksheet';
   import NodeNavigator from './NodeNavigator';
-  import MarkdownOutput from './MarkdownOutput';
   import Tailwind from './Tailwind';
   import { combination } from '../runtime/utils/mod_keys';
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
 
-  import store, { devServer, contents, getSheet, notifyParent } from '../runtime/store';
+  import store, { devServer, contents, getSheet } from '../runtime/store';
   import CalcGraph from '../runtime/engine/calc_graph';
   import { graphs } from '../runtime/store';
   import { resolveSiblings, resolveRequire } from '../runtime/hydrated';
+  import mountEllxApp from '../runtime/mount_app.js';
 
   const htmlContentId = 'mainApp';
 
@@ -48,7 +48,11 @@
     }
   }
 
+  let mountPoint;
+
   onMount(() => {
+    mountEllxApp(mountPoint, htmlCalcGraph);
+
     devServer.addEventListener('message', listen);
     return () => devServer.removeEventListener('message', listen);
   });
@@ -141,11 +145,7 @@
   </div>
 {/each}
 
-<div id="md" class:hidden={htmlContentId !== activeContentId}>
-  <div data-ellx-node-name="init" data-ellx-node-formula="app()">
-  </div>
-
-  <MarkdownOutput cg={htmlCalcGraph}/>
+<div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
 
 <Tailwind />

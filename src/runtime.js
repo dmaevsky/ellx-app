@@ -1,7 +1,7 @@
-import MarkdownOutput from './sandbox/components/MarkdownOutput.svelte';
 import getRequire from './sandbox/runtime/tokamak_dynamic.js';
 import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
+import mountEllxApp from './sandbox/runtime/mount_app.js';
 
 export default function initializeEllxApp(requireGraph, sheets, environment) {
   const rootNamespace = 'file:///src/index';
@@ -41,8 +41,5 @@ export default function initializeEllxApp(requireGraph, sheets, environment) {
     requireGraph[sheetId] = exportCalcGraph(sheetId, () => cg);
   }
 
-  new MarkdownOutput({
-    target: document.getElementById('ellx-app'),
-    props: { cg: htmlCalcGraph }
-  });
+  mountEllxApp(document.body, htmlCalcGraph);
 }
