@@ -8,7 +8,7 @@ import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
 
 import { fetchEllxProject } from './ellx_module_loader.js';
-import memoize from '../common/memoize_flow.js';
+import memoizeFlow from '../common/memoize_flow.js';
 
 function logByLevel(level, ...messages) {
   console.log(`[${level.toUpperCase()}]`, ...messages);
@@ -118,16 +118,13 @@ export function* build(entryPoints, rootDir) {
   const requireGraph = {};
 
   const loader = {
-    load: memoize(function* load(url) {
+    *load(url) {
       if (!url.startsWith('file://')) {
         throw new Error(`Don't know how to load ${url}`);
       }
 
-      return {
-        id: url,
-        code: transformModule(url, yield fetchLocally(url, rootDir))
-      }
-    }, Infinity, requireGraph),
+      return transformModule(url, yield fetchLocally(url, rootDir));
+    },
 
     isDirectory(url) {
       if (!url.endsWith('/')) url += '/';
@@ -148,6 +145,7 @@ export function* build(entryPoints, rootDir) {
 
   const loadModule = tokamak({
     loader,
+    memoize: fn => memoizeFlow(fn, Infinity, requireGraph),
     logger: logByLevel
   });
 
