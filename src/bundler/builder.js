@@ -98,6 +98,10 @@ function transformModule(id, text) {
     return '';
   }
 
+  if (id.endsWith('.json')) {
+    return `module.exports=${text}`;
+  }
+
   if (id.endsWith('.css')) {
     return appendStyle(text);
   }
@@ -116,6 +120,7 @@ function transformModule(id, text) {
 // ================================================================
 export function* build(entryPoints, rootDir) {
   const requireGraph = {};
+  const resolverMeta = {};
 
   const loader = {
     *load(url) {
@@ -123,8 +128,19 @@ export function* build(entryPoints, rootDir) {
         throw new Error(`Don't know how to load ${url}`);
       }
 
-      return transformModule(url, yield fetchLocally(url, rootDir));
+      if (url in resolverMeta) {
+        return resolverMeta[url];
+      }
+
+      const body = yield fetchLocally(url, rootDir);
+
+      if (url.endsWith('/package.json')) {
+        resolverMeta[url] = body;
+      }
+
+      return body;
     },
+    transform: transformModule,
 
     isDirectory(url) {
       if (!url.endsWith('/')) url += '/';
@@ -151,17 +167,19 @@ export function* build(entryPoints, rootDir) {
 
   yield allSettled(entryPoints.map(id => loadModule(id)));
 
-  const output = {};
-
   for (let id in requireGraph) {
     const { error, result } = getResult(requireGraph[id]);
     if (error) {
-      output[id] = {
+      requireGraph[id] = {
         id,
         code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})`
       };
     }
-    else output[id] = result;
+    else requireGraph[id] = result;
   }
-  return output;
+
+  return {
+    requireGraph,
+    resolverMeta
+  };
 }

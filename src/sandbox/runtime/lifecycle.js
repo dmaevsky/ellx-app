@@ -1,8 +1,9 @@
 import { derived } from 'tinyx';
+import { batch } from 'quarx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
 import objectId from './utils/object_id';
 import store, { getSheet, notifyParent, graphs as hydratedGraphs, namespaces as hydratedNamespaces } from './store';
-import { resolveSiblings, resolveRequire, requireGraph } from './hydrated';
+import { resolveSiblings, resolveRequire, requireGraph, resolverMeta } from './hydrated';
 
 import CalcGraph from './engine/calc_graph';
 
@@ -70,13 +71,16 @@ export function dispose(contentId) {
   store.commit(REMOVE_CONTENT, { contentId });
 }
 
-export function bundle(g) {
-  console.debug('received bundle in the frame ***', g);
+export function bundle(g, meta) {
+  console.debug('received bundle in the frame ***', g, meta);
 
   document.querySelectorAll('script[id^="file:///"]')
     .forEach(script => script.remove());
 
-  requireGraph.set(g);
+  batch(() => {
+    requireGraph.set(g);
+    resolverMeta.set(meta);
+  });
 }
 
 export function namespaces(families) {

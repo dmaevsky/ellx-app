@@ -105,11 +105,14 @@ export function startDevPipe(ws, rootDir) {
         args: [null]
       });
 
-      const graph = yield build(jsFiles, rootDir);
+      const {
+        requireGraph,
+        resolverMeta
+      } = yield build(jsFiles, rootDir);
 
       send({
         type: 'bundle',
-        args: [graph]
+        args: [requireGraph, resolverMeta]
       });
     }), e => e && console.error(e));
 

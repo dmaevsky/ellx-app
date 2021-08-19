@@ -51,6 +51,7 @@ const resolveCalcGraph = id => {
 }
 
 export const requireGraph = observable.box(null, { name: 'requireGraph' });
+export const resolverMeta = observable.box(null, { name: 'resolverMeta' });
 
 const combinedRequireGraph = computed(() => new Proxy(requireGraph.get() || {}, {
   get: (target, id) => /\.(html|md|ellx)$/.test(id)
@@ -60,6 +61,7 @@ const combinedRequireGraph = computed(() => new Proxy(requireGraph.get() || {}, 
 
 const dynamicRequire = computed(() => getRequire({
   graph: combinedRequireGraph.get(),
+  resolverMeta: resolverMeta.get(),
   logger: logByLevel
 }), { name: 'dynamicRequire' });
 

@@ -7,6 +7,7 @@ import { STALE_REQUIRE } from './engine/quack.js';
 
 export default ({
   graph,
+  resolverMeta,
   logger = console.debug,
   environment
 }) => {
@@ -21,6 +22,10 @@ export default ({
 
   const loader = {
     *load(id) {
+      if (id in resolverMeta) {
+        return resolverMeta[id];
+      }
+
       if (id.startsWith('file://')) {
         throw new Error(`Don't know how to load ${id}`);
       }
@@ -33,7 +38,7 @@ export default ({
     },
 
     isFile(url) {
-      return url in graph;
+      return url in graph || url in resolverMeta;
     },
 
     isDirectory(url) {
