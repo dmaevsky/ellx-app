@@ -3,11 +3,11 @@ import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 import mountEllxApp from './sandbox/runtime/mount_app.js';
 
-export default function initializeEllxApp(requireGraph, sheets, environment) {
+export default function initializeEllxApp({ requireGraph, resolverMeta }, sheets, environment) {
   const rootNamespace = 'file:///src/index';
   const graph = {};
 
-  const require = getRequire({ graph, environment });
+  const require = getRequire({ graph, resolverMeta, environment });
 
   require.hydrate(Object.values(requireGraph), err => {
     if (err) throw err;
