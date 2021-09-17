@@ -27,7 +27,9 @@
   function keyDown(e) {
     // Returns true if the keystroke is handled here, false otherwise
 
-    let modifiers = (e.altKey << 2) + (e.ctrlKey << 1) + e.shiftKey;
+    const isMacOS = navigator.userAgent.includes("Mac");
+
+    let modifiers = (e.altKey << 2) + ((isMacOS ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
 
     if (modifiers === 0 && e.code === 'Escape') {
       if (copySelection) clearClipboard();
