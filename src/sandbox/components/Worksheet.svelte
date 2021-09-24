@@ -47,7 +47,7 @@
       undo(thisSheet);
     }
 
-    if (modifiers === 2 && e.code === 'KeyY' || modifiers === 3 && e.code === 'KeyZ') {
+    if (modifiers === 3 && e.code === 'KeyZ') {
       redo(thisSheet);
     }
 
