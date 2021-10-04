@@ -43,9 +43,12 @@ export function *deploy(rootDir, env) {
 
   console.log('Start bundling...');
 
-  const graph = yield build(jsFiles, rootDir);
+  const {
+    requireGraph,
+    resolverMeta
+  } = yield build(jsFiles, rootDir);
 
-  console.log(`Bundle ready. Generated ${Object.keys(graph).length} entries`);
+  console.log(`Bundle ready. Generated ${Object.keys(requireGraph).length} entries`);
 
   // Extract the files to deploy and calculate their hashes
   const toDeploy = new Map();
@@ -58,8 +61,8 @@ export function *deploy(rootDir, env) {
     return 'https://' + domain + hashedUrlPath;
   }
 
-  for (let id in graph) {
-    const node = graph[id];
+  for (let id in requireGraph) {
+    const node = requireGraph[id];
     if (!node) {
       throw new Error(`${id} could not be resolved`);
     }
@@ -83,7 +86,7 @@ export function *deploy(rootDir, env) {
     )
   );
 
-  const requireGraphSrc = appendFile('/requireGraph.js', 'var requireGraph = ' + JSON.stringify(graph));
+  const requireGraphSrc = appendFile('/bundle.js', 'var bundle = ' + JSON.stringify({ requireGraph, resolverMeta }));
   const sheetsSrc = appendFile('/sheets.js', 'var sheets = ' + JSON.stringify(sheets));
   const runtimeSrc = appendFile('/Runtime.js', yield readFile(join(rootDir, 'node_modules/@ellx/app/dist/runtime.js'), 'utf8'));
 
@@ -91,7 +94,7 @@ export function *deploy(rootDir, env) {
   const injection = `
       <script src="${requireGraphSrc}" defer></script>
       <script src="${sheetsSrc}" defer></script>
-      <script src="${runtimeSrc}" defer onload="Runtime(requireGraph, sheets, '${env}')"></script>
+      <script src="${runtimeSrc}" defer onload="Runtime(bundle, sheets, '${env}')"></script>
   `;
 
   const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))

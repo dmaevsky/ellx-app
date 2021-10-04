@@ -3,18 +3,19 @@ import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 import mountEllxApp from './sandbox/runtime/mount_app.js';
 
-export default function initializeEllxApp(requireGraph, sheets, environment) {
+export default function initializeEllxApp({ requireGraph, resolverMeta }, sheets, environment) {
   const rootNamespace = 'file:///src/index';
+  const graph = {};
 
-  const require = getRequire({ graph: requireGraph, environment });
+  const require = getRequire({ graph, resolverMeta, environment });
 
-  require.hydrate(err => {
+  require.hydrate(Object.values(requireGraph), err => {
     if (err) throw err;
   });
 
   const resolveRequire = bundleId => url => url
     ? require(url, bundleId)
-    : requireGraph[bundleId] && require(bundleId);
+    : graph[bundleId] && require(bundleId);
 
   const htmlCalcGraph = new CalcGraph(
     [() => sheets[rootNamespace + '.ellx']],
@@ -38,7 +39,7 @@ export default function initializeEllxApp(requireGraph, sheets, environment) {
     cg.autoCalc.set(true);
 
     sheets[sheetId] = cg;
-    requireGraph[sheetId] = exportCalcGraph(sheetId, () => cg);
+    graph[sheetId] = exportCalcGraph(sheetId, () => cg);
   }
 
   mountEllxApp(document.body, htmlCalcGraph);

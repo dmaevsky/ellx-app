@@ -8,7 +8,7 @@ import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
 
 import { fetchEllxProject } from './ellx_module_loader.js';
-import memoize from '../common/memoize_flow.js';
+import memoizeFlow from '../common/memoize_flow.js';
 
 function logByLevel(level, ...messages) {
   console.log(`[${level.toUpperCase()}]`, ...messages);
@@ -98,6 +98,10 @@ function transformModule(id, text) {
     return '';
   }
 
+  if (id.endsWith('.json')) {
+    return `module.exports=${text}`;
+  }
+
   if (id.endsWith('.css')) {
     return appendStyle(text);
   }
@@ -116,18 +120,27 @@ function transformModule(id, text) {
 // ================================================================
 export function* build(entryPoints, rootDir) {
   const requireGraph = {};
+  const resolverMeta = {};
 
   const loader = {
-    load: memoize(function* load(url) {
+    *load(url) {
       if (!url.startsWith('file://')) {
         throw new Error(`Don't know how to load ${url}`);
       }
 
-      return {
-        id: url,
-        code: transformModule(url, yield fetchLocally(url, rootDir))
+      if (url in resolverMeta) {
+        return resolverMeta[url];
       }
-    }, Infinity, requireGraph),
+
+      const body = yield fetchLocally(url, rootDir);
+
+      if (url.endsWith('/package.json')) {
+        resolverMeta[url] = body;
+      }
+
+      return body;
+    },
+    transform: transformModule,
 
     isDirectory(url) {
       if (!url.endsWith('/')) url += '/';
@@ -148,22 +161,25 @@ export function* build(entryPoints, rootDir) {
 
   const loadModule = tokamak({
     loader,
+    memoize: fn => memoizeFlow(fn, Infinity, requireGraph),
     logger: logByLevel
   });
 
   yield allSettled(entryPoints.map(id => loadModule(id)));
 
-  const output = {};
-
   for (let id in requireGraph) {
     const { error, result } = getResult(requireGraph[id]);
     if (error) {
-      output[id] = {
+      requireGraph[id] = {
         id,
         code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})`
       };
     }
-    else output[id] = result;
+    else requireGraph[id] = result;
   }
-  return output;
+
+  return {
+    requireGraph,
+    resolverMeta
+  };
 }
