@@ -117,9 +117,8 @@
 
 <div
   id="node-navigator"
-  class:opacity-100={show}
   class:hidden={!show}
-  class="dark:text-white text-black fixed top-0 right-0 h-screen bg-white dark:bg-dark-600 opacity-0 transition duration-150 z-50 nodes border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
+  class="dark:text-white text-black fixed top-0 right-0 h-screen bg-white dark:bg-dark-600 transition duration-150 z-50 nodes border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
   on:mouseleave={() => { deps = []; show = false }}
 >
   <span
