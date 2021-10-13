@@ -153,11 +153,3 @@
     {/each}
   </div>
 </div>
-
-<div
-  on:mouseenter={(e) => {
-    show = !(e.fromElement && e.fromElement.id === "node-nav-toggle");
-  }}
-  class="activator w-8 h-screen fixed z-40 top-0 right-0"
-  class:hidden={!hasNodes}
-/>
