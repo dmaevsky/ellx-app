@@ -3,6 +3,7 @@
   import * as actions from '../runtime/lifecycle';
   import Worksheet from './Worksheet';
   import NodeNavigator from './NodeNavigator';
+  import HelpMenu from './HelpMenu';
   import Tailwind from './Tailwind';
   import { combination } from '../runtime/utils/mod_keys';
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
@@ -147,5 +148,7 @@
 
 <div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
+
+<HelpMenu/>
 
 <Tailwind />
