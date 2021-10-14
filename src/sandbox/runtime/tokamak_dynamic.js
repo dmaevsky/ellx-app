@@ -7,39 +7,38 @@ import { STALE_REQUIRE } from './engine/quack.js';
 
 export default ({
   graph,
+  resolverMeta,
   logger = console.debug,
   environment
 }) => {
 
   function* hydrateNode(node) {
     const { text } = yield fetchFile(node.src, logger);
-    node.code = text;
+    return {
+      ...node,
+      code: text
+    };
   }
 
   const loader = {
     *load(id) {
-      if (id in graph) {
-        const node = graph[id];
-
-        if (node.src && node.code === undefined) {
-          yield hydrateNode(node);
-        }
-        return node;
+      if (id in resolverMeta) {
+        return resolverMeta[id];
       }
 
       if (id.startsWith('file://')) {
         throw new Error(`Don't know how to load ${id}`);
       }
 
+      // Fetching over the network
       const { url, text } = yield fetchFile(id, logger);
 
       if (url !== id) return loader.load(url);
-
-      return { id, code: text };
+      return text;
     },
 
     isFile(url) {
-      return url in graph;
+      return url in graph || url in resolverMeta;
     },
 
     isDirectory(url) {
@@ -47,6 +46,12 @@ export default ({
       return Object.keys(graph).some(id => id.startsWith(url));
     }
   };
+
+  const memoize = fn => (id, ...args) => {
+    if (id in graph) return graph[id];
+
+    return graph[id] = fn(id, ...args);
+  }
 
   const onStale = (url, baseUrl, loadFlow, cancel) => {
     const name = `[loadModule]:${baseUrl}=>${url}`;
@@ -59,9 +64,15 @@ export default ({
     throw STALE_REQUIRE;
   };
 
-  const requireModule = tokamak_dynamic({ loader, onStale, logger, environment });
+  const requireModule = tokamak_dynamic({
+    loader,
+    memoize,
+    onStale,
+    logger,
+    environment
+  });
 
-  requireModule.hydrate = cb => conclude(all(Object.values(graph).map(hydrateNode)), cb);
+  requireModule.hydrate = (nodes, cb) => conclude(all(nodes.map(node => graph[node.id] = hydrateNode(node))), cb);
 
   return requireModule;
 }

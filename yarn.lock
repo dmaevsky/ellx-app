@@ -3281,10 +3281,10 @@ toidentifier@1.0.0:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.0.tgz#7e1be3470f1e77948bc43d94a3c8f4d7752ba553"
   integrity sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==
 
-tokamak@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/tokamak/-/tokamak-0.0.8.tgz#52e550a55fc21cbec9e76172f63d244f2739c0fa"
-  integrity sha512-9XcDAxVuRnZBKCdzVVzJGfpgyfvx3xODU2uAJM6UKCUweXLfQCscpfW83uoqoXhWEfVXiqsAyR1HHoobEzoB7g==
+tokamak@^0.0.14:
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/tokamak/-/tokamak-0.0.14.tgz#a450792eb4daf6ca65b9ab9628b35735bb16b36a"
+  integrity sha512-/PszaeX4yETeGQ6t3HbUDHzd31akBndCdMWkfMP2zl0SKRRJxg8+HBAu3soWh6pIbv0RUJOoBL91HpKRm1W1gg==
   dependencies:
     rd-parse "^3.4.0"
 
