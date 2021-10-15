@@ -1,16 +1,21 @@
 <script>
     let hidden = true;
+    
+    function showPanel(id) {
+        document.getElementById(id).classList.toggle("hidden");
+    }
 </script>
 
 <div class="help-container"
      on:mouseleave={() => {hidden = true}}>
     <ul class="help-menu flex flex-col" class:hidden>
-        <li class="menu-item">
+        <li class="menu-item"
+            on:click={() => {showPanel("node-navigator")}}>
             Node navigator
-            <span class="shortcut"><kbd>Shift</kbd><kbd>Alt</kbd><kbd>.</kbd>
-            </span>
+            <span class="shortcut"><kbd>Shift</kbd><kbd>Alt</kbd><kbd>.</kbd></span>
         </li>
-        <li class="menu-item">
+        <li class="menu-item"
+            on:click={() => {showPanel("shortcuts-helper")}}>
             Keyboard shortcuts
             <span class="shortcut"><kbd>Shift</kbd><kbd>Alt</kbd><kbd>?</kbd></span>
         </li>
@@ -23,7 +28,7 @@
     </ul>
     <div class="opacity-40 help-point"
          class:opacity-100={!hidden}
-         on:click={() => {hidden = !hidden }}
+         on:click={() => {hidden = !hidden}}
     >
         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <path d="M8.18178 12.5711C8.61213 12.5711 8.961 12.2222 8.961 11.7919C8.961 11.3615 8.61213 11.0126 8.18178 11.0126C7.75143 11.0126 7.40256 11.3615 7.40256 11.7919C7.40256 12.2222 7.75143 12.5711 8.18178 12.5711Z" />
@@ -43,8 +48,8 @@
 
     .help-point {
        @apply flex flex-col items-center justify-around text-center p-1 h-8 w-8
-       bg-gray-900 rounded-full fill-current text-white focus:outline-none
-       hover:opacity-100;
+       bg-gray-900 rounded-full fill-current text-white border border-white
+       focus:outline-none hover:opacity-100;
     }
 
     .help-menu {
@@ -55,5 +60,9 @@
     .menu-item {
         @apply flex flex-row justify-between gap-4 px-4 py-1
         hover:bg-blue-600 hover:text-white cursor-default;
+    }
+
+    kbd {
+        @apply px-1 border border-white text-xs rounded-sm
     }
 </style>
