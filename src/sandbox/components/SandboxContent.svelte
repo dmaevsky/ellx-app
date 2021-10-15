@@ -4,6 +4,7 @@
   import Worksheet from './Worksheet';
   import NodeNavigator from './NodeNavigator';
   import HelpMenu from './HelpMenu';
+  import ShortcutsHelper from "./ShortcutsHelper.svelte";
   import Tailwind from './Tailwind';
   import { combination } from '../runtime/utils/mod_keys';
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
@@ -35,6 +36,10 @@
     store.commit(SET_ACTIVE_CONTENT, { contentId });
   }
 
+  function togglePanel(id) {
+    document.getElementById(id).classList.toggle("hidden");
+  }
+
   function listen({ data }) {
     try {
       const { type, args } = JSON.parse(data);
@@ -61,10 +66,19 @@
   function kbListen(e) {
     const shortcut = combination(e);
 
-    if (shortcut === 'Alt+KeyD') {
-      e.preventDefault();
-      toggleDark(darkMode = !darkMode);
-      return;
+    switch (shortcut) {
+      case 'Alt+KeyD':
+        e.preventDefault();
+        toggleDark(darkMode = !darkMode);
+        return;
+      case 'Shift+Alt+Slash':
+        e.preventDefault();
+        togglePanel("shortcuts-helper");
+        return;
+      case 'Shift+Alt+Period':
+        e.preventDefault();
+        togglePanel("node-navigator");
+        return;
     }
 
     const digit = (/^Alt\+Digit([1-9])$/.exec(shortcut) || [])[1];
@@ -151,4 +165,6 @@
 
 <HelpMenu/>
 
-<Tailwind />
+<ShortcutsHelper/>
+
+<Tailwind/>
