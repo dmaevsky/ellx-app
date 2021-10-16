@@ -8,7 +8,7 @@
             "group": "UI",
             "list": [
                 {
-                    "title": "Toggle keyboard shortcuts",
+                    "title": "Toggle Shortcuts",
                     "keys": ["Shift", "Alt", "?"]
                 },
                 {
@@ -20,7 +20,7 @@
                     "keys": ["Alt", "1"]
                 },
                 {
-                    "title": "Switch between sheets",
+                    "title": "Switch to sheet",
                     "keys": ["Alt", "2", "..", "9"]
                 },
                 {
@@ -42,7 +42,7 @@
                 },
                 {
                     "title": "Select cells",
-                    "keys": ["Shift", "←", "/", "↑", "/", "↓", "/", "→" ]
+                    "keys": ["Shift", "←", "/", "→", "/", "↓", "/", "↑"  ]
                 },
                 {
                     "title": "Copy",
@@ -63,7 +63,7 @@
             "list": [
                 {
                     "title": "Expand / Collapse horizontally",
-                    "keys": ["Shift", "Alt", "→", "/", "←"]
+                    "keys": ["Shift", "Alt", "←", "/", "→"]
                 },
                 {
                     "title": "Expand / Collapse vertically",
@@ -83,11 +83,11 @@
             "group": "Insert / Delete cells",
             "list": [
                 {
-                    "title": "Insert coloumn",
+                    "title": "Insert column",
                     "keys": ["Space"]
                 },
                 {
-                    "title": "Remove coloumn",
+                    "title": "Remove column",
                     "keys": ["Backspace"]
                 },
                 {
