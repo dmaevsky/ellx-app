@@ -104,10 +104,10 @@
 </script>
 
 <div id="shortcuts-helper"
-     class="flex flex-col shortcuts-helper"
+     class="shortcuts-helper flex flex-col dark:bg-gray-900 dark:text-white"
      class:hidden
 >
-    <div class="absolute top-4 right-4 p-1 h-8 w-8 stroke-current text-gray-900 opacity-40 hover:opacity-100"
+    <div class="absolute top-4 right-4 p-1 h-8 w-8 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
          on:click={() => document.getElementById("shortcuts-helper").classList.toggle("hidden")}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -132,7 +132,8 @@
     }
 
     .shortcuts-helper {
-        @apply overflow-auto text-xs bg-gray-100 fixed bottom-0 left-0 h-52 w-full py-4 px-48 z-50;
+        @apply fixed bottom-0 left-0 h-54 w-full py-4 px-48 z-50 overflow-auto
+        text-xs bg-gray-100 text-gray-900;
     }
 
     .shortcut-list {
