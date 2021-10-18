@@ -1,5 +1,8 @@
 <script>
+    import Shortcut from "./Shortcut.svelte";
+
     let hidden = true;
+    let hovered = false;
     
     function showPanel(id) {
         document.getElementById(id).classList.toggle("hidden");
@@ -8,25 +11,23 @@
 
 <div class="help-container"
      on:mouseleave={() => {hidden = true}}>
-    <ul class="help-menu flex flex-col" class:hidden>
+    <ul class="help-menu flex flex-col dark:bg-gray-900 dark:text-white" class:hidden>
         <li class="menu-item"
             on:click={() => {showPanel("node-navigator")}}>
-            Node navigator
-            <span class="shortcut"><kbd>Shift</kbd><kbd>Alt</kbd><kbd>.</kbd></span>
+            <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
         </li>
         <li class="menu-item"
             on:click={() => {showPanel("shortcuts-helper")}}>
-            Keyboard shortcuts
-            <span class="shortcut"><kbd>Shift</kbd><kbd>Alt</kbd><kbd>?</kbd></span>
+            <Shortcut title="Keyboard shortcuts" keys={["Shift", "Alt", "?"]}/>
         </li>
         <li class="menu-item">
-            <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default">Documentation</a>
+            <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default block">Documentation</a>
         </li>
         <li class="menu-item">
             <a href="https://ellx.io/explore" target="_blank" class="w-full cursor-default block">Explore</a>
         </li>
     </ul>
-    <div class="opacity-40 help-point"
+    <div class="opacity-40 help-point dark:bg-gray-900 dark:fill-current dark:text-white border dark:border-white"
          class:opacity-100={!hidden}
          on:click={() => {hidden = !hidden}}
     >
@@ -47,22 +48,16 @@
     }
 
     .help-point {
-       @apply flex flex-col items-center justify-around text-center p-1 h-8 w-8
-       bg-gray-900 rounded-full fill-current text-white border border-white
+       @apply flex flex-col items-center justify-around text-center p-1 h-8 w-8 rounded-full
+       bg-gray-100 fill-current text-gray-900 border border-gray-900
        focus:outline-none hover:opacity-100;
     }
 
     .help-menu {
-        @apply py-2
-        rounded-sm text-white bg-gray-900 text-xs;
+        @apply py-2 rounded-sm text-white bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs;
     }
 
     .menu-item {
-        @apply flex flex-row justify-between gap-4 px-4 py-1
-        hover:bg-blue-600 hover:text-white cursor-default;
-    }
-
-    kbd {
-        @apply px-1 border border-white text-xs rounded-sm
+        @apply px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default;
     }
 </style>
