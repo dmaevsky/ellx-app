@@ -9,7 +9,7 @@
     <p class="flex-grow">{title}</p>
     {#each keys as key}
         {#if key === ".." || key === "/" }
-            <p className="opacity-60">{key}</p>
+            <p className="opacity-40">{key}</p>
         {:else}
             <kbd class="kbd dark:border-white dark:border-opacity-40">{key === "Cmd" ? `${switchCmd}` : key}</kbd>
         {/if}
