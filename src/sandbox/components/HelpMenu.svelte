@@ -44,7 +44,7 @@
     }
 
     .help-container {
-        @apply fixed bottom-4 right-4 z-30 flex flex-col gap-4 items-end;
+        @apply fixed bottom-4 right-4 flex flex-col gap-4 items-end;
     }
 
     .help-point {
