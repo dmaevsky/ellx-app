@@ -149,11 +149,6 @@
   /*! purgecss end ignore */
 </style>
 
-<NodeNavigator
-  on:goToLine={goToLine}
-  on:navigate={navigate}
-/>
-
 {#each sheets as contentId (contentId)}
   <div class="sheet" id="sheet-{contentId}" class:hidden={contentId !== activeContentId}>
     <Worksheet store={getSheet(contentId)}/>
@@ -163,8 +158,15 @@
 <div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
 
-<HelpMenu/>
+<div class="fixed top-0 left-0 z-100 w-full h-screen flex flex-col justify-end items-end">
+  <NodeNavigator
+          on:goToLine={goToLine}
+          on:navigate={navigate}
+  />
+  <ShortcutsHelper/>
+  <HelpMenu/>
+</div>
 
-<ShortcutsHelper/>
+
 
 <Tailwind/>

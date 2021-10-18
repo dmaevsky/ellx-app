@@ -107,7 +107,7 @@
      class="shortcuts-helper flex flex-col md:px-24 xl:px-44 dark:bg-gray-900 dark:text-white"
      class:hidden
 >
-    <div class="absolute top-4 right-4 p-1 h-8 w-8 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
+    <div class="absolute top-4 right-4 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
          on:click={() => document.getElementById("shortcuts-helper").classList.toggle("hidden")}>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -132,7 +132,7 @@
     }
 
     .shortcuts-helper {
-        @apply fixed bottom-0 left-0 h-60 w-full py-6 px-16 z-50 overflow-auto
+        @apply relative h-60 w-full py-6 px-16 overflow-auto
         text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20 ;
     }
 

@@ -41,12 +41,12 @@
 </script>
 
 <div id="node-navigator"
-  class="fixed top-0 right-0 h-screen text-xs bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white z-50 border-l border-gray-500 border-opacity-20 overflow-y-auto"
+  class="flex-1 text-xs bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white border-l border-gray-500 border-opacity-20 overflow-y-auto"
   class:hidden
   on:mouseleave={() => { deps = [] }}
 >
   <div id="node-nav-toggle"
-       class="absolute top-2 right-0 z-50 cursor-pointer h-8 w-8 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
+       class="absolute top-4 right-4 cursor-pointer stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
        on:click={() => document.getElementById("node-navigator").classList.toggle("hidden")}>
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -54,7 +54,7 @@
     </svg>
   </div>
 
-  <div class="nodes flex flex-col items-end align-center relative px-4 mt-4">
+  <div class="nodes flex flex-col items-end align-center relative px-4 mt-6">
     {#each types as type}
       {#if $nodes[type] && $nodes[type].length}
         <div class="mt-4 caps">{type}</div>
@@ -100,7 +100,6 @@
   .svg {
     fill: #aaa;
     stroke: #eee;
-    @apply transition duration-300;
   }
 
   :global(.mode-dark) .svg {
@@ -136,7 +135,7 @@
   }
 
   .id {
-    @apply transition duration-150 mr-1 text-right truncate;
+    @apply mr-1 text-right truncate;
     max-width: 16rem;
   }
 
