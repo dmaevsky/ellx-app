@@ -133,7 +133,7 @@
 
     .shortcuts-helper {
         @apply fixed bottom-0 left-0 h-60 w-full py-6 px-16 z-50 overflow-auto
-        text-xs bg-gray-100 text-gray-900;
+        text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20 ;
     }
 
     .shortcut-list {
