@@ -41,18 +41,20 @@
 </script>
 
 <div id="node-navigator"
-  class="dark:text-white text-black fixed top-0 right-0 h-screen bg-white dark:bg-dark-600 transition duration-150 z-50 nodes border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
+  class="fixed top-0 right-0 h-screen text-xs bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white z-50 border-l border-gray-500 border-opacity-20 overflow-y-auto"
   class:hidden
-  on:mouseleave={() => { deps = []}}
+  on:mouseleave={() => { deps = [] }}
 >
-  <span id="node-nav-toggle"
-    class="p-1 select-none rounded-full flex items-center justify-center h-4 w-4 mr-2 absolute top-0 right-0 m-2 text-red-500 bg-red-100 z-50 cursor-pointer hover:bg-primary-500 hover:text-white transition duration-150"
-    style="font-size: 12px"
-    on:click={() => {
-      //hidden = true;
-      document.getElementById("node-navigator").classList.toggle("hidden");
-    }}>&times;</span>
-  <div class="flex flex-col items-end align-center relative px-3 mt-4">
+  <div id="node-nav-toggle"
+       class="absolute top-2 right-0 z-50 cursor-pointer h-8 w-8 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
+       on:click={() => document.getElementById("node-navigator").classList.toggle("hidden")}>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12.5 12.5L3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="nodes flex flex-col items-end align-center relative px-4 mt-4">
     {#each types as type}
       {#if $nodes[type] && $nodes[type].length}
         <div class="mt-4 caps">{type}</div>
@@ -67,8 +69,8 @@
           >
             <span class="id">{String(node)}</span>
             <div class="flex-grow" />
-            <svg height="20" width="20">
-              <circle cx="10" cy="10" r="3" stroke-width={node.size > 0 ? 3 : 1} />
+            <svg class="svg" height="20" width="20">
+              <circle cx="12" cy="12" r="4" stroke-width={node.size > 0 ? 4 : 2} />
             </svg>
           </div>
         {/each}
@@ -83,33 +85,25 @@
   }
 
   .id {
-    opacity: 0.3;
-  }
-
-  .nodes {
-    font-size: 0.6rem;
-  }
-
-  .nodes:hover .id {
-    opacity: 0.5;
+    opacity: 0.4;
   }
 
   .node:hover .id {
     opacity: 1;
   }
 
-  .node:hover svg {
+  .node:hover .svg {
     fill: #237EB3;
     stroke: lightGray;
   }
 
-  svg {
+  .svg {
     fill: #aaa;
     stroke: #eee;
     @apply transition duration-300;
   }
 
-  :global(.mode-dark) svg {
+  :global(.mode-dark) .svg {
     fill: #333;
     stroke: #666;
   }
@@ -118,7 +112,7 @@
     @apply opacity-100 text-primary-500;
   }
 
-  .nodes:hover .dep svg {
+  .nodes:hover .dep .svg {
     fill: #237EB3;
     stroke: #237EB3;
   }
@@ -127,7 +121,7 @@
     @apply opacity-100 text-alert-500;
   }
 
-  .nodes:hover .dependant svg {
+  .nodes:hover .dependant .svg {
     fill: #ff9800;
     stroke: #ff9800;
   }
@@ -136,7 +130,7 @@
     @apply text-error-500;
   }
 
-  .nodes .error svg {
+  .nodes .error .svg {
     fill: #f44336;
     stroke: #f44336;
   }
