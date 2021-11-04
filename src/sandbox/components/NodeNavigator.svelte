@@ -41,7 +41,7 @@
 </script>
 
 <div id="node-navigator"
-  class="flex-1 text-xs bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white border-l border-gray-500 border-opacity-20 overflow-y-auto"
+  class="node-navigator bg-gray-100 text-gray-900 border-l border-gray-500 border-opacity-20 dark:bg-gray-900 dark:text-white"
   class:hidden
   on:mouseleave={() => { deps = [] }}
 >
@@ -80,6 +80,10 @@
 </div>
 
 <style>
+  .node-navigator {
+    @apply flex-1 text-xs overflow-y-auto pointer-events-auto;
+  }
+
   .hidden {
     display: none;
   }
