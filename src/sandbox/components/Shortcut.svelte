@@ -12,6 +12,8 @@
     {#each keys as key}
         {#if key === ".." || key === "/" }
             <span class="opacity-40">{key}</span>
+        {:else if key === "//" }
+            <kbd class="kbd dark:border dark:border-white dark:border-opacity-40">/</kbd>
         {:else}
             <kbd class="kbd dark:border dark:border-white dark:border-opacity-40">{key === "Cmd" ? `${switchCmd}` : key}</kbd>
         {/if}
