@@ -8,6 +8,7 @@ import polka from 'polka';
 import serve from 'serve-static';
 import { fileURLToPath } from 'url';
 import { readFile } from 'fs';
+import open from "open";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -43,9 +44,10 @@ if (mainOptions.command === 'start') {
       if (error) next(error);
       else res.end(body);
     }))
-    .listen(config.port, err => {
+    .listen(config.port, async err => {
       if (err) throw err;
-      console.log(`> Running on localhost:${config.port}`);
+      console.log(`> Running on http://localhost:${config.port}`);
+      await open(`http://localhost:${config.port}`);
     });
 
   const wss = new WebSocket.Server({ server, path: '/@@dev' });
