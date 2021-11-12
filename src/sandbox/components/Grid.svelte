@@ -373,7 +373,7 @@
   on:focus={() => focused = true}
   on:blur={() => focused = false}
   on:mousedown={gridClick}
-  on:dblclick={() => startEditing()}
+  on:dblclick={() => {if(!editorSession) startEditing()}}
 >
   <GridLayout
     {blocks}
