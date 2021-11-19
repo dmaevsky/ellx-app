@@ -1,10 +1,7 @@
 <script>
-  import clickedOutside from '../runtime/utils/clicked_outside';
-
   export let value;
   export let transparent = false;
   export let node = null;
-  export let closeEditor;
 </script>
 
 <style>
@@ -24,19 +21,17 @@
   }
 </style>
 
-
 <textarea
-  tabindex="-1"
-  class="grid__editor grid__selection-border bg-white"
-  class:dark:text-white={!transparent}
-  class:dark:text-gray-800={transparent}
-  class:dark:bg-dark-500={!transparent}
-  bind:this={node}
-  use:clickedOutside={closeEditor}
-  bind:value
-  on:input
-  on:keydown
-  autocomplete="off"
-  autocorrect="off"
-  spellcheck="false"
+        tabindex="-1"
+        class="grid__editor grid__selection-border bg-white"
+        class:dark:text-white={!transparent}
+        class:dark:text-gray-800={transparent}
+        class:dark:bg-dark-500={!transparent}
+        bind:this={node}
+        bind:value
+        on:input
+        on:keydown
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
 />
