@@ -1,9 +1,10 @@
 <script>
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
-  import GridLayout from './GridLayout.svelte';
   import query from '../runtime/blocks.js';
   import { setSelection } from '../runtime/actions/edit.js';
   import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys.js';
+
+  import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
 
   export let blocks;
@@ -13,6 +14,7 @@
   export let onkeydown;
   export let transparent = false;
   export let overflowHidden = false;
+  export let isEditMode;
 
   const thisSheet = getContext('store');
   const { nRows, nCols } = $thisSheet;
@@ -20,16 +22,23 @@
 
   let focused = false;
   let editorSession = null;
+  let isFormula = false;
 
-  let container = null, editor = null;  // refs
+  let container = null, editor = null;
   const dispatch = createEventDispatcher();
+
+  $: isEditMode = (editor !== null);
+
+  $: if (editorSession !== null) isFormula = detectFormula(editorSession)
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
   $: selectedNodeResult = calculated.get(selectedBlockId);
 
   $: if (selectedBlock) {
-    const selectedValue = selectedBlock.node ? selectedNodeResult && selectedNodeResult.value : selectedBlock.value;
+    const selectedValue = selectedBlock.node
+      ? selectedNodeResult && selectedNodeResult.value
+      : selectedBlock.value;
     console.log(selectedValue);
   }
 
@@ -39,7 +48,6 @@
     height: ${rowHeight}px;
     width: ${columnWidth}px;
   `)(selection);
-
   $: selectionStyle = (([rowStart, colStart, rowEnd, colEnd]) => {
     if (rowStart > rowEnd) [rowStart, rowEnd] = [rowEnd, rowStart];
     if (colStart > colEnd) [colStart, colEnd] = [colEnd, colStart];
@@ -52,7 +60,6 @@
       width: ${(colEnd - colStart + 1) * columnWidth}px;
     `
   })(selection);
-
   $: copySelectionStyle = copySelection && (([rowStart, colStart, rowEnd, colEnd]) => {
     return `
       top: ${rowStart * rowHeight - 1}px;
@@ -61,6 +68,214 @@
       width: ${(colEnd - colStart + 1) * columnWidth + 2}px;
     `
   })(copySelection);
+  $: if (selection) requestAnimationFrame(scrollIntoView);
+
+  // Mouse handling
+  function gridClick(e) {
+    if (e.target.nodeName === 'A') return;
+
+    // In Edit mode pass click handling to editorClick()
+    if (isEditMode) {
+      editorClick(e)
+    }
+    else {
+      mouseCellSelection(e)
+    }
+  }
+
+  function editorClick(e) {
+    if (isFormula) {
+      if (e.target !== editor) {
+        console.log("~ Clicked outside");
+      }
+      else {
+        console.log("~ Clicked inside");
+      }
+    }
+    else {
+      if (e.target !== editor) {
+        takeFocus(container);
+        jumpAway(e);
+        editorSession = null;
+        closeEditor();
+      }
+    }
+
+  }
+
+  // Keyboard handling
+  function keyDown(e) {
+    if (e.target !== container) return;
+
+    if (isEditMode) editorKeyDown(e)
+    else {
+
+      if (onkeydown && onkeydown(e)) {
+        e.preventDefault();
+        return;
+      }
+
+      let [rowStart, colStart, rowEnd, colEnd] = selection;
+
+      const modKeys = modifiers(e);
+
+      if (modKeys <= 1 && e.key.length === 1) {
+        return startEditing('');
+      }
+
+      if (['F2', 'Alt+Enter'].includes(combination(e))) {
+        return startEditing();
+      }
+
+      if (combination(e) === 'Ctrl+Slash') {
+        let [row, col] = selection;
+        dispatch('change', { row, col, value: toggleComment(getActiveCellValue()) });
+        e.preventDefault();
+        return;
+      }
+
+      if (e.altKey) return;
+
+      if (!e.shiftKey) {
+        rowEnd = rowStart;
+        colEnd = colStart;
+      }
+
+      if (modKeys & CTRL) {
+        let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
+        if (which === undefined) return;
+        let direction = (which & 2) - 1;
+
+        let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
+        let currentBlockId = query(blocks).getAt(...origin);
+        let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
+
+        let nextBlock = blocks.get(nextBlockId);
+        let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
+
+        if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
+        else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
+      }
+      else {
+        switch (e.key) {
+          case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
+          case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
+          case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
+          case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
+          case 'Home':       colEnd = 0;  break;
+          case 'End':        colEnd = nCols - 1;  break;
+          case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
+          case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
+          default: return;
+        }
+      }
+
+      if (!e.shiftKey) {
+        rowStart = rowEnd;
+        colStart = colEnd;
+      }
+
+      e.preventDefault();
+      setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
+    }
+  }
+
+  function editorKeyDown(e) {
+    // Prevent default Ctrl+A behavior when Editor is not in focus
+    if (combination(e) === 'Ctrl+KeyA' && e.target !== editor) e.preventDefault();
+
+    if (e.key === 'Escape') closeEditor();
+    else if (e.key === 'Enter') closeEditor(editorSession);
+    else if (e.key === 'Tab') closeEditor(editorSession, true);
+    else if (combination(e) === 'Ctrl+Slash') closeEditor(toggleComment(editorSession));
+    else return;
+    e.preventDefault();
+  }
+
+  async function startEditing(value) {
+    editorSession = value === undefined ? getActiveCellValue() : value;
+
+    await tick();
+    takeFocus(editor);
+    autoSizeEditor();
+  }
+
+  function closeEditor(value, moveRight = false) {
+    if (value !== undefined) {
+      let [row, col] = selection;
+      dispatch('change', { row, col, value });
+
+      if (moveRight) {
+        if (col < nCols - 1) col++;
+      }
+      else if (row < nRows - 1) row++;
+      setSelection(thisSheet, [row, col, row, col]);
+    }
+    editorSession = null;
+    takeFocus(container);
+  }
+
+  function scrollIntoView() {
+    if (!container) return;
+    let { clientWidth, clientHeight, scrollLeft, scrollTop } = container;
+
+    let [rowEnd, colEnd] = selection.slice(2);
+    let [ top, left ] = [ rowEnd * rowHeight, colEnd * columnWidth ];
+    let [ bottom, right ] = [ top + rowHeight, left + columnWidth ];
+
+    if (top < scrollTop) container.scrollTop = top - 0.5 * clientHeight;
+    else if (bottom > scrollTop + clientHeight) container.scrollTop = bottom - clientHeight;
+
+    if (left < scrollLeft) container.scrollLeft = left - 0.5 * clientWidth;
+    else if (right > scrollLeft + clientWidth) container.scrollLeft = right - clientWidth;
+  }
+
+  function visibleLines() {
+    return Math.round(container.clientHeight / rowHeight);
+  }
+
+  function takeFocus(el) {
+    if (el) {
+      let x = window.scrollX, y = window.scrollY;
+      el.focus({ preventScroll: true });    // TODO: Remove hack when Safari and Safari iOS will support preventScrolling
+      window.scrollTo(x, y);
+    }
+  }
+
+  async function autoSizeEditor() {
+    await tick();
+    if (editor) {
+      editor.style.removeProperty('width');
+      if (editor.scrollWidth > editor.clientWidth) {
+        editor.style.width = editor.scrollWidth + 5 + 'px';
+      }
+    }
+  }
+
+  function getActiveCellValue() {
+    const [row, col] = selection;
+    const block = blocks.get(query(blocks).getAt(row, col));
+    return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
+  }
+
+  function jumpAway(e) {
+    let { left, top } = container.getBoundingClientRect();
+    let { clientWidth, clientHeight } = container;
+
+    let [x, y] = [e.pageX - left, e.pageY - top];
+    if (x >= clientWidth || y >= clientHeight) {
+      // Ignore clicks on scrollbars
+      e.stopPropagation();
+      return;
+    }
+
+    let [row, col] = getRowCol(x, y);
+    setSelection(thisSheet, [row, col, row, col]);
+  }
+
+  function detectFormula(str) {
+    return /^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)?\s*=([^=>].*)/.test(str);
+  }
 
   function getRowCol(x, y) {
     return [
@@ -69,9 +284,7 @@
     ];
   }
 
-  function gridClick(e) {
-    if (e.target === editor || e.target.nodeName === 'A') return;
-
+  function mouseCellSelection(e) {
     takeFocus(container);
 
     let { left, top } = container.getBoundingClientRect();
@@ -149,163 +362,13 @@
     window.addEventListener('mouseup', mouseUp);
   }
 
-  function scrollIntoView() {
-    if (!container) return;
-    let { clientWidth, clientHeight, scrollLeft, scrollTop } = container;
-
-    let [rowEnd, colEnd] = selection.slice(2);
-    let [ top, left ] = [ rowEnd * rowHeight, colEnd * columnWidth ];
-    let [ bottom, right ] = [ top + rowHeight, left + columnWidth ];
-
-    if (top < scrollTop) container.scrollTop = top - 0.5 * clientHeight;
-    else if (bottom > scrollTop + clientHeight) container.scrollTop = bottom - clientHeight;
-
-    if (left < scrollLeft) container.scrollLeft = left - 0.5 * clientWidth;
-    else if (right > scrollLeft + clientWidth) container.scrollLeft = right - clientWidth;
-  }
-
-  $: if (selection) requestAnimationFrame(scrollIntoView);
-
-  function visibleLines() {
-    return Math.round(container.clientHeight / rowHeight);
-  }
-
-  function takeFocus(el) {
-    if (el) {
-      let x = window.scrollX, y = window.scrollY;
-      el.focus({ preventScroll: true });    // TODO: remove surrounding hack when more browsers support preventScrolling
-      window.scrollTo(x, y);
-    }
-  }
-
-  async function autoSizeEditor() {
-    await tick();
-    if (editor) {
-      editor.style.removeProperty('width');
-      if (editor.scrollWidth > editor.clientWidth) {
-        editor.style.width = editor.scrollWidth + 5 + 'px';
-      }
-    }
-  }
-
-  function getActiveCellValue() {
-    const [row, col] = selection;
-    const block = blocks.get(query(blocks).getAt(row, col));
-    return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
-  }
-
-  async function startEditing(value) {
-    editorSession = value === undefined ? getActiveCellValue() : value;
-
-    await tick();
-    takeFocus(editor);
-    autoSizeEditor();
-  }
-
-  function closeEditor(value, moveRight = false) {
-    if (value !== undefined) {
-      let [row, col] = selection;
-      dispatch('change', { row, col, value });
-
-      if (moveRight) {
-        if (col < nCols - 1) col++;
-      }
-      else if (row < nRows - 1) row++;
-      setSelection(thisSheet, [row, col, row, col]);
-    }
-    editorSession = null;
-    takeFocus(container);
-  }
-
-  function editorKeyDown(e) {
-    if (e.key === 'Escape') closeEditor();
-    else if (e.key === 'Enter') closeEditor(e.target.value);
-    else if (e.key === 'Tab') closeEditor(e.target.value, true);
-    else if (combination(e) === 'Ctrl+Slash') closeEditor(toggleComment(e.target.value));
-    else return;
-    e.preventDefault();
-  }
-
-  function toggleComment(str = '') {
-    return str.trim().startsWith('//')
+  function toggleComment(str = "") {
+    return str.trim().startsWith("//")
       ? str.trim().slice(2).trim()
-      : '// ' + str;
-  }
-
-  function keyDown(e) {
-    if (e.target !== container) return;
-    if (onkeydown && onkeydown(e)) {
-      e.preventDefault();
-      return;
-    }
-
-    let [rowStart, colStart, rowEnd, colEnd] = selection;
-
-    const modKeys = modifiers(e);
-
-    if (modKeys <= 1 && e.key.length === 1) {
-      return startEditing('');
-    }
-
-
-    if (['F2', 'Alt+Enter'].includes(combination(e))) {
-      return startEditing();
-    }
-
-    if (combination(e) === 'Ctrl+Slash') {
-      let [row, col] = selection;
-      dispatch('change', { row, col, value: toggleComment(getActiveCellValue()) });
-      e.preventDefault();
-      return;
-    }
-
-    if (e.altKey) return;
-
-    if (!e.shiftKey) {
-      rowEnd = rowStart;
-      colEnd = colStart;
-    }
-
-    if (modKeys & CTRL) {
-      let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
-      if (which === undefined) return;
-      let direction = (which & 2) - 1;
-
-      let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
-      let currentBlockId = query(blocks).getAt(...origin);
-      let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
-
-      let nextBlock = blocks.get(nextBlockId);
-      let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
-
-      if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
-      else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
-    }
-    else {
-      switch (e.key) {
-        case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
-        case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
-        case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
-        case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
-        case 'Home':       colEnd = 0;  break;
-        case 'End':        colEnd = nCols - 1;  break;
-        case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
-        case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
-        default: return;
-      }
-    }
-
-    if (!e.shiftKey) {
-      rowStart = rowEnd;
-      colStart = colEnd;
-    }
-
-    e.preventDefault();
-    setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
+      : "// " + str;
   }
 
   // Copy / Cut / Paste events subscription and forwarding
-
   const clipboardEvent = name => e => {
     if (!focused) return;
     dispatch(name, e);
@@ -314,12 +377,15 @@
 
   onMount(() => {
     let handlers = {};
-    ['copy', 'cut', 'paste'].forEach(name => document.addEventListener(name, handlers[name] = clipboardEvent(name)));
+    ['copy', 'cut', 'paste'].forEach(name =>
+      document.addEventListener(name, handlers[name] = clipboardEvent(name))
+    );
 
     takeFocus(container);
 
     return () => {
-      for (let name in handlers) document.removeEventListener(name, handlers[name]);
+      for (let name in handlers)
+        document.removeEventListener(name, handlers[name]);
     }
   });
 </script>
@@ -373,7 +439,15 @@
   on:focus={() => focused = true}
   on:blur={() => focused = false}
   on:mousedown={gridClick}
-  on:dblclick={() => {if(!editorSession) startEditing()}}
+  on:dblclick={(e) => {
+    e.preventDefault();
+    if (!editorSession) { startEditing() }
+    else if (e.target !== editor) {
+      jumpAway(e);
+      editorSession = null;
+      closeEditor();
+    }
+  }}
 >
   <GridLayout
     {blocks}
@@ -393,6 +467,7 @@
     {#if editorSession !== null}
       <CellEditor
         {transparent}
+        {isFormula}
         {closeEditor}
         bind:node={editor}
         bind:value={editorSession}
