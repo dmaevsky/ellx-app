@@ -110,6 +110,11 @@
     if (isEditMode) editorKeyDown(e)
     else {
 
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        return startEditing();
+      }
+
       if (onkeydown && onkeydown(e)) {
         e.preventDefault();
         return;
