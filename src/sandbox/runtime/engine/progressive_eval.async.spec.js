@@ -10,6 +10,7 @@ import * as library from './library.js';
 const resolve = name => {
   if (name === 'math') return math;
   if (name in library) return library[name];
+  if (name in global) return global[name];
   return name.charCodeAt(0);
 }
 
@@ -129,4 +130,10 @@ test('that everything else (including .then callbacks) is still transpiled', asy
   t.is(await evaluator(), 42 + 121);
   t.snapshot(evaluator.compiled());
   t.is(await evaluator(), 42 + 121);
+});
+
+test('array of Promises', async t => {
+  const evaluator = parse('range(5).map(x => new Promise(resolve => setTimeout(() => resolve(x*x), 1)))');
+
+  t.deepEqual(await Promise.all(await evaluator()), [0, 1, 4, 9, 16]);
 });

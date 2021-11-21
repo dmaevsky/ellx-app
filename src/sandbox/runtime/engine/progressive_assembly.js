@@ -284,15 +284,18 @@ export default class ProgressiveEval {
         evaluator = this.buildEvaluator(node);
       }
 
+      let lastEvaluator = evaluator;
       let result = evaluator(context);
 
       if (node.isArrowFn) {
         const fn = (...args) => {
-          if (!evaluator) {
-            evaluator = this.buildEvaluator(node);
+          if (lastEvaluator !== evaluator) {
+            if (!evaluator) {
+              evaluator = this.buildEvaluator(node);
+            }
+            lastEvaluator = evaluator;
             result = evaluator(context);
           }
-
           return result(...args);
         }
 
