@@ -4,9 +4,25 @@
   export let node = null;
 </script>
 
+<textarea
+  tabindex="-1"
+  class="grid__editor grid__selection-border bg-white"
+  class:dark:text-white={!transparent}
+  class:dark:text-gray-800={transparent}
+  class:dark:bg-dark-500={!transparent}
+  bind:this={node}
+  bind:value
+  on:select
+  on:input
+  on:keydown
+  autocomplete="off"
+  autocorrect="off"
+  spellcheck="false"
+/>
+
 <style>
   .grid__selection-border {
-    border: 2px solid rgb(0, 128, 255);
+    border: 2px solid rgb(0, 255, 77);
   }
   .grid__editor {
     width: 100%;
@@ -20,18 +36,3 @@
     overflow: hidden;
   }
 </style>
-
-<textarea
-        tabindex="-1"
-        class="grid__editor grid__selection-border bg-white"
-        class:dark:text-white={!transparent}
-        class:dark:text-gray-800={transparent}
-        class:dark:bg-dark-500={!transparent}
-        bind:this={node}
-        bind:value
-        on:input
-        on:keydown
-        autocomplete="off"
-        autocorrect="off"
-        spellcheck="false"
-/>
