@@ -70,6 +70,15 @@
   })(copySelection);
   $: if (selection) requestAnimationFrame(scrollIntoView);
 
+  let isNodeInserted = false;
+  let caretPosition = null;
+
+  function getCaretPosition(e) {
+    caretPosition = [e.target.selectionStart, e.target.selectionEnd];
+    isNodeInserted = false;
+    console.log("~ caretPosition: ", caretPosition);
+  }
+
   // Mouse handling
   function gridClick(e) {
     if (e.target.nodeName === 'A') return;
@@ -83,13 +92,57 @@
     }
   }
 
+  function getNodeContent(e) {
+    let { left, top } = container.getBoundingClientRect();
+    let { clientWidth, clientHeight } = container;
+
+    let [x, y] = [e.pageX - left, e.pageY - top];
+    if (x >= clientWidth || y >= clientHeight) {
+      // Ignore clicks on scrollbars
+      e.stopPropagation();
+      return;
+    }
+
+    let [row, col] = getRowCol(x, y);
+    let blockId = query(blocks).getAt(row, col);
+    let block = blocks.get(blockId);
+    if(blockId !== undefined && block.formula !== undefined) {
+      return block.node;
+    }
+    return null;
+  }
+
   function editorClick(e) {
     if (isFormula) {
+      // If click is outside the editor
       if (e.target !== editor) {
-        console.log("~ Clicked outside");
+        e.preventDefault(); // Prevent select on drag
+
+        // If node insertion isn't done
+        if (!isNodeInserted) {
+          // Get target node name for insertion
+          const node = getNodeContent(e);
+
+          if (node !== null) {
+            if (caretPosition) { // Ignore Initial value only
+              const arr = [
+                editorSession.substring(0, caretPosition[0]),
+                node,
+                editorSession.substring(caretPosition[1], editorSession.length)
+              ];
+              editorSession = arr.join("");
+              autoSizeEditor();
+
+              // Remember insertion start and end position
+              caretPosition[1] = caretPosition[0] + node.length;
+              // editor.setSelectionRange(caretPosition[1], caretPosition[1]);
+            }
+          }
+        }
       }
       else {
-        console.log("~ Clicked inside");
+        // If previous node is inserted then get caret position for new insertion
+        getCaretPosition(e);
       }
     }
     else {
@@ -100,7 +153,6 @@
         closeEditor();
       }
     }
-
   }
 
   // Keyboard handling
@@ -395,39 +447,6 @@
   });
 </script>
 
-<style>
-  .grid__container {
-    position: relative;
-    padding: 0;
-    margin: 0;
-    outline: none;
-    border: none;
-    font-size: 12px;
-    font-family: Consolas, monaco, monospace;
-    color: black;
-  }
-  .grid__selection-border {
-    border: 2px solid rgb(0, 128, 255);
-  }
-  .grid__copy-selection {
-    position: absolute;
-    border: 2px dashed rgb(0, 128, 255);
-    background: rgba(0, 0, 0, 0);
-    z-index: 10;
-  }
-  .grid__selection-start {
-    position: absolute;
-    background: rgba(0, 0, 0, 0);
-    z-index: 20;
-  }
-  .grid__selection {
-    position: absolute;
-    border: 1px solid rgb(0, 128, 255);
-    background: rgba(14, 101, 235, 0.1);
-    z-index: 10;
-  }
-</style>
-
 <div
   class="w-full h-full grid__container text-black"
   class:overflow-auto={!overflowHidden}
@@ -476,7 +495,13 @@
         {closeEditor}
         bind:node={editor}
         bind:value={editorSession}
-        on:input={autoSizeEditor}
+        on:select={getCaretPosition}
+        on:input={(e) => {
+          isNodeInserted = true;
+          console.log("~ Input occured!");
+          getCaretPosition(e);
+          autoSizeEditor()
+        }}
         on:keydown={editorKeyDown}
       />
     {/if}
@@ -486,3 +511,36 @@
     <div class="grid__copy-selection" style={copySelectionStyle}></div>
   {/if}
 </div>
+
+<style>
+  .grid__container {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    border: none;
+    font-size: 12px;
+    font-family: Consolas, monaco, monospace;
+    color: black;
+  }
+  .grid__selection-border {
+    border: 2px solid rgb(0, 128, 255);
+  }
+  .grid__copy-selection {
+    position: absolute;
+    border: 2px dashed rgb(0, 128, 255);
+    background: rgba(0, 0, 0, 0);
+    z-index: 10;
+  }
+  .grid__selection-start {
+    position: absolute;
+    background: rgba(0, 0, 0, 0);
+    z-index: 20;
+  }
+  .grid__selection {
+    position: absolute;
+    border: 1px solid rgb(0, 128, 255);
+    background: rgba(14, 101, 235, 0.1);
+    z-index: 10;
+  }
+</style>
