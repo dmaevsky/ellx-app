@@ -71,12 +71,10 @@
   $: if (selection) requestAnimationFrame(scrollIntoView);
 
   let isNodeInserted = false;
-  let caretPosition = null;
+  let caretPosition;
 
   function getCaretPosition(e) {
     caretPosition = [e.target.selectionStart, e.target.selectionEnd];
-    isNodeInserted = false;
-    console.log("~ caretPosition: ", caretPosition);
   }
 
   // Mouse handling
@@ -114,45 +112,38 @@
 
   function editorClick(e) {
     if (isFormula) {
-      // If click is outside the editor
       if (e.target !== editor) {
         e.preventDefault(); // Prevent select on drag
 
-        // If node insertion isn't done
-        if (!isNodeInserted) {
-          // Get target node name for insertion
-          const node = getNodeContent(e);
+        const node = getNodeContent(e);
 
-          if (node !== null) {
-            if (caretPosition) { // Ignore Initial value only
-              const arr = [
-                editorSession.substring(0, caretPosition[0]),
-                node,
-                editorSession.substring(caretPosition[1], editorSession.length)
-              ];
-              editorSession = arr.join("");
-              autoSizeEditor();
+        if (node !== null) {
+          editorSession = [
+            editorSession.substring(0, caretPosition[0]),
+            node,
+            editorSession.substring(caretPosition[1], editorSession.length)
+          ].join("");
 
-              // Remember insertion start and end position
-              caretPosition[1] = caretPosition[0] + node.length;
-              // editor.setSelectionRange(caretPosition[1], caretPosition[1]);
-            }
-          }
+          // Remember insertion position
+          const caret = caretPosition[0] + node.length;
+          caretPosition[1] = caret;
+
+          // Restore caret position after editing input
+          requestAnimationFrame(() => {
+            editor.selectionStart = editor.selectionEnd = caret;
+          });
+
+          autoSizeEditor();
         }
       }
-      else {
-        // If previous node is inserted then get caret position for new insertion
-        getCaretPosition(e);
-      }
+      else getCaretPosition(e);
     }
-    else {
-      if (e.target !== editor) {
+    else if (e.target !== editor) {
         takeFocus(container);
         jumpAway(e);
         editorSession = null;
         closeEditor();
       }
-    }
   }
 
   // Keyboard handling
@@ -495,10 +486,10 @@
         {closeEditor}
         bind:node={editor}
         bind:value={editorSession}
-        on:select={getCaretPosition}
+        on:select={(e)=> {
+          if(e.target.selectionStart !== e.target.selectionEnd) getCaretPosition(e);
+        }}
         on:input={(e) => {
-          isNodeInserted = true;
-          console.log("~ Input occured!");
           getCaretPosition(e);
           autoSizeEditor()
         }}
