@@ -124,12 +124,10 @@
             editorSession.substring(caretPosition[1], editorSession.length)
           ].join("");
 
-          // Remember insertion position
-          const caret = caretPosition[0] + node.length;
+          const caret = caretPosition[0] + node.length; // Remember insertion position
           caretPosition[1] = caret;
 
-          // Restore caret position after editing input
-          requestAnimationFrame(() => {
+          tick().then(() => {   // Restore caret position after editing input
             editor.selectionStart = editor.selectionEnd = caret;
           });
 
