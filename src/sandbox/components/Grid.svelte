@@ -140,7 +140,7 @@
           autoSizeEditor();
         }
       }
-      else getCaretPosition(e);
+      // else getCaretPosition(e);
     }
     else if (e.target !== editor) {
         takeFocus(container);
@@ -489,6 +489,9 @@
         {isFormula}
         {closeEditor}
         bind:node={editor}
+        on:click={(e) => {
+          getCaretPosition(e);
+        }}
         bind:value={editorSession}
         on:select={(e)=> {
           if(e.target.selectionStart !== e.target.selectionEnd) getCaretPosition(e);
