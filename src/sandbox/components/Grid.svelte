@@ -326,7 +326,7 @@
   }
 
   function detectFormula(str) {
-    return /^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)?\s*=([^=>].*)/.test(str);
+    return (str === "=") ? true : /^\s*([a-z_$][a-z0-9_$]*)?\s*=([^=>].*)/gmi.test(str);
   }
 
   function getRowCol(x, y) {
