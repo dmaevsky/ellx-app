@@ -75,6 +75,23 @@
 
   $: if(!isEditMode) caretPosition = null;
 
+  let highlight = selection;
+
+  $: if(isEditMode) highlight = selection;
+
+  $: highlightStyle = (([rowStart, colStart, rowEnd, colEnd]) => {
+    if (rowStart > rowEnd) [rowStart, rowEnd] = [rowEnd, rowStart];
+    if (colStart > colEnd) [colStart, colEnd] = [colEnd, colStart];
+
+    return `
+    visibility: ${(focused && rowStart === rowEnd && colStart === colEnd) ? 'hidden' : 'visible'};
+    top: ${rowStart * rowHeight}px;
+    left: ${colStart * columnWidth}px;
+    height: ${(rowEnd - rowStart + 1) * rowHeight}px;
+    width: ${(colEnd - colStart + 1) * columnWidth}px;
+  `
+  })(highlight);
+
   function getCaretPosition(e) {
     caretPosition = [e.target.selectionStart, e.target.selectionEnd];
   }
@@ -121,7 +138,20 @@
           return;
         }
 
+        let { left, top } = container.getBoundingClientRect();
+        let { clientWidth, clientHeight } = container;
+
+        let [x, y] = [e.pageX - left, e.pageY - top];
+        if (x >= clientWidth || y >= clientHeight) {
+          // Ignore clicks on scrollbars
+          e.stopPropagation();
+          return;
+        }
+
         const node = getNodeContent(e);
+        let [row, col] = getRowCol(x, y);
+
+        highlight = [row, col, row, col];
 
         if (node !== null) {
           editorSession = [
@@ -489,9 +519,7 @@
         {isFormula}
         {closeEditor}
         bind:node={editor}
-        on:click={(e) => {
-          getCaretPosition(e);
-        }}
+        on:click={getCaretPosition}
         bind:value={editorSession}
         on:select={(e)=> {
           if(e.target.selectionStart !== e.target.selectionEnd) getCaretPosition(e);
@@ -505,6 +533,7 @@
     {/if}
   </div>
   <div class="grid__selection" style={selectionStyle}></div>
+  <div class="grid__highlight" style={highlightStyle}></div>
   {#if copySelection}
     <div class="grid__copy-selection" style={copySelectionStyle}></div>
   {/if}
@@ -539,6 +568,12 @@
     position: absolute;
     border: 1px solid rgb(0, 128, 255);
     background: rgba(14, 101, 235, 0.1);
+    z-index: 10;
+  }
+  .grid__highlight {
+    position: absolute;
+    border: 2px dashed rgb(0, 128, 255);
+    background: rgba(0, 128, 255, 0.1);
     z-index: 10;
   }
 </style>
