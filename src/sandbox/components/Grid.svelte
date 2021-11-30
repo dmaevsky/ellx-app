@@ -71,7 +71,9 @@
   $: if (selection) requestAnimationFrame(scrollIntoView);
 
   let isNodeInserted = false;
-  let caretPosition;
+  let caretPosition = null;
+
+  $: if(!isEditMode) caretPosition = null;
 
   function getCaretPosition(e) {
     caretPosition = [e.target.selectionStart, e.target.selectionEnd];
@@ -114,6 +116,10 @@
     if (isFormula) {
       if (e.target !== editor) {
         e.preventDefault(); // Prevent select on drag
+        if (!caretPosition) {
+          closeEditor();
+          return;
+        }
 
         const node = getNodeContent(e);
 
