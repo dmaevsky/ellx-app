@@ -104,6 +104,10 @@
     }
 
     let [row, col] = getRowCol(x, y);
+    return getValue(row, col);
+  }
+
+  function getValue(row, col) {
     let blockId = query(blocks).getAt(row, col);
     let block = blocks.get(blockId);
     if(blockId !== undefined && block.formula !== undefined) {
@@ -189,12 +193,16 @@
     }
   }
 
+  $: console.log("isEditMode: ", isEditMode);
+
   // Keyboard handling
   function keyDown(e) {
     if (e.target !== container) return;
 
-    if (isEditMode) editorKeyDown(e)
-    else {
+    if (isEditMode) return;
+
+    console.log("~ keyDown:", e.key);
+    // else {
 
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -214,7 +222,7 @@
         return startEditing('');
       }
 
-      if (['F2', 'Alt+Enter'].includes(combination(e))) {
+      if (e.key === "Enter") {
         return startEditing();
       }
 
@@ -268,19 +276,81 @@
 
       e.preventDefault();
       setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
-    }
+    // }
   }
 
-  function editorKeyDown(e) {
-    // Prevent default Ctrl+A behavior when Editor is not in focus
-    if (combination(e) === 'Ctrl+KeyA' && e.target !== editor) e.preventDefault();
+  let isArrowMode = false;
+  let arrowRow, arrowCol;
 
-    if (e.key === 'Escape') closeEditor();
-    else if (e.key === 'Enter') closeEditor(editorSession);
-    else if (e.key === 'Tab') closeEditor(editorSession, true);
-    else if (combination(e) === 'Ctrl+Slash') closeEditor(toggleComment(editorSession));
-    else return;
-    e.preventDefault();
+  $: if (isArrowMode) [arrowRow, arrowCol] = selection;
+  $: if (!isArrowMode) highlight = selection;
+
+  $: console.log("~ Arrow Mode: ", isArrowMode);
+  $: if (!isEditMode) isArrowMode = false;
+
+  function editorKeyDown(e) {
+    console.log("~ editorKeyDown(e):", e.key);
+    // Prevent default Ctrl+A behavior when Editor is not in focus
+    if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
+
+    if (e.key === "Escape") closeEditor();
+    else if (e.key === "Enter") closeEditor(editorSession);
+    else if (e.key === "Tab") closeEditor(editorSession, true);
+    else if (combination(e) === "Ctrl+Slash") closeEditor(toggleComment(editorSession));
+
+    if (e.key === "F2") {
+      isArrowMode = !isArrowMode;
+    }
+
+    if (isArrowMode) {
+
+      switch (e.key) {
+        case 'ArrowLeft':  if (arrowCol > 0) --arrowCol;  break;
+        case 'ArrowRight': if (arrowCol < nCols - 1) ++arrowCol; break;
+        case 'ArrowUp':    if (arrowRow > 0) --arrowRow; break;
+        case 'ArrowDown':  if (arrowRow < nRows - 1) ++arrowRow; break;
+        default: isNodeInserted = true; return;
+      }
+
+      e.preventDefault();
+
+      highlight = [arrowRow, arrowCol, arrowRow, arrowCol];
+
+      if (highlight[0] !== selection[0] && highlight[1] !== selection[1] && isFormula) {
+
+        if (!insertRange) { // Handle initial value
+          insertRange = [editor.selectionStart, editor.selectionEnd];
+        }
+
+        const node = getValue(arrowRow, arrowCol);
+
+        if (node !== null) {
+          let start, end;
+
+          [start, end] = isNodeInserted
+                  ? [editor.selectionStart, editor.selectionEnd]
+                  : insertRange;
+
+          editorSession = [
+            editorSession.substring(0, start),
+            node,
+            editorSession.substring(end, editorSession.length)
+          ].join("");
+
+          const caret = start + node.length; // Remember insertion position
+          insertRange = [start, caret];
+
+          tick().then(() => {   // Restore caret position after editing input
+            editor.selectionStart = editor.selectionEnd = caret;
+          });
+
+          autoSizeEditor();
+          isNodeInserted = false;
+        }
+      }
+    } else {
+      console.log("~ Editor node!");
+    }
   }
 
   async function startEditing(value) {
@@ -533,7 +603,7 @@
           autoSizeEditor()
         }}
         on:keydown={(e) => {
-          isNodeInserted = true;
+          if (!isArrowMode) isNodeInserted = true;
           editorKeyDown(e)
         }}
       />
