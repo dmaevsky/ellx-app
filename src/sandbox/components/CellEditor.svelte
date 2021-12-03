@@ -12,8 +12,6 @@
   class:dark:bg-dark-500={!transparent}
   bind:this={node}
   bind:value
-  on:select
-  on:click
   on:input
   on:keydown
   autocomplete="off"

@@ -71,9 +71,9 @@
   $: if (selection) requestAnimationFrame(scrollIntoView);
 
   let isNodeInserted = false;
-  let caretPosition = null;
+  let insertRange = null;
 
-  $: if(!isEditMode) caretPosition = null;
+  $: if(!isEditMode) insertRange = null;
 
   let highlight = selection;
 
@@ -91,23 +91,6 @@
     width: ${(colEnd - colStart + 1) * columnWidth}px;
   `
   })(highlight);
-
-  function getCaretPosition(e) {
-    caretPosition = [e.target.selectionStart, e.target.selectionEnd];
-  }
-
-  // Mouse handling
-  function gridClick(e) {
-    if (e.target.nodeName === 'A') return;
-
-    // In Edit mode pass click handling to editorClick()
-    if (isEditMode) {
-      editorClick(e)
-    }
-    else {
-      mouseCellSelection(e)
-    }
-  }
 
   function getNodeContent(e) {
     let { left, top } = container.getBoundingClientRect();
@@ -129,55 +112,81 @@
     return null;
   }
 
+  function highlightNode(e) {
+    let { left, top } = container.getBoundingClientRect();
+    let { clientWidth, clientHeight } = container;
+
+    let [x, y] = [e.pageX - left, e.pageY - top];
+    if (x >= clientWidth || y >= clientHeight) {
+      // Ignore clicks on scrollbars
+      e.stopPropagation();
+      return;
+    }
+
+    let [row, col] = getRowCol(x, y);
+
+    highlight = [row, col, row, col];
+  }
+
+  // Mouse handling
+  function gridClick(e) {
+    if (e.target.nodeName === 'A') return;
+
+    if (isEditMode) {
+      editorClick(e);
+      return;
+    }
+
+    mouseCellSelection(e)
+  }
+
   function editorClick(e) {
     if (isFormula) {
       if (e.target !== editor) {
         e.preventDefault(); // Prevent select on drag
-        if (!caretPosition) {
-          closeEditor();
-          return;
+
+        if (!insertRange) { // Handle initial value
+          insertRange = [editor.selectionStart, editor.selectionEnd];
         }
 
-        let { left, top } = container.getBoundingClientRect();
-        let { clientWidth, clientHeight } = container;
-
-        let [x, y] = [e.pageX - left, e.pageY - top];
-        if (x >= clientWidth || y >= clientHeight) {
-          // Ignore clicks on scrollbars
-          e.stopPropagation();
-          return;
-        }
+        highlightNode(e);
 
         const node = getNodeContent(e);
-        let [row, col] = getRowCol(x, y);
-
-        highlight = [row, col, row, col];
 
         if (node !== null) {
+          let start, end;
+
+          [start, end] = isNodeInserted
+            ? [editor.selectionStart, editor.selectionEnd]
+            : insertRange;
+
           editorSession = [
-            editorSession.substring(0, caretPosition[0]),
+            editorSession.substring(0, start),
             node,
-            editorSession.substring(caretPosition[1], editorSession.length)
+            editorSession.substring(end, editorSession.length)
           ].join("");
 
-          const caret = caretPosition[0] + node.length; // Remember insertion position
-          caretPosition[1] = caret;
+          const caret = start + node.length; // Remember insertion position
+          insertRange = [start, caret];
 
           tick().then(() => {   // Restore caret position after editing input
             editor.selectionStart = editor.selectionEnd = caret;
           });
 
           autoSizeEditor();
+          isNodeInserted = false;
         }
       }
-      // else getCaretPosition(e);
+      else {
+        isNodeInserted = true;
+      }
     }
     else if (e.target !== editor) {
-        takeFocus(container);
-        jumpAway(e);
-        editorSession = null;
-        closeEditor();
-      }
+      takeFocus(container);
+      jumpAway(e);
+      editorSession = null;
+      closeEditor();
+    }
   }
 
   // Keyboard handling
@@ -519,16 +528,14 @@
         {isFormula}
         {closeEditor}
         bind:node={editor}
-        on:click={getCaretPosition}
         bind:value={editorSession}
-        on:select={(e)=> {
-          if(e.target.selectionStart !== e.target.selectionEnd) getCaretPosition(e);
-        }}
-        on:input={(e) => {
-          getCaretPosition(e);
+        on:input={() => {
           autoSizeEditor()
         }}
-        on:keydown={editorKeyDown}
+        on:keydown={(e) => {
+          isNodeInserted = true;
+          editorKeyDown(e)
+        }}
       />
     {/if}
   </div>
