@@ -155,6 +155,8 @@
 
         highlightNode(e);
 
+        [arrowRow, arrowCol, arrowRow, arrowCol] = highlight;
+
         const node = getNodeContent(e);
 
         if (node !== null) {
@@ -193,123 +195,151 @@
     }
   }
 
-  $: console.log("isEditMode: ", isEditMode);
-
   // Keyboard handling
   function keyDown(e) {
     if (e.target !== container) return;
 
     if (isEditMode) return;
 
-    console.log("~ keyDown:", e.key);
-    // else {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      return startEditing();
+    }
 
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        return startEditing();
+    if (onkeydown && onkeydown(e)) {
+      e.preventDefault();
+      return;
+    }
+
+    let [rowStart, colStart, rowEnd, colEnd] = selection;
+
+    const modKeys = modifiers(e);
+
+    if (modKeys <= 1 && e.key.length === 1) {
+      return startEditing('');
+    }
+
+    if (e.key === "Enter") {
+      return startEditing();
+    }
+
+    if (combination(e) === 'Ctrl+Slash') {
+      let [row, col] = selection;
+      dispatch('change', { row, col, value: toggleComment(getActiveCellValue()) });
+      e.preventDefault();
+      return;
+    }
+
+    if (e.altKey) return;
+
+    if (!e.shiftKey) {
+      rowEnd = rowStart;
+      colEnd = colStart;
+    }
+
+    if (modKeys & CTRL) {
+      let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
+      if (which === undefined) return;
+      let direction = (which & 2) - 1;
+
+      let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
+      let currentBlockId = query(blocks).getAt(...origin);
+      let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
+
+      let nextBlock = blocks.get(nextBlockId);
+      let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
+
+      if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
+      else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
+    }
+    else {
+      switch (e.key) {
+        case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
+        case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
+        case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
+        case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
+        case 'Home':       colEnd = 0;  break;
+        case 'End':        colEnd = nCols - 1;  break;
+        case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
+        case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
+        default: return;
       }
+    }
 
-      if (onkeydown && onkeydown(e)) {
-        e.preventDefault();
-        return;
-      }
+    if (!e.shiftKey) {
+      rowStart = rowEnd;
+      colStart = colEnd;
+    }
 
-      let [rowStart, colStart, rowEnd, colEnd] = selection;
+    e.preventDefault();
+    setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
+  }
 
+  let isArrowMode = false;
+  let arrowRow, arrowCol;
+
+  $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
+  $: if (!isArrowMode) highlight = selection;
+
+  $: if (!isEditMode) isArrowMode = false;
+
+  function editorKeyDown(e) {
+    // Prevent default Ctrl+A behavior when Editor is not in focus
+    if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeEditor();
+    }
+    else if (e.key === "Enter") {
+      e.preventDefault();
+      closeEditor(editorSession);
+    }
+    else if (e.key === "Tab") {
+      e.preventDefault();
+      closeEditor(editorSession, true);
+    }
+
+    if (combination(e) === 'Ctrl+Slash') {
+      editorSession = toggleComment(editorSession);
+      autoSizeEditor();
+      e.preventDefault();
+      return;
+    }
+
+    if (e.key === "F2" && isFormula) {
+      isArrowMode = !isArrowMode;
+    }
+
+    if (isArrowMode) {
       const modKeys = modifiers(e);
-
-      if (modKeys <= 1 && e.key.length === 1) {
-        return startEditing('');
-      }
-
-      if (e.key === "Enter") {
-        return startEditing();
-      }
-
-      if (combination(e) === 'Ctrl+Slash') {
-        let [row, col] = selection;
-        dispatch('change', { row, col, value: toggleComment(getActiveCellValue()) });
-        e.preventDefault();
-        return;
-      }
-
-      if (e.altKey) return;
-
-      if (!e.shiftKey) {
-        rowEnd = rowStart;
-        colEnd = colStart;
-      }
-
       if (modKeys & CTRL) {
         let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
         if (which === undefined) return;
         let direction = (which & 2) - 1;
 
-        let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
+        let origin = [arrowRow, arrowCol];
         let currentBlockId = query(blocks).getAt(...origin);
         let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
 
         let nextBlock = blocks.get(nextBlockId);
         let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
 
-        if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
-        else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
+        if (which & 1) arrowCol = Math.max(0, Math.min(nCols - 1, edge));
+        else arrowRow = Math.max(0, Math.min(nRows - 1, edge));
       }
       else {
         switch (e.key) {
-          case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
-          case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
-          case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
-          case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
-          case 'Home':       colEnd = 0;  break;
-          case 'End':        colEnd = nCols - 1;  break;
-          case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
-          case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
-          default: return;
+          case "ArrowLeft":  if (arrowCol > 0) arrowCol--;  break;
+          case "ArrowRight": if (arrowCol < nCols - 1) arrowCol++; break;
+          case "ArrowUp":    if (arrowRow > 0) arrowRow--; break;
+          case "ArrowDown":  if (arrowRow < nRows - 1) arrowRow++; break;
+          case 'Home':       arrowCol = 0;  break;
+          case 'End':        arrowCol = nCols - 1;  break;
+          case 'PageUp':     arrowRow -= visibleLines();  if (arrowRow < 0) arrowRow = 0;  break;
+          case 'PageDown':   arrowRow += visibleLines();  if (arrowRow >= nRows) arrowRow = nRows - 1;  break;
+          default: isNodeInserted = true; return;
         }
-      }
-
-      if (!e.shiftKey) {
-        rowStart = rowEnd;
-        colStart = colEnd;
-      }
-
-      e.preventDefault();
-      setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
-    // }
-  }
-
-  let isArrowMode = false;
-  let arrowRow, arrowCol;
-
-  $: if (isArrowMode) [arrowRow, arrowCol] = selection;
-  $: if (!isArrowMode) highlight = selection;
-
-  $: console.log("~ Arrow Mode: ", isArrowMode);
-  $: if (!isEditMode) isArrowMode = false;
-
-  function editorKeyDown(e) {
-    console.log("~ editorKeyDown(e):", e.key);
-    // Prevent default Ctrl+A behavior when Editor is not in focus
-    if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
-
-    if (e.key === "Escape") closeEditor();
-    else if (e.key === "Enter") closeEditor(editorSession);
-    else if (e.key === "Tab") closeEditor(editorSession, true);
-    else if (combination(e) === "Ctrl+Slash") closeEditor(toggleComment(editorSession));
-
-    if (e.key === "F2") {
-      isArrowMode = !isArrowMode;
-    }
-
-    if (isArrowMode) {
-
-      switch (e.key) {
-        case 'ArrowLeft':  if (arrowCol > 0) --arrowCol;  break;
-        case 'ArrowRight': if (arrowCol < nCols - 1) ++arrowCol; break;
-        case 'ArrowUp':    if (arrowRow > 0) --arrowRow; break;
-        case 'ArrowDown':  if (arrowRow < nRows - 1) ++arrowRow; break;
-        default: isNodeInserted = true; return;
       }
 
       e.preventDefault();
@@ -348,8 +378,6 @@
           isNodeInserted = false;
         }
       }
-    } else {
-      console.log("~ Editor node!");
     }
   }
 
