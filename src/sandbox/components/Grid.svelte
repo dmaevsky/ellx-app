@@ -27,9 +27,22 @@
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
 
-  $: isEditMode = (editor !== null);
+  let isNodeInserted = false;
+  let isArrowMode = false;
+  let insertRange = null;
+  let highlight = selection;
+  let arrowRow, arrowCol;
 
   $: if (editorSession !== null) isFormula = detectFormula(editorSession)
+
+  $: isEditMode = (editor !== null);
+  $: if (!isEditMode) {
+    insertRange = null;
+    isArrowMode = false;
+  }
+  $: if (isEditMode) highlight = selection;
+  $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
+  $: if (!isArrowMode) highlight = selection;
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
@@ -42,6 +55,18 @@
     console.log(selectedValue);
   }
 
+  $: highlightStyle = (([rowStart, colStart, rowEnd, colEnd]) => {
+    if (rowStart > rowEnd) [rowStart, rowEnd] = [rowEnd, rowStart];
+    if (colStart > colEnd) [colStart, colEnd] = [colEnd, colStart];
+
+    return `
+    visibility: ${(focused && rowStart === rowEnd && colStart === colEnd) ? 'hidden' : 'visible'};
+    top: ${rowStart * rowHeight}px;
+    left: ${colStart * columnWidth}px;
+    height: ${(rowEnd - rowStart + 1) * rowHeight}px;
+    width: ${(colEnd - colStart + 1) * columnWidth}px;
+  `
+  })(highlight);
   $: selectionStartStyle = (([rowStart, colStart]) => `
     top: ${rowStart * rowHeight}px;
     left: ${colStart * columnWidth}px;
@@ -70,27 +95,12 @@
   })(copySelection);
   $: if (selection) requestAnimationFrame(scrollIntoView);
 
-  let isNodeInserted = false;
-  let insertRange = null;
-
-  $: if(!isEditMode) insertRange = null;
-
-  let highlight = selection;
-
-  $: if(isEditMode) highlight = selection;
-
-  $: highlightStyle = (([rowStart, colStart, rowEnd, colEnd]) => {
-    if (rowStart > rowEnd) [rowStart, rowEnd] = [rowEnd, rowStart];
-    if (colStart > colEnd) [colStart, colEnd] = [colEnd, colStart];
-
-    return `
-    visibility: ${(focused && rowStart === rowEnd && colStart === colEnd) ? 'hidden' : 'visible'};
-    top: ${rowStart * rowHeight}px;
-    left: ${colStart * columnWidth}px;
-    height: ${(rowEnd - rowStart + 1) * rowHeight}px;
-    width: ${(colEnd - colStart + 1) * columnWidth}px;
-  `
-  })(highlight);
+  function getRowCol(x, y) {
+    return [
+      Math.floor((y + container.scrollTop) / rowHeight),
+      Math.floor((x + container.scrollLeft) / columnWidth)
+    ];
+  }
 
   function getNodeContent(e) {
     let { left, top } = container.getBoundingClientRect();
@@ -110,10 +120,16 @@
   function getValue(row, col) {
     let blockId = query(blocks).getAt(row, col);
     let block = blocks.get(blockId);
-    if(blockId !== undefined && block.formula !== undefined) {
+    if (blockId !== undefined && block.formula !== undefined) {
       return block.node;
     }
     return null;
+  }
+
+  function getActiveCellValue() {
+    const [row, col] = selection;
+    const block = blocks.get(query(blocks).getAt(row, col));
+    return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
   }
 
   function highlightNode(e) {
@@ -132,7 +148,6 @@
     highlight = [row, col, row, col];
   }
 
-  // Mouse handling
   function gridClick(e) {
     if (e.target.nodeName === 'A') return;
 
@@ -195,7 +210,6 @@
     }
   }
 
-  // Keyboard handling
   function keyDown(e) {
     if (e.target !== container) return;
 
@@ -275,14 +289,6 @@
     setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
   }
 
-  let isArrowMode = false;
-  let arrowRow, arrowCol;
-
-  $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
-  $: if (!isArrowMode) highlight = selection;
-
-  $: if (!isEditMode) isArrowMode = false;
-
   function editorKeyDown(e) {
     // Prevent default Ctrl+A behavior when Editor is not in focus
     if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
@@ -307,9 +313,7 @@
       return;
     }
 
-    if (e.key === "F2" && isFormula) {
-      isArrowMode = !isArrowMode;
-    }
+    if (e.key === "F2" && isFormula) isArrowMode = !isArrowMode;
 
     if (isArrowMode) {
       const modKeys = modifiers(e);
@@ -441,12 +445,6 @@
     }
   }
 
-  function getActiveCellValue() {
-    const [row, col] = selection;
-    const block = blocks.get(query(blocks).getAt(row, col));
-    return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
-  }
-
   function jumpAway(e) {
     let { left, top } = container.getBoundingClientRect();
     let { clientWidth, clientHeight } = container;
@@ -464,13 +462,6 @@
 
   function detectFormula(str) {
     return (str === "=") ? true : /^\s*([a-z_$][a-z0-9_$]*)?\s*=([^=>].*)/gmi.test(str);
-  }
-
-  function getRowCol(x, y) {
-    return [
-      Math.floor((y + container.scrollTop) / rowHeight),
-      Math.floor((x + container.scrollLeft) / columnWidth)
-    ];
   }
 
   function mouseCellSelection(e) {
@@ -627,9 +618,7 @@
         {closeEditor}
         bind:node={editor}
         bind:value={editorSession}
-        on:input={() => {
-          autoSizeEditor()
-        }}
+        on:input={autoSizeEditor}
         on:keydown={(e) => {
           if (!isArrowMode) isNodeInserted = true;
           editorKeyDown(e)
