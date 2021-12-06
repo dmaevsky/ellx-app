@@ -93,7 +93,8 @@
       width: ${(colEnd - colStart + 1) * columnWidth + 2}px;
     `
   })(copySelection);
-  $: if (selection) requestAnimationFrame(scrollIntoView);
+  $: if (selection) requestAnimationFrame(() => scrollIntoView(selection));
+  $: if (highlight) requestAnimationFrame(() => scrollIntoView(highlight));
 
   function getRowCol(x, y) {
     return [
@@ -408,11 +409,11 @@
     takeFocus(container);
   }
 
-  function scrollIntoView() {
+  function scrollIntoView(selector) {
     if (!container) return;
     let { clientWidth, clientHeight, scrollLeft, scrollTop } = container;
 
-    let [rowEnd, colEnd] = selection.slice(2);
+    let [rowEnd, colEnd] = selector.slice(2);
     let [ top, left ] = [ rowEnd * rowHeight, colEnd * columnWidth ];
     let [ bottom, right ] = [ top + rowHeight, left + columnWidth ];
 
