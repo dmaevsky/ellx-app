@@ -144,7 +144,7 @@
 
     let [row, col] = getRowCol(x, y);
 
-    highlight = [row, col, row, col];
+    highlight = [row, col];
   }
 
   function gridClick(e) {
@@ -169,7 +169,7 @@
 
         highlightNode(e);
 
-        [arrowRow, arrowCol, arrowRow, arrowCol] = highlight;
+        [arrowRow, arrowCol] = highlight;
 
         const node = getNodeContent(e);
 
@@ -348,7 +348,7 @@
 
       e.preventDefault();
 
-      highlight = [arrowRow, arrowCol, arrowRow, arrowCol];
+      highlight = [arrowRow, arrowCol];
 
       if (highlight[0] !== selection[0] && highlight[1] !== selection[1] && isFormula) {
 
