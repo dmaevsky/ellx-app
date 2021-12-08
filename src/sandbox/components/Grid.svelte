@@ -41,6 +41,7 @@
     isArrowMode = false;
   }
   $: if (isEditMode) highlight = selection;
+
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
   $: if (!isArrowMode) highlight = selection;
 
@@ -55,16 +56,13 @@
     console.log(selectedValue);
   }
 
-  $: highlightStyle = (([rowStart, colStart, rowEnd, colEnd]) => {
-    if (rowStart > rowEnd) [rowStart, rowEnd] = [rowEnd, rowStart];
-    if (colStart > colEnd) [colStart, colEnd] = [colEnd, colStart];
-
+  $: highlightStyle = (([rowStart, colStart]) => {
     return `
-    visibility: ${(focused && rowStart === rowEnd && colStart === colEnd) ? 'hidden' : 'visible'};
+    visibility: ${(isEditMode) ? 'visible' : 'hidden'};
     top: ${rowStart * rowHeight}px;
     left: ${colStart * columnWidth}px;
-    height: ${(rowEnd - rowStart + 1) * rowHeight}px;
-    width: ${(colEnd - colStart + 1) * columnWidth}px;
+    height: ${rowHeight}px;
+    width: ${columnWidth}px;
   `
   })(highlight);
   $: selectionStartStyle = (([rowStart, colStart]) => `
@@ -221,6 +219,11 @@
       return startEditing();
     }
 
+    if (e.key === "F2" && !isEditMode) {
+      e.preventDefault();
+      return startEditing();
+    }
+
     if (onkeydown && onkeydown(e)) {
       e.preventDefault();
       return;
@@ -232,10 +235,6 @@
 
     if (modKeys <= 1 && e.key.length === 1) {
       return startEditing('');
-    }
-
-    if (e.key === "Enter") {
-      return startEditing();
     }
 
     if (combination(e) === 'Ctrl+Slash') {
