@@ -458,6 +458,7 @@
 
     let [row, col] = getRowCol(x, y);
     setSelection(thisSheet, [row, col, row, col]);
+    e.preventDefault(); // Prevent select on drag
   }
 
   function detectFormula(str) {
