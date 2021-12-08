@@ -94,7 +94,21 @@
   $: if (selection) requestAnimationFrame(() => scrollIntoView(selection));
   $: if (highlight) requestAnimationFrame(() => scrollIntoView(highlight));
 
-  function getRowCol(x, y) {
+  function getCoords(e) {
+    const { left, top } = container.getBoundingClientRect();
+    const { clientWidth, clientHeight } = container;
+    const [x, y] = [e.pageX - left, e.pageY - top];
+
+    if (x >= clientWidth || y >= clientHeight) {
+      // Ignore clicks on scrollbars
+      e.stopPropagation();
+      return null;
+    }
+
+    return [x, y];
+  }
+
+  function getRowCol([x, y]) {
     return [
       Math.floor((y + container.scrollTop) / rowHeight),
       Math.floor((x + container.scrollLeft) / columnWidth)
@@ -102,17 +116,10 @@
   }
 
   function getNodeContent(e) {
-    let { left, top } = container.getBoundingClientRect();
-    let { clientWidth, clientHeight } = container;
+    let coords = getCoords(e);
+    if (!coords) return;
+    let [row, col] = getRowCol(coords);
 
-    let [x, y] = [e.pageX - left, e.pageY - top];
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return;
-    }
-
-    let [row, col] = getRowCol(x, y);
     return getValue(row, col);
   }
 
@@ -132,17 +139,9 @@
   }
 
   function highlightNode(e) {
-    let { left, top } = container.getBoundingClientRect();
-    let { clientWidth, clientHeight } = container;
-
-    let [x, y] = [e.pageX - left, e.pageY - top];
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return;
-    }
-
-    let [row, col] = getRowCol(x, y);
+    let coords = getCoords(e);
+    if (!coords) return;
+    let [row, col] = getRowCol(coords);
 
     highlight = [row, col];
   }
@@ -446,17 +445,10 @@
   }
 
   function jumpAway(e) {
-    let { left, top } = container.getBoundingClientRect();
-    let { clientWidth, clientHeight } = container;
+    let coords = getCoords(e);
+    if (!coords) return;
+    let [row, col] = getRowCol(coords);
 
-    let [x, y] = [e.pageX - left, e.pageY - top];
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return;
-    }
-
-    let [row, col] = getRowCol(x, y);
     setSelection(thisSheet, [row, col, row, col]);
     e.preventDefault(); // Prevent select on drag
   }
@@ -468,17 +460,9 @@
   function mouseCellSelection(e) {
     takeFocus(container);
 
-    let { left, top } = container.getBoundingClientRect();
-    let { clientWidth, clientHeight } = container;
-
-    let [x, y] = [e.pageX - left, e.pageY - top];
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return;
-    }
-
-    let [row, col] = getRowCol(x, y);
+    let coords = getCoords(e);
+    if (!coords) return;
+    let [row, col] = getRowCol(coords);
 
     setSelection(thisSheet, [row, col, row, col]);
 
@@ -486,10 +470,13 @@
     e.preventDefault();
     let tickTimerX = null, tickTimerY = null;
     let mouseMoveRAF = 0;
+    const { left, top } = container.getBoundingClientRect();
+    const { clientWidth, clientHeight } = container;
 
     let mouseMove = e => {
       let { pageX, pageY } = e;
       if (mouseMoveRAF) return;
+
 
       mouseMoveRAF = requestAnimationFrame(() => {
         mouseMoveRAF = 0;
@@ -526,7 +513,7 @@
           tickTimerY = null;
         }
 
-        let [row, col] = getRowCol(x, y);
+        let [row, col] = getRowCol([x, y]);
         setSelection(thisSheet, Object.assign([...selection], {2: row, 3: col}));
       });
     }
