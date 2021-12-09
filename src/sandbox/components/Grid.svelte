@@ -3,6 +3,7 @@
   import query from '../runtime/blocks.js';
   import { setSelection } from '../runtime/actions/edit.js';
   import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys.js';
+  import { commentRange } from '../runtime/actions/edit';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -132,8 +133,8 @@
     return null;
   }
 
-  function getActiveCellValue() {
-    const [row, col] = selection;
+  function getActiveCellValue(row, col) {
+    if (!row && !col) [row, col] = selection;
     const block = blocks.get(query(blocks).getAt(row, col));
     return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
   }
@@ -237,8 +238,7 @@
     }
 
     if (combination(e) === 'Ctrl+Slash') {
-      let [row, col] = selection;
-      dispatch('change', { row, col, value: toggleComment(getActiveCellValue()) });
+      commentRange(thisSheet, selection, toggleComment);
       e.preventDefault();
       return;
     }
