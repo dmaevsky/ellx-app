@@ -602,8 +602,6 @@
     {#if editorSession !== null}
       <CellEditor
         {transparent}
-        {isFormula}
-        {closeEditor}
         bind:node={editor}
         bind:value={editorSession}
         on:input={autoSizeEditor}
