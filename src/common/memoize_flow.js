@@ -4,7 +4,7 @@ export default (fn, expiry = 0, cache = {}) => {
   const [expiryResults, expiryErrors] = Array.isArray(expiry) ? expiry : [expiry, expiry];
 
   const expire = (it, key, ms) => {
-    if (ms === 0) {
+    if (ms === 0 && cache[key] === it) {
       delete cache[key];
     }
     else if (isFinite(ms)) {

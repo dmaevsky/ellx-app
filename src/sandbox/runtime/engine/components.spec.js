@@ -4,7 +4,11 @@ import CalcGraph from './calc_graph.js';
 
 const store = writable(42);
 
-const cg = new CalcGraph([], () => ({ store }));
+const cg = new CalcGraph(
+  'file:///self.ellx',
+  () => undefined,
+  url => url === 'file:///self.js' && { store }
+);
 
 test('A simple subscribable', t => {
   cg.autoCalc.set(true);

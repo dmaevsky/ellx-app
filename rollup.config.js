@@ -88,21 +88,21 @@ export default [
       dir: 'dist',
     },
   },
-  {
-    input: 'src/runtime.js',
-    plugins: [
-      modify(env),
-      resolve({ browser: true }),
-      commonjs(),
+  // {
+  //   input: 'src/runtime.js',
+  //   plugins: [
+  //     modify(env),
+  //     resolve({ browser: true }),
+  //     commonjs(),
 
-      svelte(svelteOptions),
-      production && terser()
-    ],
-    output: {
-      sourcemap: !production,
-      format: 'iife',
-      name: 'Runtime',
-      dir: 'dist',
-    }
-  }
+  //     svelte(svelteOptions),
+  //     production && terser()
+  //   ],
+  //   output: {
+  //     sourcemap: !production,
+  //     format: 'iife',
+  //     name: 'Runtime',
+  //     dir: 'dist',
+  //   }
+  // }
 ];

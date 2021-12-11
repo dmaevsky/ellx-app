@@ -3,7 +3,7 @@ import { fromObservable } from '../adapters';
 export function exportCalcGraph(id, getCalcGraph) {
   let exportCount = 0;
 
-  const exports = new Proxy({}, {
+  return new Proxy({}, {
     has() {
       return true;
     },
@@ -13,16 +13,7 @@ export function exportCalcGraph(id, getCalcGraph) {
 
       const nodeId = id + ':' + name;
 
-      return {
-        id: nodeId,
-        ...fromObservable(node.currentValue, { name: `Export node: ${nodeId} @${exportCount++}` })
-      };
+      return fromObservable(node.currentValue, { name: `Export node: ${nodeId} @${exportCount++}` });
     }
   });
-
-  return {
-    id,
-    code: { exports },
-    imports: {}
-  };
 }

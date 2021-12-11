@@ -1,6 +1,6 @@
 import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
-import { makeReactive } from 'conclure-quarx';
+import { reactiveFlow } from 'conclure-quarx';
 import { isFlow, isIterator } from 'conclure';
 import { isStale, isSubscribable } from './quack.js';
 import { binaryOp, unaryOp, transpile } from './transpile.js';
@@ -328,13 +328,6 @@ function JIT_transpile(node, op, shouldTranspile) {
     else node.transpile = op;
     return op(...parts);
   };
-}
-
-const reactiveFlow = it => {
-  if (isIterator(it)) {
-    makeReactive(it).reportObserved();
-  }
-  return it;
 }
 
 function JIT_reactiveFlow(node) {

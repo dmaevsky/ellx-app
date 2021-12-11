@@ -9,18 +9,18 @@
 
   import store, { devServer, contents, getSheet } from '../runtime/store';
   import CalcGraph from '../runtime/engine/calc_graph';
-  import { graphs } from '../runtime/store';
-  import { resolveSiblings, resolveRequire } from '../runtime/hydrated';
+  import { moduleMap, requireModule } from '../runtime/module_manager.js';
   import mountEllxApp from '../runtime/mount_app.js';
 
-  const htmlContentId = 'mainApp';
+  const htmlContentId = 'file:///src/index.html';
 
   const htmlCalcGraph = new CalcGraph(
-    resolveSiblings('html', htmlContentId),
-    resolveRequire('html', htmlContentId)
+    htmlContentId,
+    url => moduleMap.get(url),
+    url => requireModule(url, htmlContentId)
   );
 
-  graphs.set(htmlContentId, htmlCalcGraph);
+  moduleMap.set(htmlContentId, htmlCalcGraph);
   htmlCalcGraph.autoCalc.set(true);
 
   setActiveContent(htmlContentId);
@@ -32,6 +32,10 @@
 
   function setActiveContent(contentId) {
     store.commit(SET_ACTIVE_CONTENT, { contentId });
+  }
+
+  function escapeId(contentId) {
+    return contentId.replace(/[^a-zA-Z0-9-_]+/g, '-');
   }
 
   function listen({ data }) {
@@ -109,7 +113,7 @@
   }
 
   function focus(contentId) {
-    const container = document.querySelector(`#sheet-${contentId} .grid__container`);
+    const container = document.querySelector(`#sheet-${escapeId(contentId)} .grid__container`);
     if (container) container.focus();
   }
 
@@ -140,7 +144,7 @@
 />
 
 {#each sheets as contentId (contentId)}
-  <div class="sheet" id="sheet-{contentId}" class:hidden={contentId !== activeContentId}>
+  <div class="sheet" id="sheet-{escapeId(contentId)}" class:hidden={contentId !== activeContentId}>
     <Worksheet store={getSheet(contentId)}/>
   </div>
 {/each}

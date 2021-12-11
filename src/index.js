@@ -12,7 +12,7 @@ import { readFile } from 'fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 import { startDevPipe } from './dev_pipe.js';
-import { deploy } from './deploy.js';
+// import { deploy } from './deploy.js';
 
 import { conclude } from 'conclure';
 
@@ -53,6 +53,8 @@ if (mainOptions.command === 'start') {
   wss.on('connection', ws => startDevPipe(ws, process.cwd()));
 }
 else if (mainOptions.command === 'deploy') {
+  throw new Error('Temporarily disabled');
+
   const deployDefinitions = [
     { name: 'env', defaultOption: true, default: process.env.NODE_ENV || 'staging', type: String }
   ];

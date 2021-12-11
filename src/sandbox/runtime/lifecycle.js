@@ -1,9 +1,9 @@
-import { derived } from 'tinyx';
 import { batch } from 'quarx';
+import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
 import objectId from './utils/object_id';
-import store, { getSheet, notifyParent, graphs as hydratedGraphs, namespaces as hydratedNamespaces } from './store';
-import { resolveSiblings, resolveRequire, requireGraph, resolverMeta } from './hydrated';
+import store, { getSheet, notifyParent } from './store';
+import { requireModule, moduleMap, evalUMD } from './module_manager';
 
 import CalcGraph from './engine/calc_graph';
 
@@ -21,11 +21,12 @@ function sendContent(contentId, blocks) {
 
 export function init(contentId, contents) {
   const cg = new CalcGraph(
-    resolveSiblings('ellx', contentId),
-    resolveRequire('ellx', contentId)
+    contentId,
+    url => moduleMap.get(url),
+    url => requireModule(url, contentId)
   );
 
-  hydratedGraphs.set(contentId, cg);
+  moduleMap.set(contentId, cg);
 
   store.commit(UPDATE_CONTENT, {
     contentId,
@@ -63,27 +64,31 @@ export function dispose(contentId) {
   if (typeof unsubscribe === 'function') unsubscribe();
   autoSave.delete(contentId);
 
-  const cg = hydratedGraphs.get(contentId);
+  const cg = moduleMap.get(contentId);
   if (cg && cg.dispose) cg.dispose();
 
-  hydratedGraphs.delete(contentId);
+  moduleMap.delete(contentId);
 
   store.commit(REMOVE_CONTENT, { contentId });
 }
 
-export function bundle(g, meta) {
-  console.debug('received bundle in the frame ***', g, meta);
-
-  document.querySelectorAll('script[id^="file:///"]')
-    .forEach(script => script.remove());
+export function updateModules(modules) {
+  console.debug('UPDATE modules ***', modules);
 
   batch(() => {
-    requireGraph.set(g);
-    resolverMeta.set(meta);
-  });
-}
+    for (let id in modules) {
 
-export function namespaces(families) {
-  console.debug('received namespaces in the frame ***', families);
-  hydratedNamespaces.set(families);
+      if (modules[id] === undefined) {
+        moduleMap.delete(id);
+      }
+      else if (id.endsWith('/package.json')) {
+        moduleMap.set(id, { code: { exports: modules[id] } });
+      }
+      else {
+        const node = modules[id];
+        node.code = evalUMD(id, node.code);
+        moduleMap.set(id, node);
+      }
+    }
+  });
 }

@@ -1,19 +1,21 @@
 import { createAtom, batch } from 'quarx';
 
-export function observableMap(options = {}) {
+export function observableMap(map = new Map(), options = {}) {
   const {
     name = 'observableMap',
+    equals = (a, b) => a === b
   } = options;
 
-  const map = new Map();
   const atoms = new Map();
+
+  // This atom is an optimization: an operation touching all elements would only need to report this one observed
   const allElements = createAtom(null, { name: name + '.*'});
 
   function reportObserved(key) {
     const atom = atoms.get(key) || createAtom(
       () => {
         atoms.set(key, atom);
-        return () => atoms.delete(key);
+        return () => atom === atoms.get(key) && atoms.delete(key);
       },
       { name: name + '.' + key }
     );
@@ -38,9 +40,13 @@ export function observableMap(options = {}) {
     },
     set(key, value) {
       const existed = map.has(key);
-      map.set(key, value);
+      const unchanged = equals(map.get(key), value);
 
-      if (!existed) reportChanged(key);
+      if (existed && unchanged) return this;
+
+      map.set(key, value);
+      reportChanged(key);
+
       return this;
     },
     delete(key) {
@@ -54,10 +60,13 @@ export function observableMap(options = {}) {
         for (let key of map.keys()) this.delete(key);
       });
     },
-    toJS: () => {
+    toJS() {
       allElements.reportObserved();
       return map;
     },
-    values: () => map.values()
+    values() {
+      allElements.reportObserved();
+      return map.values();
+    }
   };
 }
