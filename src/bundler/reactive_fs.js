@@ -8,7 +8,8 @@ import autoMemo from '../common/auto_memoize.js';
 export default (rootDir, options = {}) => {
   const {
     logger = () => {},
-    changeDebounce = 50
+    changeDebounce = 50,
+    invalidator
   } = options;
 
   const files = new Map();
@@ -92,7 +93,7 @@ export default (rootDir, options = {}) => {
         throw new Error(`[ReactiveFS]: unobserved ${key}`);
       }
       return exists(getPath(key));
-    }),
+    }, { invalidator }),
 
     get: autoMemo(key => {
       if (!reportObserved(key)) {
@@ -101,6 +102,6 @@ export default (rootDir, options = {}) => {
 
       files.get(key).atomContents.reportObserved();
       return load(getPath(key));
-    })
+    }, { invalidator })
   }
 }

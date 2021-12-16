@@ -1,4 +1,4 @@
-import { autorun } from 'quarx';
+import { autorun, createAtom } from 'quarx';
 import { reactiveFlow } from 'conclure-quarx';
 import { conclude, getResult } from 'conclure';
 import { allSettled } from 'conclure/combinators';
@@ -9,8 +9,11 @@ import { preloadEllxProject, transformModule } from './module_loader.js';
 import autoMemo from '../common/auto_memoize.js';
 
 export default function reactiveBuild(getEntryPoints, rootDir, updateModules) {
+  const completeSignal = createAtom();
+
   const files = reactiveFS(rootDir, {
-    logger: console.debug
+    logger: console.debug,
+    invalidator: completeSignal
   });
 
   let bundle = {};
@@ -52,11 +55,13 @@ export default function reactiveBuild(getEntryPoints, rootDir, updateModules) {
 
   const resolveId = resolver({
     isFile,
-    loadPkgJSON: autoMemo(loadPkgJSON)
+    loadPkgJSON: autoMemo(loadPkgJSON, { invalidator: completeSignal })
   });
 
   const memoize = fn => autoMemo((key, ...args) => {
     return reactiveFlow(bundle[key] = fn(key, ...args));
+  }, {
+    invalidator: completeSignal
   });
 
   const loadModule = tokamak({
@@ -81,7 +86,7 @@ export default function reactiveBuild(getEntryPoints, rootDir, updateModules) {
           continue;
         }
 
-        const { error, result } = getResult(bundle[id]);
+        const { error, result } = getResult(bundle[id]) || { result: 'deleted' };
         if (error) {
           bundle[id] = {
             id,
@@ -98,6 +103,7 @@ export default function reactiveBuild(getEntryPoints, rootDir, updateModules) {
 
       bundle = {};
       pjsons = {};
+      completeSignal.reportChanged();
     });
   }, { name: 'reactiveBuild' });
 }

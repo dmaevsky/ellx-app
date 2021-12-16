@@ -3,7 +3,7 @@ import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
 import objectId from './utils/object_id';
 import store, { getSheet, notifyParent } from './store';
-import { requireModule, moduleMap, evalUMD } from './module_manager';
+import { requireModule, moduleMap, evalUMD, removeModule } from './module_manager';
 
 import CalcGraph from './engine/calc_graph';
 
@@ -78,7 +78,8 @@ export function updateModules(modules) {
   batch(() => {
     for (let id in modules) {
 
-      if (modules[id] === undefined) {
+      if (modules[id] === 'deleted') {
+        removeModule(id);
         moduleMap.delete(id);
       }
       else if (id.endsWith('/package.json')) {

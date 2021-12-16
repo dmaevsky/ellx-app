@@ -12,7 +12,12 @@ const resolveId = resolver({
 
 export function requireModule(url, baseUrl) {
   if (baseUrl && baseUrl !== url) {
-    url = asyncCell(resolveId(url, baseUrl), { name: `[Resolve]: ${url} <- ${baseUrl}`});
+    const resolvedUrl = asyncCell(resolveId(url, baseUrl), { name: `[Resolve]: ${url} <- ${baseUrl}`});
+
+    if (!resolvedUrl) {
+      throw new Error(`Cannot resolve ${url} from ${baseUrl}`);
+    }
+    url = resolvedUrl;
   }
 
   const getModule = () => {
@@ -81,11 +86,15 @@ export function requireModule(url, baseUrl) {
   }
 }
 
-export function evalUMD(id, code) {
+export function removeModule(id) {
   const existingScript = document.getElementById(id);
   if (existingScript) {
     existingScript.remove();
   }
+}
+
+export function evalUMD(id, code) {
+  removeModule(id);
 
   const script = document.createElement('script');
   script.id = id;
