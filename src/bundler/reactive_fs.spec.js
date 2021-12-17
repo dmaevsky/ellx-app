@@ -5,26 +5,32 @@ import { delay } from 'conclure/effects';
 import reactveFS from './reactive_fs.js';
 import { join, dirname } from 'path';
 import { promisify } from 'util';
+import chokidar from 'chokidar';
 
 import { fileURLToPath } from 'url';
 import { writeFile, unlink } from 'fs/promises';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const rootDir = dirname(fileURLToPath(import.meta.url));
+
+const watcher = chokidar.watch(rootDir);
 
 const purgeSignal = createAtom();
 
-const files = reactveFS(__dirname, {
+const files = reactveFS(watcher, {
+  rootDir,
   logger: console.debug,
   invalidator: purgeSignal
 });
 
 const key = 'file:///test.txt';
-const filename = join(__dirname, fileURLToPath(key));
+const filename = join(rootDir, fileURLToPath(key));
 
 const run = promisify(conclude);
 
+test.after(() => watcher.unwatch(rootDir));
+
 // This test passes, just needs long delays to work properly (because of chokidar)
-test('reactive FS', async t => {
+test.skip('reactive FS', async t => {
   const existsEvents = [];
   const changeEvents = [];
 

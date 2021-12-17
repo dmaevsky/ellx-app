@@ -1,14 +1,14 @@
-import chokidar from 'chokidar';
 import { join } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { promises as fs } from 'fs';
 import { createAtom, batch } from 'quarx';
 import autoMemo from '../common/auto_memoize.js';
 
-export default (rootDir, options = {}) => {
+export default (watcher, options = {}) => {
   const {
+    rootDir,
     logger = () => {},
-    changeDebounce = 50,
+    changeDebounce = 100,
     invalidator
   } = options;
 
@@ -35,18 +35,14 @@ export default (rootDir, options = {}) => {
     }), changeDebounce);
   }
 
-  const watcher = chokidar.watch([], {
-    ignoreInitial: true
-  });
-
   watcher.on('all', (event, path) => {
-    logger('[ReactiveFS]', event, path);
-
     const key = pathToFileURL(path.slice(rootDir.length)).href;
 
     const file = files.get(key);
 
-    if (!file) return;  // Event emitted after the file is unwatched -> just ignore it
+    if (!file) return;  // file is not watched -> just ignore it
+
+    logger('[ReactiveFS]', event, path);
 
     if (event === 'add' || event === 'unlink') {
       reportChanged(file.atom);
@@ -71,13 +67,11 @@ export default (rootDir, options = {}) => {
         }
 
         files.set(key, file);
-        watcher.add(path);
 
         logger('[ReactiveFS]', 'watching', path);
 
         return () => {
           logger('[ReactiveFS]', 'unwatching', path);
-          watcher.unwatch(path);
           files.delete(key);
         }
       },

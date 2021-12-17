@@ -8,10 +8,11 @@ import reactiveFS from './reactive_fs.js';
 import { preloadEllxProject, transformModule } from './module_loader.js';
 import autoMemo from '../common/auto_memoize.js';
 
-export default function reactiveBuild(getEntryPoints, rootDir, updateModules) {
+export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, updateModules) {
   const completeSignal = createAtom();
 
-  const files = reactiveFS(rootDir, {
+  const files = reactiveFS(fsWatcher, {
+    rootDir,
     logger: console.debug,
     invalidator: completeSignal
   });

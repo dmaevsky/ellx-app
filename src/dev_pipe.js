@@ -11,7 +11,6 @@ import reactiveBuild from './bundler/reactive_build.js';
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
 
-  const globs = ['html', 'ellx', 'md'].map(ext => `${rootDir}/src/**/*.${ext}`);
   const watchList = new Set();
   const entryPointsAtom = createAtom();
 
@@ -22,9 +21,12 @@ export function startDevPipe(ws, rootDir) {
     equals: (a, b) => a && b && a.size === b.size && [...a].every(el => b.has(el))
   });
 
-  const watcher = chokidar.watch(globs);
+  const watcher = chokidar.watch(rootDir);
+  const srcPath = join(rootDir, 'src');
 
   const add = async path => {
+    if (!path.startsWith(srcPath) || !/\.(html|md|ellx)$/.test(path)) return;
+
     const id = pathToFileURL(path.slice(rootDir.length)).href;
 
     watchList.add(id);
@@ -42,6 +44,8 @@ export function startDevPipe(ws, rootDir) {
 
   const unlink = path => {
     const id = pathToFileURL(path.slice(rootDir.length)).href;
+
+    if (!watchList.has(id)) return;
 
     if (path.endsWith('.ellx')) {
       send({
@@ -70,6 +74,7 @@ export function startDevPipe(ws, rootDir) {
     .on('unlink', unlink)
     .on('ready', () => reactiveBuild(
       () => [...entryPoints.get()],
+      watcher,
       rootDir,
       modules => send({
         type: 'updateModules',

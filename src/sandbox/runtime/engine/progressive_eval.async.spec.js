@@ -27,7 +27,7 @@ const parse = formula => {
 
 test('async error', async t => {
   const evaluator = parse('delayed(1, () => x.something.wrong)()');
-  await t.throwsAsync(evaluator, { instanceOf: Error, message: 'Cannot read property \'wrong\' of undefined' });
+  await t.throwsAsync(evaluator, { instanceOf: Error, message: 'Cannot read properties of undefined (reading \'wrong\')' });
 });
 
 test('async MemberExpression with a ComputedProperty', async t => {
