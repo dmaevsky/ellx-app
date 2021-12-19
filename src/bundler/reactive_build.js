@@ -1,6 +1,6 @@
-import { autorun } from 'quarx';
+import { autorun, createAtom } from 'quarx';
 import { reactiveFlow } from 'conclure-quarx';
-import { conclude, getResult } from 'conclure';
+import { conclude } from 'conclure';
 import { allSettled } from 'conclure/combinators';
 import tokamak from 'tokamak';
 import resolver from 'tokamak/resolve';
@@ -59,9 +59,24 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
     loadPkgJSON: autoMemo(loadPkgJSON, { gc })
   });
 
-  const memoize = fn => autoMemo((key, ...args) => {
-    return reactiveFlow(bundle[key] = fn(key, ...args));
-  }, { gc });
+  function* assembleBundle(fn, key, ...args) {
+    createAtom(() => () => {
+      if (!bundle[key]) bundle[key] = 'deleted';
+    }).reportObserved();
+
+    try {
+      bundle[key] = yield fn(key, ...args);
+    }
+    catch (error) {
+      bundle[key] = {
+        id: key,
+        code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})`
+      };
+    }
+    return bundle[key];
+  }
+
+  const memoize = fn => autoMemo((...args) => reactiveFlow(assembleBundle(fn, ...args)), { gc });
 
   const loadModule = tokamak({
     resolveId,
@@ -79,20 +94,14 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
     console.log('Incremental build', entryPoints);
 
     cancel = conclude(reactiveFlow(allSettled(entryPoints.map(id => loadModule(id)))), () => {
+      for (let dispose of gc) dispose();
+      gc.clear();
+
       for (let id in bundle) {
         if (/\.(html|md|ellx)$/.test(id)) {
           delete bundle[id];
           continue;
         }
-
-        const { error, result } = getResult(bundle[id]) || { result: 'deleted' };
-        if (error) {
-          bundle[id] = {
-            id,
-            code: `throw new Error(${JSON.stringify(error.message || 'Unknown error: ' + error)})`
-          };
-        }
-        else bundle[id] = result;
       }
 
       updateModules({
@@ -102,9 +111,6 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
 
       bundle = {};
       pjsons = {};
-
-      for (let dispose of gc) dispose();
-      gc.clear();
     });
   }, { name: 'reactiveBuild' });
 }
