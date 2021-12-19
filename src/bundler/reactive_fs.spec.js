@@ -1,5 +1,5 @@
 import test from 'ava';
-import { autorun, createAtom } from 'quarx';
+import { autorun } from 'quarx';
 import { conclude } from 'conclure';
 import { delay } from 'conclure/effects';
 import reactveFS from './reactive_fs.js';
@@ -14,12 +14,12 @@ const rootDir = dirname(fileURLToPath(import.meta.url));
 
 const watcher = chokidar.watch(rootDir);
 
-const purgeSignal = createAtom();
+const gc = new Set();
 
 const files = reactveFS(watcher, {
   rootDir,
   logger: console.debug,
-  invalidator: purgeSignal
+  gc
 });
 
 const key = 'file:///test.txt';
@@ -61,7 +61,7 @@ test.skip('reactive FS', async t => {
   await run(allSteps());
   stop1();
   stop2();
-  purgeSignal.reportChanged();
+  for (let dispose of gc) dispose();
 
   t.deepEqual(existsEvents, [false, true, false].map(exists => ({ err: null, exists })));
   t.deepEqual(changeEvents, [undefined, 'FOO', 'BAR', undefined].map(body => ({ err: null, body })));
