@@ -9,7 +9,7 @@ export default (watcher, options = {}) => {
     rootDir,
     logger = () => {},
     changeDebounce = 100,
-    invalidator
+    gc
   } = options;
 
   const files = new Map();
@@ -87,7 +87,7 @@ export default (watcher, options = {}) => {
         throw new Error(`[ReactiveFS]: unobserved ${key}`);
       }
       return exists(getPath(key));
-    }, { invalidator }),
+    }, { gc }),
 
     get: autoMemo(key => {
       if (!reportObserved(key)) {
@@ -96,6 +96,6 @@ export default (watcher, options = {}) => {
 
       files.get(key).atomContents.reportObserved();
       return load(getPath(key));
-    }, { invalidator })
+    }, { gc })
   }
 }

@@ -1,16 +1,13 @@
 import { createAtom, autorun } from 'quarx';
 import { whenFinished, isFlow } from 'conclure';
 import { reactiveFlow } from 'conclure-quarx';
-import triggerBatch from './trigger_batch.js';
 
 export default (fn, options = {}) => {
   const {
     cache = new Map(),
     equals = (a, b) => a === b,
-    invalidator
+    gc
   } = options;
-
-  const pendingInvalidate = invalidator && triggerBatch(invalidator);
 
   return (key, ...args) => {
     if (cache.has(key)) {
@@ -27,9 +24,9 @@ export default (fn, options = {}) => {
     }
 
     const atom = createAtom(() => {
-      if (pendingInvalidate) {
-        pendingInvalidate.remove(key);
-        return () => pendingInvalidate.add(key, invalidate);
+      if (gc) {
+        gc.delete(invalidate);
+        return () => gc.add(invalidate);
       }
       return invalidate;
     }, {
