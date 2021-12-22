@@ -1,45 +1,47 @@
-import getRequire from './sandbox/runtime/tokamak_dynamic.js';
-import { exportCalcGraph } from './sandbox/runtime/engine/calc_graph_export.js';
+import ModuleManager from './sandbox/runtime/module_manager.js';
 import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
 import mountEllxApp from './sandbox/runtime/mount_app.js';
 
-export default function initializeEllxApp({ requireGraph, resolverMeta }, sheets, environment) {
-  const rootNamespace = 'file:///src/index';
-  const graph = {};
+function hydrate(node) {
+  if (!node.src || node.code) return;
 
-  const require = getRequire({ graph, resolverMeta, environment });
+  node.code = fetch(node.src)
+    .then(res => res.text())
+    .catch(console.error);
+}
 
-  require.hydrate(Object.values(requireGraph), err => {
-    if (err) throw err;
-  });
+export default function initializeEllxApp(modules, sheets, environment) {
+  const Module = ModuleManager(modules, environment);
 
-  const resolveRequire = bundleId => url => url
-    ? require(url, bundleId)
-    : graph[bundleId] && require(bundleId);
+  modules.values().forEach(hydrate);
+
+  const htmlContentId = 'file:///src/index.html';
 
   const htmlCalcGraph = new CalcGraph(
-    [() => sheets[rootNamespace + '.ellx']],
-    resolveRequire(rootNamespace + '.js')
+    htmlContentId,
+    url => Module.get(url),
+    url => Module.require(url, htmlContentId)
   );
 
   htmlCalcGraph.autoCalc.set(true);
+  Module.set(htmlContentId, htmlCalcGraph);
 
   // initialize sheets
   for (let sheetId in sheets) {
-    const ns = sheetId.slice(0, sheetId.lastIndexOf('.'));
-    const siblings = ns === rootNamespace ? [() => htmlCalcGraph] : [];
-
-    const cg = new CalcGraph(siblings, resolveRequire(ns + '.js'));
+    const cg = new CalcGraph(
+      sheetId,
+      url => Module.get(url),
+      url => Module.require(url, sheetId)
+    );
 
     const nodes = sheets[sheetId];
 
     for (let name in nodes) {
       cg.insert(name, nodes[name]);
     }
-    cg.autoCalc.set(true);
 
-    sheets[sheetId] = cg;
-    graph[sheetId] = exportCalcGraph(sheetId, () => cg);
+    cg.autoCalc.set(true);
+    Module.set(sheetId, cg);
   }
 
   mountEllxApp(document.body, htmlCalcGraph);

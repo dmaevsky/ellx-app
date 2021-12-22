@@ -1,5 +1,4 @@
-import store, { oActiveContentId, contents } from './store';
-import { moduleMap } from './module_manager.js'
+import store, { Module, oActiveContentId, contents } from './store';
 import { UPDATE_CONTENT } from './mutations';
 import { computed } from 'quarx';
 
@@ -54,7 +53,7 @@ export const activeNodes = computed(() => {
 
   if (!namespace) return {};
 
-  const activeGraphs = Object.fromEntries(types.map(t => [t, moduleMap.get(namespace + t)]));
+  const activeGraphs = Object.fromEntries(types.map(t => [t, Module.get(namespace + t)]));
   const allNodes = Object.values(activeGraphs).reduce((acc, cur) => [...acc, ...getNodes(cur)], []);
   const processor = getNodeProcessor(allNodes);
 

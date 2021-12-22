@@ -1,13 +1,12 @@
 import { batch } from 'quarx';
 import { derived } from 'tinyx';
-import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations';
-import objectId from './utils/object_id';
-import store, { getSheet, notifyParent } from './store';
-import { requireModule, moduleMap, evalUMD, removeModule } from './module_manager';
+import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations.js';
+import objectId from './utils/object_id.js';
+import store, { Module, getSheet, notifyParent } from './store.js';
 
-import CalcGraph from './engine/calc_graph';
+import CalcGraph from './engine/calc_graph.js';
 
-import { buildBlocks, saveBody } from './body_parse';
+import { buildBlocks, saveBody } from './body_parse.js';
 
 const autoSave = new Map();
 
@@ -22,11 +21,11 @@ function sendContent(contentId, blocks) {
 export function init(contentId, contents) {
   const cg = new CalcGraph(
     contentId,
-    url => moduleMap.get(url),
-    url => requireModule(url, contentId)
+    url => Module.get(url),
+    url => Module.require(url, contentId)
   );
 
-  moduleMap.set(contentId, cg);
+  Module.set(contentId, cg);
 
   store.commit(UPDATE_CONTENT, {
     contentId,
@@ -64,10 +63,7 @@ export function dispose(contentId) {
   if (typeof unsubscribe === 'function') unsubscribe();
   autoSave.delete(contentId);
 
-  const cg = moduleMap.get(contentId);
-  if (cg && cg.dispose) cg.dispose();
-
-  moduleMap.delete(contentId);
+  Module.remove(contentId);
 
   store.commit(REMOVE_CONTENT, { contentId });
 }
@@ -79,16 +75,14 @@ export function updateModules(modules) {
     for (let id in modules) {
 
       if (modules[id] === 'deleted') {
-        removeModule(id);
-        moduleMap.delete(id);
+        Module.remove(id);
       }
       else if (id.endsWith('/package.json')) {
-        moduleMap.set(id, { code: { exports: modules[id] } });
+        Module.set(id, { code: { exports: modules[id] } });
       }
       else {
         const node = modules[id];
-        node.code = evalUMD(id, node.code);
-        moduleMap.set(id, node);
+        Module.set(id, node);
       }
     }
   });

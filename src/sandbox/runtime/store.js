@@ -4,7 +4,9 @@ import { enableUndoRedo } from 'tinyx/middleware/undo_redo';
 import { makeStore } from './utils/make_store';
 import cgConnect from './cg_connect';
 import { toObservable } from './adapters';
-import { moduleMap } from './module_manager.js';
+import ModuleManager from './module_manager.js';
+
+export const Module = ModuleManager();
 
 const store = makeStore({
   contents: new Map(),
@@ -26,12 +28,12 @@ export function logByLevel(level, ...messages) {
 export default store;
 
 window.__ellx = {
-  store, moduleMap
+  store
 };
 
 export const getSheet = (contentId) => applyMiddleware(
   select(store, () => ['contents', contentId]),
-  [enableUndoRedo, cgConnect(moduleMap.get(contentId))]
+  [enableUndoRedo, cgConnect(Module.get(contentId))]
 );
 
 export const contents = select(store, () => ['contents']);

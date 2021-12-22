@@ -1,26 +1,25 @@
 <script>
   import { onMount, tick } from 'svelte';
-  import * as actions from '../runtime/lifecycle';
-  import Worksheet from './Worksheet';
-  import NodeNavigator from './NodeNavigator';
-  import Tailwind from './Tailwind';
-  import { combination } from '../runtime/utils/mod_keys';
-  import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
+  import * as actions from '../runtime/lifecycle.js';
+  import Worksheet from './Worksheet.svelte';
+  import NodeNavigator from './NodeNavigator.svelte';
+  import Tailwind from './Tailwind.svelte';
+  import { combination } from '../runtime/utils/mod_keys.js';
+  import { SET_ACTIVE_CONTENT } from '../runtime/mutations.js';
 
-  import store, { devServer, contents, getSheet } from '../runtime/store';
-  import CalcGraph from '../runtime/engine/calc_graph';
-  import { moduleMap, requireModule } from '../runtime/module_manager.js';
+  import store, { Module, devServer, contents, getSheet } from '../runtime/store.js';
+  import CalcGraph from '../runtime/engine/calc_graph.js';
   import mountEllxApp from '../runtime/mount_app.js';
 
   const htmlContentId = 'file:///src/index.html';
 
   const htmlCalcGraph = new CalcGraph(
     htmlContentId,
-    url => moduleMap.get(url),
-    url => requireModule(url, htmlContentId)
+    url => Module.get(url),
+    url => Module.require(url, htmlContentId)
   );
 
-  moduleMap.set(htmlContentId, htmlCalcGraph);
+  Module.set(htmlContentId, htmlCalcGraph);
   htmlCalcGraph.autoCalc.set(true);
 
   setActiveContent(htmlContentId);
