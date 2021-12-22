@@ -11,9 +11,9 @@ function hydrate(node) {
 }
 
 export default function initializeEllxApp(modules, sheets, environment) {
-  const Module = ModuleManager(modules, environment);
+  const Module = ModuleManager(new Map(Object.entries(modules)), environment);
 
-  modules.values().forEach(hydrate);
+  Object.values(modules).forEach(hydrate);
 
   const htmlContentId = 'file:///src/index.html';
 
