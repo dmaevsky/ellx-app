@@ -52,12 +52,22 @@
   }
 
   let mountPoint;
+  let devServerConnected = true;
+
+  function disconnect() {
+    devServerConnected = false;
+  }
 
   onMount(() => {
     mountEllxApp(mountPoint, htmlCalcGraph);
 
     devServer.addEventListener('message', listen);
-    return () => devServer.removeEventListener('message', listen);
+    devServer.addEventListener('close', disconnect);
+
+    return () => {
+      devServer.removeEventListener('message', listen);
+      devServer.removeEventListener('close', disconnect);
+    }
   });
 
   function kbListen(e) {
@@ -144,7 +154,11 @@
 
 {#each sheets as contentId (contentId)}
   <div class="sheet" id="sheet-{escapeId(contentId)}" class:hidden={contentId !== activeContentId}>
-    <Worksheet store={getSheet(contentId)}/>
+    {#if devServerConnected}
+      <Worksheet store={getSheet(contentId)}/>
+    {:else}
+      <div class="text-error-500">Dev server disconnected...</div>
+    {/if}
   </div>
 {/each}
 

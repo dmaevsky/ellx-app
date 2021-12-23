@@ -1,6 +1,6 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
@@ -40,9 +40,7 @@
     "command-line-args": "^5.1.1",
     "conclure": "^2.0.0",
     "conclure-quarx": "^0.4.3",
-    "lodash-es": "^4.17.21",
     "md5": "^2.3.0",
-    "nanoid": "^3.1.23",
     "node-abort-controller": "^2.0.0",
     "node-fetch": "^2.6.1",
     "polka": "^0.5.2",

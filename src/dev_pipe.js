@@ -67,12 +67,20 @@ export function startDevPipe(ws, rootDir) {
       fs.writeFile(path, body, 'utf8').catch(console.error);
     }
     catch {}
-  })
+  });
+
+  let cancelBuild;
+  ws.on('close', () => {
+    if (cancelBuild) cancelBuild();
+
+    watcher.close()
+      .catch(console.error);
+  });
 
   watcher
     .on('add', add)
     .on('unlink', unlink)
-    .on('ready', () => reactiveBuild(
+    .on('ready', () => cancelBuild = reactiveBuild(
       () => [...entryPoints.get()],
       watcher,
       rootDir,
