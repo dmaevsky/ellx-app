@@ -93,8 +93,7 @@
       width: ${(colEnd - colStart + 1) * columnWidth + 2}px;
     `
   })(copySelection);
-  $: if (selection) requestAnimationFrame(() => scrollIntoView(selection));
-  $: if (highlight) requestAnimationFrame(() => scrollIntoView(highlight));
+  $: requestAnimationFrame(() => scrollIntoView(isEditMode? highlight : selection));
 
   function getCoords(e) {
     const { left, top } = container.getBoundingClientRect();
