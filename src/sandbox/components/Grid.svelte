@@ -125,9 +125,8 @@
   }
 
   function getValue(row, col) {
-    let blockId = query(blocks).getAt(row, col);
-    let block = blocks.get(blockId);
-    if (blockId !== undefined && block.formula !== undefined) {
+    let block = blocks.get(query(blocks).getAt(row, col));
+    if (block && block.node && block.formula && !block.formula.includes(block.node)) {
       return block.node;
     }
     return null;
