@@ -71,7 +71,7 @@ export const clearRange = undoable((thisSheet, range) => {
   for (let blockId of found) clearBlock(thisSheet, blockId);
 });
 
-export const commentRange = undoable((thisSheet, range, cb) => {
+export const commentRange = undoable((thisSheet, range, toggleComment) => {
   const blocks = thisSheet.get("blocks");
   const found = query(blocks).getInRange(normalize(range));
 
@@ -84,6 +84,6 @@ export const commentRange = undoable((thisSheet, range, cb) => {
         : block.formula || block.value
       : "";
 
-    editCell(thisSheet, row, col, cb(value));
+    editCell(thisSheet, row, col, toggleComment(value));
   }
 });
