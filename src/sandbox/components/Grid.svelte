@@ -173,9 +173,7 @@
         const node = getNodeContent(e);
 
         if (node !== null) {
-          let start, end;
-
-          [start, end] = isNodeInserted
+          let [start, end] = isNodeInserted
             ? [editor.selectionStart, editor.selectionEnd]
             : insertRange;
 
@@ -209,9 +207,7 @@
   }
 
   function keyDown(e) {
-    if (e.target !== container) return;
-
-    if (isEditMode) return;
+    if (e.target !== container || isEditMode) return;
 
     if (e.key === 'Enter') {
       e.preventDefault();
