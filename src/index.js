@@ -47,12 +47,12 @@ if (mainOptions.command === "start") {
         else res.end(body);
       })
     )
-    .listen(config.port, async (err) => {
+    .listen(config.port, (err) => {
       if (err) throw err;
       const url = `http://localhost:${config.port}`;
 
       console.log(`> Running on ${url}`);
-      if (config.open) await open(url);
+      if (config.open) open(url).catch((e) => console.log(e));
     });
 
   const wss = new WebSocket.Server({ server, path: "/@@dev" });
