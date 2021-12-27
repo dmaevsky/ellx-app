@@ -37,11 +37,13 @@
   $: if (editorSession !== null) isFormula = detectFormula(editorSession)
 
   $: isEditMode = (editor !== null);
+
   $: if (!isEditMode) {
     insertRange = null;
     isArrowMode = false;
+  } else {
+    highlight = selection;
   }
-  $: if (isEditMode) highlight = selection;
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
   $: if (!isArrowMode) highlight = selection;
@@ -410,8 +412,7 @@
   function scrollIntoView(selector) {
     if (!container) return;
     let { clientWidth, clientHeight, scrollLeft, scrollTop } = container;
-
-    let [rowEnd, colEnd] = selector.slice(2);
+    let [rowEnd, colEnd] = selector.length === 4 ? selector.slice(2) : selector;
     let [ top, left ] = [ rowEnd * rowHeight, colEnd * columnWidth ];
     let [ bottom, right ] = [ top + rowHeight, left + columnWidth ];
 
@@ -429,7 +430,7 @@
   function takeFocus(el) {
     if (el) {
       let x = window.scrollX, y = window.scrollY;
-      el.focus({ preventScroll: true });    // TODO: Remove hack when Safari and Safari iOS will support preventScrolling
+      el.focus({ preventScroll: true });    // TODO: Remove hack when Safari and Safari iOS will support preventScroll
       window.scrollTo(x, y);
     }
   }
@@ -476,7 +477,6 @@
     let mouseMove = e => {
       let { pageX, pageY } = e;
       if (mouseMoveRAF) return;
-
 
       mouseMoveRAF = requestAnimationFrame(() => {
         mouseMoveRAF = 0;
