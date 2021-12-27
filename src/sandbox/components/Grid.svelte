@@ -45,8 +45,7 @@
     highlight = selection;
   }
 
-  $: if (isArrowMode) [arrowRow, arrowCol] = highlight ? highlight : selection;
-  $: if (!isArrowMode) highlight = selection;
+  $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
