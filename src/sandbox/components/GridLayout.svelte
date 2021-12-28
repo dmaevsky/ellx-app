@@ -140,6 +140,12 @@
     return acc;
   }, []);
 
+  function showContent(row, col) {
+    const block = blocks.get(query(blocks).getAt(row, col));
+    const value = block.node ? `${block.node} = ${block.formula}` : block.formula;
+    return value ? value : ""
+  }
+
 </script>
 
 <div
@@ -175,6 +181,7 @@
           class:bg-transparent={transparent}
           class:header={header}
           class="gridlayout__cell gridlines"
+          title={showContent(row, col)}
         >
           <TextCell {cell}/>
         </div>
