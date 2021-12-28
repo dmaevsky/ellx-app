@@ -78,11 +78,7 @@ export const commentRange = undoable((thisSheet, range, toggleComment) => {
   for (let blockId of found) {
     const block = blocks.get(blockId);
     const [row, col] = block.position;
-    const value = block
-      ? block.node
-        ? `${block.node} = ${block.formula}`
-        : block.formula || block.value
-      : "";
+    const value = block.node ? `${block.node} = ${block.formula}` : block.formula || block.value;
 
     editCell(thisSheet, row, col, toggleComment(value));
   }
