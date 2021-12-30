@@ -2,7 +2,7 @@
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
   import query from '../runtime/blocks.js';
   import { setSelection, toggleComment, commentRange } from '../runtime/actions/edit.js';
-  import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys.js';
+  import { CTRL, SHIFT, ALT, modifiers, combination } from '../runtime/utils/mod_keys.js';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -199,6 +199,40 @@
     }
   }
 
+  function handleArrows(e, modKeys, rowStart, rowEnd, colStart, colEnd) {
+    if (modKeys & CTRL) {
+      let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
+      if (which === undefined) return;
+      let direction = (which & 2) - 1;
+
+      let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
+      let currentBlockId = query(blocks).getAt(...origin);
+      let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
+
+      let nextBlock = blocks.get(nextBlockId);
+      let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
+
+      if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
+      else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
+    }
+    else {
+      switch (e.key) {
+        case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
+        case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
+        case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
+        case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
+        case 'Home':       colEnd = 0; break;
+        case 'End':        colEnd = nCols - 1;  break;
+        case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
+        case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
+        default:
+          if (isArrowMode && !(modKeys & SHIFT) && !(modKeys & ALT)) insertRange = null;
+          return null;
+      }
+    }
+    return isArrowMode ? [rowEnd, colEnd] : [rowStart, rowEnd, colStart, colEnd];
+  }
+
   function keyDown(e) {
     if (e.target !== container || isEditMode) return;
 
@@ -238,34 +272,11 @@
       colEnd = colStart;
     }
 
-    if (modKeys & CTRL) {
-      let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
-      if (which === undefined) return;
-      let direction = (which & 2) - 1;
+    const tryKey = handleArrows(e, modKeys, rowStart, rowEnd, colStart, colEnd);
 
-      let origin = (which & 1) ? [rowStart, colEnd] : [rowEnd, colStart];
-      let currentBlockId = query(blocks).getAt(...origin);
-      let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
+    if (!tryKey) return;
 
-      let nextBlock = blocks.get(nextBlockId);
-      let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
-
-      if (which & 1) colEnd = Math.max(0, Math.min(nCols - 1, edge));
-      else rowEnd = Math.max(0, Math.min(nRows - 1, edge));
-    }
-    else {
-      switch (e.key) {
-        case 'ArrowLeft':  if (colEnd > 0) colEnd--;  break;
-        case 'ArrowRight': if (colEnd < nCols - 1) colEnd++;  break;
-        case 'ArrowUp':    if (rowEnd > 0) rowEnd--;  break;
-        case 'ArrowDown':  if (rowEnd < nRows - 1) rowEnd++;  break;
-        case 'Home':       colEnd = 0;  break;
-        case 'End':        colEnd = nCols - 1;  break;
-        case 'PageUp':     rowEnd -= visibleLines();  if (rowEnd < 0) rowEnd = 0;  break;
-        case 'PageDown':   rowEnd += visibleLines();  if (rowEnd >= nRows) rowEnd = nRows - 1;  break;
-        default: return;
-      }
-    }
+    [rowStart, rowEnd, colStart, colEnd] = tryKey;
 
     if (!e.shiftKey) {
       rowStart = rowEnd;
@@ -304,38 +315,13 @@
 
     if (isArrowMode) {
       const modKeys = modifiers(e);
-      if (modKeys & CTRL) {
-        let which = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
-        if (which === undefined) return;
-        let direction = (which & 2) - 1;
+      const tryKey = handleArrows(e, modKeys, arrowRow, arrowRow, arrowCol, arrowCol);
 
-        let origin = [arrowRow, arrowCol];
-        let currentBlockId = query(blocks).getAt(...origin);
-        let nextBlockId = query(blocks).neighbor([...origin, ...origin], which);
+      if (!tryKey) return;
 
-        let nextBlock = blocks.get(nextBlockId);
-        let edge = nextBlock ? currentBlockId === nextBlockId ? nextBlock.position[which] : nextBlock.position[(which + 2) % 4] : direction * Infinity;
-
-        if (which & 1) arrowCol = Math.max(0, Math.min(nCols - 1, edge));
-        else arrowRow = Math.max(0, Math.min(nRows - 1, edge));
-      }
-      else {
-        switch (e.key) {
-          case "ArrowLeft":  if (arrowCol > 0) arrowCol--;  break;
-          case "ArrowRight": if (arrowCol < nCols - 1) arrowCol++; break;
-          case "ArrowUp":    if (arrowRow > 0) arrowRow--; break;
-          case "ArrowDown":  if (arrowRow < nRows - 1) arrowRow++; break;
-          case 'Home':       arrowCol = 0;  break;
-          case 'End':        arrowCol = nCols - 1;  break;
-          case 'PageUp':     arrowRow -= visibleLines();  if (arrowRow < 0) arrowRow = 0;  break;
-          case 'PageDown':   arrowRow += visibleLines();  if (arrowRow >= nRows) arrowRow = nRows - 1;  break;
-          default:           insertRange = null; return;
-        }
-      }
+      highlight = [arrowRow, arrowCol] = tryKey;
 
       e.preventDefault();
-
-      highlight = [arrowRow, arrowCol];
 
       if ((highlight[0] !== selection[0] || highlight[1] !== selection[1]) && isFormula) {
         setInsertRange(getValue(arrowRow, arrowCol));
