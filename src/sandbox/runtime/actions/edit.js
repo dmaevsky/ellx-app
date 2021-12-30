@@ -71,7 +71,13 @@ export const clearRange = undoable((thisSheet, range) => {
   for (let blockId of found) clearBlock(thisSheet, blockId);
 });
 
-export const commentRange = undoable((thisSheet, range, toggleComment) => {
+export function toggleComment(str = "") {
+  return str.trim().startsWith("//")
+      ? str.trim().slice(2).trim()
+      : "// " + str;
+}
+
+export const commentRange = undoable((thisSheet, range) => {
   const blocks = thisSheet.get("blocks");
   const found = query(blocks).getInRange(normalize(range));
 

@@ -1,9 +1,8 @@
 <script>
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
   import query from '../runtime/blocks.js';
-  import { setSelection } from '../runtime/actions/edit.js';
+  import { setSelection, toggleComment, commentRange } from '../runtime/actions/edit.js';
   import { CTRL, modifiers, combination } from '../runtime/utils/mod_keys.js';
-  import { commentRange } from '../runtime/actions/edit';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -227,7 +226,7 @@
     }
 
     if (combination(e) === 'Ctrl+Slash') {
-      commentRange(thisSheet, selection, toggleComment);
+      commentRange(thisSheet, selection);
       e.preventDefault();
       return;
     }
@@ -510,12 +509,6 @@
 
     window.addEventListener('mousemove', mouseMove);
     window.addEventListener('mouseup', mouseUp);
-  }
-
-  function toggleComment(str = "") {
-    return str.trim().startsWith("//")
-      ? str.trim().slice(2).trim()
-      : "// " + str;
   }
 
   // Copy / Cut / Paste events subscription and forwarding
