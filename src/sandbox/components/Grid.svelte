@@ -28,7 +28,6 @@
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
 
-  let isNodeInserted = false;
   let isArrowMode = false;
   let insertRange = null;
   let highlight = selection;
@@ -46,6 +45,8 @@
   }
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
+
+  $: console.log("~ insertRange: ", insertRange )
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
@@ -126,9 +127,7 @@
 
   function getValue(row, col) {
     let block = blocks.get(query(blocks).getAt(row, col));
-    if (block && block.node && block.formula && !block.formula.includes(block.node)) {
-      return block.node;
-    }
+    if (block && block.node && block.formula) return block.node;
     return null;
   }
 
@@ -162,10 +161,6 @@
       if (e.target !== editor) {
         e.preventDefault(); // Prevent select on drag
 
-        if (!insertRange) { // Handle initial value
-          insertRange = [editor.selectionStart, editor.selectionEnd];
-        }
-
         highlightNode(e);
 
         [arrowRow, arrowCol] = highlight;
@@ -173,9 +168,9 @@
         const node = getNodeContent(e);
 
         if (node !== null) {
-          let [start, end] = isNodeInserted
-            ? [editor.selectionStart, editor.selectionEnd]
-            : insertRange;
+          let [start, end] = insertRange
+            ? insertRange
+            : [editor.selectionStart, editor.selectionEnd];
 
           editorSession = [
             editorSession.substring(0, start),
@@ -191,11 +186,10 @@
           });
 
           autoSizeEditor();
-          isNodeInserted = false;
         }
       }
       else {
-        isNodeInserted = true;
+        insertRange = null
       }
     }
     else if (e.target !== editor) {
@@ -336,7 +330,7 @@
           case 'End':        arrowCol = nCols - 1;  break;
           case 'PageUp':     arrowRow -= visibleLines();  if (arrowRow < 0) arrowRow = 0;  break;
           case 'PageDown':   arrowRow += visibleLines();  if (arrowRow >= nRows) arrowRow = nRows - 1;  break;
-          default: isNodeInserted = true; return;
+          default:           insertRange = null; return;
         }
       }
 
@@ -344,20 +338,14 @@
 
       highlight = [arrowRow, arrowCol];
 
-      if (highlight[0] !== selection[0] && highlight[1] !== selection[1] && isFormula) {
-
-        if (!insertRange) { // Handle initial value
-          insertRange = [editor.selectionStart, editor.selectionEnd];
-        }
+      if ((highlight[0] !== selection[0] || highlight[1] !== selection[1]) && isFormula) {
 
         const node = getValue(arrowRow, arrowCol);
 
         if (node !== null) {
-          let start, end;
-
-          [start, end] = isNodeInserted
-                  ? [editor.selectionStart, editor.selectionEnd]
-                  : insertRange;
+          let [start, end] = insertRange
+                  ? insertRange
+                  : [editor.selectionStart, editor.selectionEnd];
 
           editorSession = [
             editorSession.substring(0, start),
@@ -373,9 +361,10 @@
           });
 
           autoSizeEditor();
-          isNodeInserted = false;
         }
       }
+    } else {
+      insertRange = null
     }
   }
 
@@ -598,10 +587,7 @@
         bind:node={editor}
         bind:value={editorSession}
         on:input={autoSizeEditor}
-        on:keydown={(e) => {
-          if (!isArrowMode) isNodeInserted = true;
-          editorKeyDown(e)
-        }}
+        on:keydown={editorKeyDown}
       />
     {/if}
   </div>
