@@ -45,8 +45,6 @@
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
 
-  $: console.log("~ insertRange: ", insertRange )
-
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
   $: selectedNodeResult = calculated.get(selectedBlockId);
@@ -144,6 +142,29 @@
     highlight = [row, col];
   }
 
+  function setInsertRange(node) {
+    if (node !== null) {
+      let [start, end] = insertRange
+              ? insertRange
+              : [editor.selectionStart, editor.selectionEnd];
+
+      editorSession = [
+        editorSession.substring(0, start),
+        node,
+        editorSession.substring(end, editorSession.length)
+      ].join("");
+
+      const caret = start + node.length; // Remember insertion position
+      insertRange = [start, caret];
+
+      tick().then(() => {   // Restore caret position after editing input
+        editor.selectionStart = editor.selectionEnd = caret;
+      });
+
+      autoSizeEditor();
+    }
+  }
+
   function gridClick(e) {
     if (e.target.nodeName === 'A') return;
 
@@ -164,28 +185,7 @@
 
         [arrowRow, arrowCol] = highlight;
 
-        const node = getNodeContent(e);
-
-        if (node !== null) {
-          let [start, end] = insertRange
-            ? insertRange
-            : [editor.selectionStart, editor.selectionEnd];
-
-          editorSession = [
-            editorSession.substring(0, start),
-            node,
-            editorSession.substring(end, editorSession.length)
-          ].join("");
-
-          const caret = start + node.length; // Remember insertion position
-          insertRange = [start, caret];
-
-          tick().then(() => {   // Restore caret position after editing input
-            editor.selectionStart = editor.selectionEnd = caret;
-          });
-
-          autoSizeEditor();
-        }
+        setInsertRange(getNodeContent(e));
       }
       else {
         insertRange = null
@@ -338,29 +338,7 @@
       highlight = [arrowRow, arrowCol];
 
       if ((highlight[0] !== selection[0] || highlight[1] !== selection[1]) && isFormula) {
-
-        const node = getValue(arrowRow, arrowCol);
-
-        if (node !== null) {
-          let [start, end] = insertRange
-                  ? insertRange
-                  : [editor.selectionStart, editor.selectionEnd];
-
-          editorSession = [
-            editorSession.substring(0, start),
-            node,
-            editorSession.substring(end, editorSession.length)
-          ].join("");
-
-          const caret = start + node.length; // Remember insertion position
-          insertRange = [start, caret];
-
-          tick().then(() => {   // Restore caret position after editing input
-            editor.selectionStart = editor.selectionEnd = caret;
-          });
-
-          autoSizeEditor();
-        }
+        setInsertRange(getValue(arrowRow, arrowCol));
       }
     } else {
       insertRange = null
