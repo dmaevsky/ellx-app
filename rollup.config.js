@@ -94,8 +94,6 @@ export default [
       modify(env),
       resolve({ browser: true }),
       commonjs(),
-
-      svelte(svelteOptions),
       production && terser()
     ],
     output: {

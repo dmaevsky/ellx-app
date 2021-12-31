@@ -1,28 +1,27 @@
 <script>
   import { onMount, tick } from 'svelte';
-  import * as actions from '../runtime/lifecycle';
-  import Worksheet from './Worksheet';
-  import NodeNavigator from './NodeNavigator';
-  import HelpMenu from './HelpMenu';
-  import ShortcutsHelper from "./ShortcutsHelper.svelte";
-  import Tailwind from './Tailwind';
-  import { combination } from '../runtime/utils/mod_keys';
-  import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
+  import * as actions from '../runtime/lifecycle.js';
+  import Worksheet from './Worksheet.svelte';
+  import NodeNavigator from './NodeNavigator.svelte';
+  import HelpMenu from './HelpMenu.svelte';
+  import ShortcutsHelper from './ShortcutsHelper.svelte';
+  import Tailwind from './Tailwind.svelte';
+  import { combination } from '../runtime/utils/mod_keys.js';
+  import { SET_ACTIVE_CONTENT } from '../runtime/mutations.js';
 
-  import store, { devServer, contents, getSheet } from '../runtime/store';
-  import CalcGraph from '../runtime/engine/calc_graph';
-  import { graphs } from '../runtime/store';
-  import { resolveSiblings, resolveRequire } from '../runtime/hydrated';
+  import store, { Module, devServer, contents, getSheet } from '../runtime/store.js';
+  import CalcGraph from '../runtime/engine/calc_graph.js';
   import mountEllxApp from '../runtime/mount_app.js';
 
-  const htmlContentId = 'mainApp';
+  const htmlContentId = 'file:///src/index.html';
 
   const htmlCalcGraph = new CalcGraph(
-    resolveSiblings('html', htmlContentId),
-    resolveRequire('html', htmlContentId)
+    htmlContentId,
+    url => Module.get(url),
+    url => Module.require(url, htmlContentId)
   );
 
-  graphs.set(htmlContentId, htmlCalcGraph);
+  Module.set(htmlContentId, htmlCalcGraph);
   htmlCalcGraph.autoCalc.set(true);
 
   setActiveContent(htmlContentId);
@@ -34,6 +33,10 @@
 
   function setActiveContent(contentId) {
     store.commit(SET_ACTIVE_CONTENT, { contentId });
+  }
+
+  function escapeId(contentId) {
+    return contentId.replace(/[^a-zA-Z0-9-_]+/g, '-');
   }
 
   function togglePanel(id) {
@@ -55,12 +58,22 @@
   }
 
   let mountPoint;
+  let devServerConnected = true;
+
+  function disconnect() {
+    devServerConnected = false;
+  }
 
   onMount(() => {
     mountEllxApp(mountPoint, htmlCalcGraph);
 
     devServer.addEventListener('message', listen);
-    return () => devServer.removeEventListener('message', listen);
+    devServer.addEventListener('close', disconnect);
+
+    return () => {
+      devServer.removeEventListener('message', listen);
+      devServer.removeEventListener('close', disconnect);
+    }
   });
 
   function kbListen(e) {
@@ -124,7 +137,7 @@
   }
 
   function focus(contentId) {
-    const container = document.querySelector(`#sheet-${contentId} .grid__container`);
+    const container = document.querySelector(`#sheet-${escapeId(contentId)} .grid__container`);
     if (container) container.focus();
   }
 
@@ -150,8 +163,12 @@
 </style>
 
 {#each sheets as contentId (contentId)}
-  <div class="sheet" id="sheet-{contentId}" class:hidden={contentId !== activeContentId}>
-    <Worksheet store={getSheet(contentId)}/>
+  <div class="sheet" id="sheet-{escapeId(contentId)}" class:hidden={contentId !== activeContentId}>
+    {#if devServerConnected}
+      <Worksheet store={getSheet(contentId)}/>
+    {:else}
+      <div class="text-error-500">Dev server disconnected...</div>
+    {/if}
   </div>
 {/each}
 

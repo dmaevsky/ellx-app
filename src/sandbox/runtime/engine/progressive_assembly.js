@@ -1,6 +1,6 @@
 import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
-import { makeReactive } from 'conclure-quarx';
+import { reactiveFlow } from 'conclure-quarx';
 import { isFlow, isIterator } from 'conclure';
 import { isStale, isSubscribable } from './quack.js';
 import { binaryOp, unaryOp, transpile } from './transpile.js';
@@ -284,15 +284,18 @@ export default class ProgressiveEval {
         evaluator = this.buildEvaluator(node);
       }
 
+      let lastEvaluator = evaluator;
       let result = evaluator(context);
 
       if (node.isArrowFn) {
         const fn = (...args) => {
-          if (!evaluator) {
-            evaluator = this.buildEvaluator(node);
+          if (lastEvaluator !== evaluator) {
+            if (!evaluator) {
+              evaluator = this.buildEvaluator(node);
+            }
+            lastEvaluator = evaluator;
             result = evaluator(context);
           }
-
           return result(...args);
         }
 
@@ -325,13 +328,6 @@ function JIT_transpile(node, op, shouldTranspile) {
     else node.transpile = op;
     return op(...parts);
   };
-}
-
-const reactiveFlow = it => {
-  if (isIterator(it)) {
-    makeReactive(it).reportObserved();
-  }
-  return it;
 }
 
 function JIT_reactiveFlow(node) {

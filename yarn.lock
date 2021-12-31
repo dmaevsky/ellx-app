@@ -738,13 +738,13 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
 
-conclure-quarx@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/conclure-quarx/-/conclure-quarx-0.3.0.tgz#3ebcccedcdf947d8af9bbc581c02209a7a6e71ab"
-  integrity sha512-jVP0p+y27+LXqfkjDssrxe1cuEEsZYVSqLStkSV6pFfPNUoBmK+bqOYzaX6iWTnrYFcjzGlNgJb7JEJiJvlAQw==
+conclure-quarx@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/conclure-quarx/-/conclure-quarx-0.4.3.tgz#11a4950e74a4b891633bb15407d492f92dc5b2ff"
+  integrity sha512-lG/zj3mmDSRueOJux5lKRXsTS66qNbCJJne6m2i62UY3C8TxN2pAEBUYxZAclArZXZYMNJPW+nHuU3Bmrtpuyw==
   dependencies:
     conclure "^2"
-    quarx "^3 >=3.3"
+    quarx "^3 >=3.4"
 
 conclure@^2, conclure@^2.0.0:
   version "2.0.0"
@@ -1810,11 +1810,6 @@ locate-path@^5.0.0:
   dependencies:
     p-locate "^4.1.0"
 
-lodash-es@^4.17.21:
-  version "4.17.21"
-  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.21.tgz#43e626c46e6591b7750beb2b50117390c609e3ee"
-  integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
-
 lodash.camelcase@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz#b28aa6288a2b9fc651035c7711f65ab6190331a6"
@@ -2655,10 +2650,10 @@ purgecss@^4.0.3:
     postcss "^8.2.1"
     postcss-selector-parser "^6.0.2"
 
-"quarx@^3 >=3.3", quarx@^3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/quarx/-/quarx-3.3.1.tgz#3ea13a27fe6beadc9bbae365f9356d8b8c677ba7"
-  integrity sha512-ICyKuVdhp3Hyl3NQUDiOmeCrtXMtIkuP90A5vP06XXJECEMA6v1a+kW9H0vvH/CTyuGkaKu8dwMMVGpBxfFv2Q==
+"quarx@^3 >=3.4", quarx@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/quarx/-/quarx-3.4.0.tgz#ba2ce545a709e46bb814f1164c26af010d7e6542"
+  integrity sha512-/NFVDTtIxJUvajWLmzphWyOKl+MC3MFGxHGutjkrRdeZHUjkbKvbbZ9yX/BzD6K4EPrJPwTj3xnuKYu5OABCHA==
 
 queue-microtask@^1.2.2:
   version "1.2.3"
@@ -3307,10 +3302,10 @@ toidentifier@1.0.0:
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.0.tgz#7e1be3470f1e77948bc43d94a3c8f4d7752ba553"
   integrity sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==
 
-tokamak@^0.0.14:
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/tokamak/-/tokamak-0.0.14.tgz#a450792eb4daf6ca65b9ab9628b35735bb16b36a"
-  integrity sha512-/PszaeX4yETeGQ6t3HbUDHzd31akBndCdMWkfMP2zl0SKRRJxg8+HBAu3soWh6pIbv0RUJOoBL91HpKRm1W1gg==
+tokamak@^0.0.15:
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/tokamak/-/tokamak-0.0.15.tgz#964ea3503c269bc77c1421e32daf9146d22422cc"
+  integrity sha512-sX/par8NwAssR6bsUt8FZ2kuvrYdfbAvvV4MI0u5CeZIsvIFfq/x7S/0kUF3ZtnFhnX5e9nRI9ai/OoQF56VoQ==
   dependencies:
     rd-parse "^3.4.0"
 

@@ -1,4 +1,4 @@
-import store, { oActiveContentId, contents, graphs, namespaces } from './store';
+import store, { Module, oActiveContentId, contents } from './store';
 import { UPDATE_CONTENT } from './mutations';
 import { computed } from 'quarx';
 
@@ -49,17 +49,17 @@ export const types = ['ellx', 'html', 'md'];
 
 export const activeNodes = computed(() => {
   const activeContentId = oActiveContentId.get();
-  const namespace = (namespaces.get() || []).find(r => Object.values(r).includes(activeContentId));
+  const namespace = activeContentId.replace(/\.[^.]*$/, '.');
 
   if (!namespace) return {};
 
-  const activeGraphs = Object.fromEntries(types.map(t => [t, graphs.get(namespace[t])]));
+  const activeGraphs = Object.fromEntries(types.map(t => [t, Module.get(namespace + t)]));
   const allNodes = Object.values(activeGraphs).reduce((acc, cur) => [...acc, ...getNodes(cur)], []);
   const processor = getNodeProcessor(allNodes);
 
   return Object.fromEntries(
     types
       .filter(t => activeGraphs[t])
-      .map(t => [t, processGraph(getNodes(activeGraphs[t]).map(processor), t, namespace[t])])
+      .map(t => [t, processGraph(getNodes(activeGraphs[t]).map(processor), t, namespace + t)])
   );
 }, { name: 'activeNodes' });

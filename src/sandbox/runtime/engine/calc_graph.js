@@ -1,4 +1,4 @@
-import { observable, computed, autorun, batch, untracked } from 'quarx';
+import { observable, autorun, batch, untracked } from 'quarx';
 import { observableMap } from '../observable_map.js';
 
 import CalcNode from './calc_node.js';
@@ -12,14 +12,14 @@ const lookupNode = (cg, identifier, runTime) => runTime && untracked(() => cg.no
 const noRequire = url => { if (url) throw new Error('No support for require'); }
 
 export default class CalcGraph {
-  constructor(resolveSiblings = [], require = noRequire) {
-    this.nodes = observableMap({ name: 'NodesMap' });
+  constructor(selfId, resolveSibling, require = noRequire) {
+    this.nodes = observableMap(new Map(), { name: 'NodesMap' });
     this.autoCalc = observable.box(false, { name: 'AutoCalcFlag' });
 
-    this.family = resolveSiblings.map(resolver => computed(resolver, { name: 'Siblings' }));
-
-    this.bundle = computed(() => require(), { name: 'Bundle' });
+    [, this.namespace, this.type] = /^(.+)(\.[^.]+)$/.exec(selfId);
+    this.resolveSibling = resolveSibling;
     this.require = require;
+
     this.maxAutoID = 0;
   }
 
@@ -31,8 +31,11 @@ export default class CalcGraph {
     let node = lookupNode(this, identifier, runTime);
     if (node) return node;
 
-    for (let obs of this.family) {
-      const sibling = obs.get();
+
+    for (let ext of ['.html', '.md', '.ellx']) {
+      if (this.type === ext) continue;
+
+      const sibling = this.resolveSibling(this.namespace + ext);
 
       if (sibling && this !== sibling) {
         node = lookupNode(sibling, identifier, runTime);
@@ -42,13 +45,13 @@ export default class CalcGraph {
 
     if (!runTime) return null;
 
-    if (identifier === 'require') return this.require;
-
-    const bundle = this.bundle.get();
-    if (bundle && identifier in bundle) return bundle[identifier];
-
     if (typeof window === 'object' && window && identifier in window) return window[identifier];
     if (typeof global === 'object' && global && identifier in global) return global[identifier];
+
+    if (identifier === 'require') return this.require;
+
+    const bundle = this.require(this.namespace + '.js');
+    if (bundle && identifier in bundle) return bundle[identifier];
 
     throw new Error(`${identifier} not defined`);
   }

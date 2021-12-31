@@ -8,7 +8,12 @@ const bundle = {
   TestDate: Date
 };
 
-const cg = new CalcGraph([], () => bundle);
+const cg = new CalcGraph(
+  'file:///self.ellx',
+  () => undefined,
+  url => url === 'file:///self.js' && bundle
+);
+
 test.afterEach(() => cg.dispose());
 
 test('basic graph operations', t => {
