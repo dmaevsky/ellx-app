@@ -84,11 +84,11 @@
         e.preventDefault();
         toggleDark(darkMode = !darkMode);
         return;
-      case 'Shift+Alt+Slash':
+      case 'Alt+Slash':
         e.preventDefault();
         togglePanel("shortcuts-helper");
         return;
-      case 'Shift+Alt+Period':
+      case 'Alt+Period':
         e.preventDefault();
         togglePanel("node-navigator");
         return;
