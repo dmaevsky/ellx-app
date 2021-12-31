@@ -35,101 +35,26 @@
     if (node.select) node.select();
   }
 
-  let show = false;
+  let hidden = true;
 
   $: hasNodes = Object.values($nodes).some(i => i.length > 0);
 </script>
 
-<style>
-  .id {
-    opacity: 0.3;
-  }
-
-  .nodes {
-    font-size: 0.6rem;
-  }
-
-
-  .nodes:hover .id {
-    opacity: 0.5;
-  }
-
-  .node:hover .id {
-    opacity: 1;
-  }
-
-  .node:hover svg {
-    fill: #237EB3;
-    stroke: lightGray;
-  }
-
-  svg {
-    fill: #aaa;
-    stroke: #eee;
-    @apply transition duration-300;
-  }
-  :global(.mode-dark) svg {
-    fill: #333;
-    stroke: #666;
-  }
-
-  .nodes:hover .dep .id {
-    @apply opacity-100 text-primary-500;
-  }
-
-  .nodes:hover .dep svg {
-    fill: #237EB3;
-    stroke: #237EB3;
-  }
-  .nodes:hover .dependant .id {
-    @apply opacity-100 text-alert-500;
-  }
-  .nodes:hover .dependant svg {
-    fill: #ff9800;
-    stroke: #ff9800;
-  }
-
-  .nodes .error {
-    @apply text-error-500;
-  }
-
-  .nodes .error svg {
-    fill: #f44336;
-    stroke: #f44336;
-  }
-
-  .id {
-    @apply transition duration-150 mr-1 text-right truncate;
-    max-width: 16rem;
-  }
-
-  .node {
-    @apply flex items-center cursor-pointer relative w-full;
-  }
-
-  @media (max-width: 768px) {
-    #node-navigator {
-      display: none;
-    }
-  }
-</style>
-
-
-<div
-  id="node-navigator"
-  class:opacity-100={show}
-  class:hidden={!show}
-  class="dark:text-white text-black fixed top-0 right-0 h-screen bg-white dark:bg-dark-600 opacity-0 transition duration-150 z-50 nodes border-l border-gray-200 dark:border-gray-700 overflow-y-auto"
-  on:mouseleave={() => { deps = []; show = false }}
+<div id="node-navigator"
+  class="node-navigator bg-gray-100 text-gray-900 border-l border-gray-500 border-opacity-20 dark:bg-gray-900 dark:text-white"
+  class:hidden
+  on:mouseleave={() => { deps = [] }}
 >
-  <span
-    id="node-nav-toggle"
-    class="p-1 select-none rounded-full flex items-center justify-center h-4 w-4 mr-2 absolute top-0 right-0 m-2 text-red-500 bg-red-100 z-50 cursor-pointer hover:bg-primary-500 hover:text-white transition duration-150"
-    style="font-size: 12px"
-    class:hidden={!show}
-    on:click={() => show = false}
-  >&times;</span>
-  <div class="flex flex-col items-end align-center relative px-3 mt-4">
+  <div id="node-nav-toggle"
+       class="absolute top-4 right-4 cursor-pointer stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
+       on:click={() => document.getElementById("node-navigator").classList.toggle("hidden")}>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12.5 12.5L3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="nodes flex flex-col items-end align-center relative px-4 mt-6">
     {#each types as type}
       {#if $nodes[type] && $nodes[type].length}
         <div class="mt-4 caps">{type}</div>
@@ -144,8 +69,8 @@
           >
             <span class="id">{String(node)}</span>
             <div class="flex-grow" />
-            <svg height="20" width="20">
-              <circle cx="10" cy="10" r="3" stroke-width={node.size > 0 ? 3 : 1} />
+            <svg class="svg" height="20" width="20">
+              <circle cx="12" cy="12" r="4" stroke-width={node.size > 0 ? 4 : 2} />
             </svg>
           </div>
         {/each}
@@ -154,10 +79,77 @@
   </div>
 </div>
 
-<div
-  on:mouseenter={(e) => {
-    show = !(e.fromElement && e.fromElement.id === "node-nav-toggle");
-  }}
-  class="activator w-8 h-screen fixed z-40 top-0 right-0"
-  class:hidden={!hasNodes}
-/>
+<style>
+  .node-navigator {
+    @apply flex-1 text-xs overflow-y-auto pointer-events-auto;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .id {
+    opacity: 0.4;
+  }
+
+  .node:hover .id {
+    opacity: 1;
+  }
+
+  .node:hover .svg {
+    fill: #237EB3;
+    stroke: lightGray;
+  }
+
+  .svg {
+    fill: #aaa;
+    stroke: #eee;
+  }
+
+  :global(.mode-dark) .svg {
+    fill: #333;
+    stroke: #666;
+  }
+
+  .nodes:hover .dep .id {
+    @apply opacity-100 text-primary-500;
+  }
+
+  .nodes:hover .dep .svg {
+    fill: #237EB3;
+    stroke: #237EB3;
+  }
+
+  .nodes:hover .dependant .id {
+    @apply opacity-100 text-alert-500;
+  }
+
+  .nodes:hover .dependant .svg {
+    fill: #ff9800;
+    stroke: #ff9800;
+  }
+
+  .nodes .error {
+    @apply text-error-500;
+  }
+
+  .nodes .error .svg {
+    fill: #f44336;
+    stroke: #f44336;
+  }
+
+  .id {
+    @apply mr-1 text-right truncate;
+    max-width: 16rem;
+  }
+
+  .node {
+    @apply flex items-center cursor-pointer relative w-full;
+  }
+
+  @media (max-width: 768px) {
+    #node-navigator {
+      display: none;
+    }
+  }
+</style>

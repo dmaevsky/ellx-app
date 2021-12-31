@@ -1,9 +1,16 @@
 <script>
   import { getContext } from 'svelte';
-  import CustomRender from './CustomRender.svelte';
   import { makeSpace } from '../runtime/actions/expansion';
   import query from '../runtime/blocks';
-  import { expandable, getPrimaryKeys, getSecondaryKeys, expandOnce, expandTwice } from '../runtime/iterate';
+  import {
+    expandable,
+    getPrimaryKeys,
+    getSecondaryKeys,
+    expandOnce,
+    expandTwice
+  } from '../runtime/iterate';
+
+  import CustomRender from './CustomRender.svelte';
   import TextCell from './TextCell.svelte';
 
   export let blocks;
@@ -92,7 +99,8 @@
     const maxSecondaryLength = transpose ? dataHeight : dataWidth;
 
     const primaryKeys = [...getPrimaryKeys(value, maxPrimaryLength)];
-    const secondaryKeys = expansion.secondary ? [...getSecondaryKeys(value, primaryKeys.length, maxSecondaryLength)] : [];
+    const secondaryKeys = expansion.secondary
+            ? [...getSecondaryKeys(value, primaryKeys.length, maxSecondaryLength)] : [];
 
     if (!primaryKeys.length) {
       if (!expansion.secondary) {
@@ -119,18 +127,61 @@
       sliceBlock(transpose ?
         [
           ['#', ...secondaryKeys],
-          ...primaryKeys.map(k1 => [ k1, ...secondaryKeys.map(k2 => expandable(expanded.get(k1)) ? expanded.get(k1).get(k2) : expanded.get(k1)) ])
+          ...primaryKeys.map(k1 => [ k1, ...secondaryKeys.map(k2 => expandable(expanded.get(k1))
+                  ? expanded.get(k1).get(k2) : expanded.get(k1)) ])
         ] :
         [
           ['#', ...primaryKeys],
-          ...secondaryKeys.map(k2 => [ k2, ...primaryKeys.map(k1 => expandable(expanded.get(k1)) ? expanded.get(k1).get(k2) : expanded.get(k1)) ])
+          ...secondaryKeys.map(k2 => [ k2, ...primaryKeys.map(k1 => expandable(expanded.get(k1))
+                  ? expanded.get(k1).get(k2) : expanded.get(k1)) ])
         ]
       );
     }
     return acc;
   }, []);
-
 </script>
+
+<div
+  class="gridlayout__container gridlines"
+  style={`width: ${nCols * columnWidth}px; height: ${nRows * rowHeight}px;`}
+>
+  {#each tiles as { id, pos: [row, col, rowSpan, colSpan], data, component, node, header } (id)}
+    <div
+      class:node={node}
+      class={ data || component ? 'gridlayout__tile' : 'gridlayout__block-bg' }
+      style={`
+        transform: translate(${col * columnWidth}px, ${row * rowHeight}px);
+        height: ${rowSpan * rowHeight}px;
+        width: ${(colSpan || 1) * columnWidth}px;
+        overflow: ${colSpan ? 'hidden' : 'visible'};
+      `}
+    >
+    {#if component}
+      <CustomRender
+        component={component}
+        rowSpan={rowSpan}
+        colSpan={colSpan}
+        rowHeight={rowHeight}
+        columnWidth={columnWidth}
+        on:resize={({ detail: { nRows: newHeight, nCols: newWidth } }) =>
+          makeSpace(thisSheet, parseInt(id), { newHeight, newWidth })}
+      />
+    {:else if data}
+      {#each data as cell}
+        <div
+          class:bg-white={!transparent}
+          class:dark:bg-dark-500={!transparent}
+          class:bg-transparent={transparent}
+          class:header={header}
+          class="gridlayout__cell gridlines"
+        >
+          <TextCell {cell}/>
+        </div>
+      {/each}
+    {/if}
+    </div>
+  {/each}
+</div>
 
 <style>
   .gridlines {
@@ -167,6 +218,7 @@
   }
 
   .gridlayout__cell {
+    cursor: default;
     padding: 2px;
     width: 100px;
     height: 20px;
@@ -174,9 +226,8 @@
 
   .gridlayout__block-bg {
     position: absolute;
-    background: url(
-      data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFElEQVQImWNgQAIpKSkNpHIYGBgA4vwGscjvFCUAAAAASUVORK5CYII=
-    ), linear-gradient(white, white);
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFElEQVQImWNgQAIpKSkNpHIYGBgA4vwGscjvFCUAAAAASUVORK5CYII=),
+      linear-gradient(white, white);
     background-repeat: repeat;
   }
   /*! purgecss start ignore */
@@ -186,49 +237,13 @@
 
   :global(.mode-dark) .gridlayout__block-bg {
     position: absolute;
-    background: url(
-      data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFElEQVQImWNgQAIpKSkNpHIYGBgA4vwGscjvFCUAAAAASUVORK5CYII=
-    ), linear-gradient(#212121, #212121);
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFElEQVQImWNgQAIpKSkNpHIYGBgA4vwGscjvFCUAAAAASUVORK5CYII=),
+      linear-gradient(#212121, #212121);
     background-repeat: repeat;
   }
 
-    :global(.mode-dark) .gridlines {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' fill='transparent' height='20'%3E%3Crect width='100' height='20' style='stroke-width:1;stroke:rgb(50,50,50)' /%3E%3C/svg%3E");
-    }
+  :global(.mode-dark) .gridlines {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' fill='transparent' height='20'%3E%3Crect width='100' height='20' style='stroke-width:1;stroke:rgb(50,50,50)' /%3E%3C/svg%3E");
+  }
   /*! purgecss end ignore */
 </style>
-
-<div class="gridlayout__container gridlines" style={`width: ${nCols * columnWidth}px; height: ${nRows * rowHeight}px;`}>
-  {#each tiles as {id, pos: [row, col, rowSpan, colSpan], data, component, node, header} (id)}
-    <div class:node={node} class={ data || component ? 'gridlayout__tile' : 'gridlayout__block-bg' } style={`
-      transform: translate(${col * columnWidth}px, ${row * rowHeight}px);
-      height: ${rowSpan * rowHeight}px;
-      width: ${(colSpan || 1) * columnWidth}px;
-      overflow: ${colSpan ? 'hidden' : 'visible'};
-      `}
-    >
-    {#if component}
-      <CustomRender
-        component={component}
-        rowSpan={rowSpan}
-        colSpan={colSpan}
-        rowHeight={rowHeight}
-        columnWidth={columnWidth}
-        on:resize={({ detail: {nRows: newHeight, nCols: newWidth} }) => makeSpace(thisSheet, parseInt(id), {newHeight, newWidth})}
-      />
-    {:else if data}
-      {#each data as cell}
-        <div
-          class:bg-white={!transparent}
-          class:dark:bg-dark-500={!transparent}
-          class:bg-transparent={transparent}
-          class:header={header}
-          class="gridlayout__cell gridlines"
-        >
-          <TextCell {cell}/>
-        </div>
-      {/each}
-    {/if}
-    </div>
-  {/each}
-</div>

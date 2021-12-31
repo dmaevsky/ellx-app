@@ -3,6 +3,8 @@
   import * as actions from '../runtime/lifecycle';
   import Worksheet from './Worksheet';
   import NodeNavigator from './NodeNavigator';
+  import HelpMenu from './HelpMenu';
+  import ShortcutsHelper from "./ShortcutsHelper.svelte";
   import Tailwind from './Tailwind';
   import { combination } from '../runtime/utils/mod_keys';
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations';
@@ -34,6 +36,10 @@
     store.commit(SET_ACTIVE_CONTENT, { contentId });
   }
 
+  function togglePanel(id) {
+    document.getElementById(id).classList.toggle("hidden");
+  }
+
   function listen({ data }) {
     try {
       const { type, args } = JSON.parse(data);
@@ -60,10 +66,19 @@
   function kbListen(e) {
     const shortcut = combination(e);
 
-    if (shortcut === 'Alt+KeyD') {
-      e.preventDefault();
-      toggleDark(darkMode = !darkMode);
-      return;
+    switch (shortcut) {
+      case 'Alt+KeyD':
+        e.preventDefault();
+        toggleDark(darkMode = !darkMode);
+        return;
+      case 'Shift+Alt+Slash':
+        e.preventDefault();
+        togglePanel("shortcuts-helper");
+        return;
+      case 'Shift+Alt+Period':
+        e.preventDefault();
+        togglePanel("node-navigator");
+        return;
     }
 
     const digit = (/^Alt\+Digit([1-9])$/.exec(shortcut) || [])[1];
@@ -134,11 +149,6 @@
   /*! purgecss end ignore */
 </style>
 
-<NodeNavigator
-  on:goToLine={goToLine}
-  on:navigate={navigate}
-/>
-
 {#each sheets as contentId (contentId)}
   <div class="sheet" id="sheet-{contentId}" class:hidden={contentId !== activeContentId}>
     <Worksheet store={getSheet(contentId)}/>
@@ -148,4 +158,16 @@
 <div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
 
-<Tailwind />
+<HelpMenu/>
+
+<div class="fixed top-0 left-0 z-100 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
+  <NodeNavigator
+          on:goToLine={goToLine}
+          on:navigate={navigate}
+  />
+  <ShortcutsHelper/>
+</div>
+
+
+
+<Tailwind/>
