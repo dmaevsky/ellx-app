@@ -143,4 +143,9 @@
     .shortcut-list {
        @apply flex flex-col gap-2;
     }
+
+    h4 {
+        @apply text-sm font-normal;
+        letter-spacing: 0.25px;
+    }
 </style>
