@@ -3,6 +3,8 @@
   import * as actions from '../runtime/lifecycle.js';
   import Worksheet from './Worksheet.svelte';
   import NodeNavigator from './NodeNavigator.svelte';
+  import HelpMenu from './HelpMenu.svelte';
+  import ShortcutsHelper from './ShortcutsHelper.svelte';
   import Tailwind from './Tailwind.svelte';
   import { combination } from '../runtime/utils/mod_keys.js';
   import { SET_ACTIVE_CONTENT } from '../runtime/mutations.js';
@@ -35,6 +37,10 @@
 
   function escapeId(contentId) {
     return contentId.replace(/[^a-zA-Z0-9-_]+/g, '-');
+  }
+
+  function togglePanel(id) {
+    document.getElementById(id).classList.toggle("hidden");
   }
 
   function listen({ data }) {
@@ -73,10 +79,19 @@
   function kbListen(e) {
     const shortcut = combination(e);
 
-    if (shortcut === 'Alt+KeyD') {
-      e.preventDefault();
-      toggleDark(darkMode = !darkMode);
-      return;
+    switch (shortcut) {
+      case 'Alt+KeyD':
+        e.preventDefault();
+        toggleDark(darkMode = !darkMode);
+        return;
+      case 'Shift+Alt+Slash':
+        e.preventDefault();
+        togglePanel("shortcuts-helper");
+        return;
+      case 'Shift+Alt+Period':
+        e.preventDefault();
+        togglePanel("node-navigator");
+        return;
     }
 
     const digit = (/^Alt\+Digit([1-9])$/.exec(shortcut) || [])[1];
@@ -147,11 +162,6 @@
   /*! purgecss end ignore */
 </style>
 
-<NodeNavigator
-  on:goToLine={goToLine}
-  on:navigate={navigate}
-/>
-
 {#each sheets as contentId (contentId)}
   <div class="sheet" id="sheet-{escapeId(contentId)}" class:hidden={contentId !== activeContentId}>
     {#if devServerConnected}
@@ -165,4 +175,16 @@
 <div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
 
-<Tailwind />
+<HelpMenu/>
+
+<div class="fixed top-0 left-0 z-100 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
+  <NodeNavigator
+          on:goToLine={goToLine}
+          on:navigate={navigate}
+  />
+  <ShortcutsHelper/>
+</div>
+
+
+
+<Tailwind/>

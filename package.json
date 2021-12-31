@@ -43,6 +43,7 @@
     "md5": "^2.3.0",
     "node-abort-controller": "^2.0.0",
     "node-fetch": "^2.6.1",
+    "open": "^8.4.0",
     "polka": "^0.5.2",
     "quarx": "^3.4.0",
     "rd-parse": "^3.4.0",
