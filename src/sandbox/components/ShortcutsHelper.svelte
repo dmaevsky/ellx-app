@@ -9,11 +9,11 @@
             "list": [
                 {
                     "title": "Toggle Shortcuts",
-                    "keys": ["Shift", "Alt", "?"]
+                    "keys": ["Alt", "?"]
                 },
                 {
-                    "title": "Toggle Navigator",
-                    "keys": ["Shift", "Alt", "."]
+                    "title": "Toggle Node Navigator",
+                    "keys": ["Alt", "."]
                 },
                 {
                     "title": "Switch to layout",
@@ -78,7 +78,7 @@
                     "keys": ["Shift", "Alt", "X"]
                 },
                 {
-                    "title": "Comment / Uncomment cell",
+                    "title": "Toggle comments",
                     "keys": ["Cmd", "//"]
                 },
             ]
