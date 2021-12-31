@@ -136,7 +136,7 @@
     }
 
     .shortcuts-helper {
-        @apply relative h-60 w-full py-6 px-16 overflow-auto pointer-events-auto
+        @apply relative w-full py-4 px-16 overflow-auto pointer-events-auto
         text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20 ;
     }
 
