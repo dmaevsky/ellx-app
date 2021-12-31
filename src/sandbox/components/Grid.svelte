@@ -400,7 +400,7 @@
   }
 
   function detectFormula(str) {
-    return (str === "=") ? true : /^\s*([a-z_$][a-z0-9_$]*)?\s*=([^=>].*)/gmi.test(str);
+    return /^\s*([a-z_$][a-z0-9_$]*)?\s*=([^=>]?.*)/gmi.test(str);
   }
 
   function mouseCellSelection(e) {
