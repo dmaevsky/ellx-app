@@ -1,6 +1,6 @@
-import ModuleManager from './sandbox/runtime/module_manager.js';
-import CalcGraph from './sandbox/runtime/engine/calc_graph.js';
-import mountEllxApp from './sandbox/runtime/mount_app.js';
+import ModuleManager from './module_manager.js';
+import CalcGraph from './engine/calc_graph.js';
+import mountEllxApp from './mount_app.js';
 
 function hydrate(node) {
   if (!node.src || node.code) return;

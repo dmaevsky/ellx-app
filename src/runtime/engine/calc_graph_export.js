@@ -1,4 +1,4 @@
-import { fromObservable } from '../adapters';
+import { fromObservable } from './adapters.js';
 
 export function exportCalcGraph(id, getCalcGraph) {
   let exportCount = 0;

@@ -1,7 +1,7 @@
 import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
 import { isFlow } from 'conclure';
-import { isStale } from './engine/quack.js';
+import { isStale } from '../runtime/engine/quack.js';
 
 const FUNC_MARKER = '@@@func';
 const ERROR_MARKER = '@@@error';

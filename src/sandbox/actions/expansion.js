@@ -1,18 +1,18 @@
-import { clearBlock, normalize } from './edit';
+import { clearBlock, normalize } from './edit.js';
 import { undoable } from 'tinyx/middleware/undo_redo';
 
-import { getPrimaryKeys, getSecondaryKeys } from '../iterate';
-import query from '../blocks';
+import { getPrimaryKeys, getSecondaryKeys } from '../../runtime/iterate.js';
+import query from '../blocks.js';
 
 import {
   CHANGE_EXPANSION,
   CHANGE_POSITION
-} from '../mutations';
+} from '../mutations.js';
 
 import {
   UNDOABLE_ACTION_START,
   UNDOABLE_ACTION_END
-} from 'tinyx/middleware/undo_redo/mutations';
+} from 'tinyx/middleware/undo_redo/mutations.js';
 
 export const changeExpansion = undoable((thisSheet, blockId, { labels, step }) => {
   const { blocks, calculated, nRows, nCols } = thisSheet.get();

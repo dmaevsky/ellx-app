@@ -1,5 +1,5 @@
-import store, { Module, oActiveContentId, contents } from './store';
-import { UPDATE_CONTENT } from './mutations';
+import store, { Module, oActiveContentId, contents } from './store.js';
+import { UPDATE_CONTENT } from './mutations.js';
 import { computed } from 'quarx';
 
 const getNodes = graph => graph && graph.nodes ? [...graph.nodes.toJS()] : [];

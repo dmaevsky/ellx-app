@@ -1,10 +1,10 @@
 <script>
   import { tick, setContext } from 'svelte';
   import { undo, redo } from 'tinyx/middleware/undo_redo';
-  import query from '../runtime/blocks';
-  import { editCell, clearRange, setSelection } from '../runtime/actions/edit';
-  import { changeExpansion, shiftCellsH, shiftCellsV } from '../runtime/actions/expansion';
-  import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../runtime/actions/copypaste';
+  import query from '../blocks.js';
+  import { editCell, clearRange, setSelection } from '../actions/edit.js';
+  import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
+  import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
 
   import Grid from './Grid.svelte';
 

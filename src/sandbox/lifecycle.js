@@ -1,10 +1,10 @@
 import { batch } from 'quarx';
 import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations.js';
-import objectId from './utils/object_id.js';
+import objectId from '../utils/object_id.js';
 import store, { Module, getSheet, notifyParent } from './store.js';
 
-import CalcGraph from './engine/calc_graph.js';
+import CalcGraph from '../runtime/engine/calc_graph.js';
 
 import { buildBlocks, saveBody } from './body_parse.js';
 

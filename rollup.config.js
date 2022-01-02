@@ -89,7 +89,7 @@ export default [
     },
   },
   {
-    input: 'src/runtime.js',
+    input: 'src/runtime/runtime.js',
     plugins: [
       modify(env),
       resolve({ browser: true }),

@@ -1,7 +1,7 @@
 import { whenFinished } from 'conclure';
 import fetch from 'node-fetch';
 import AbortController from 'node-abort-controller';
-import memoize from '../../common/memoize_flow.js';
+import memoize from './memoize_flow.js';
 
 export function* abortableFetch(url, options) {
   const controller = new AbortController();

@@ -1,7 +1,7 @@
 <script>
-  import { activeNodes, types } from '../runtime/node_navigator';
+  import { activeNodes, types } from '../node_navigator.js';
   import { createEventDispatcher } from 'svelte';
-  import { fromObservable } from '../runtime/adapters';
+  import { fromObservable } from '../../runtime/engine/adapters.js';
 
   const dispatch = createEventDispatcher();
   let deps = [], dependants = [];

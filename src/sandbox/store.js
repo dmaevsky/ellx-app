@@ -1,10 +1,10 @@
 import { select, derived } from 'tinyx';
 import applyMiddleware from 'tinyx/middleware';
 import { enableUndoRedo } from 'tinyx/middleware/undo_redo';
-import { makeStore } from './utils/make_store';
-import cgConnect from './cg_connect';
-import { toObservable } from './adapters';
-import ModuleManager from './module_manager.js';
+import { makeStore } from './make_store.js';
+import cgConnect from './cg_connect.js';
+import { toObservable } from '../runtime/engine/adapters.js';
+import ModuleManager from '../runtime/module_manager.js';
 
 export const Module = ModuleManager();
 

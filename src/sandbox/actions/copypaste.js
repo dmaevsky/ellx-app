@@ -1,16 +1,16 @@
 import {
   BULK_UPDATE_BLOCKS
-} from '../mutations';
+} from '../mutations.js';
 
 import { derived } from 'tinyx';
-import { makeStore } from '../utils/make_store';
+import { makeStore } from '../make_store.js';
 
-import objectId from '../utils/object_id';
-import query from '../blocks';
+import objectId from '../../utils/object_id.js';
+import query from '../blocks.js';
 
 import { undoable } from 'tinyx/middleware/undo_redo';
-import { normalize } from './edit';
-import { changeExpansion } from './expansion';
+import { normalize } from './edit.js';
+import { changeExpansion } from './expansion.js';
 
 export const clipboard = makeStore(null);
 

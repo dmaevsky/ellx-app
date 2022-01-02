@@ -2,7 +2,7 @@ import {
   UPDATE_BLOCK,
   UPDATE_CALCULATED,
   DELETE_CALCULATED
-} from './mutations';
+} from './mutations.js';
 
 const cgConnect = cg => (inner) => {
   const nodeRenderer = (blockId) => updated => {

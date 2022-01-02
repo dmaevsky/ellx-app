@@ -6,8 +6,8 @@ import { join } from 'path';
 import { pathToFileURL, fileURLToPath } from 'url';
 import md5 from 'md5';
 import reactiveBuild from './bundler/reactive_build.js';
-import { abortableFetch } from './sandbox/runtime/fetch.js';
-import { loadBody as parseEllx } from './sandbox/runtime/body_parse.js';
+import { abortableFetch } from './utils/fetch.js';
+import { loadBody as parseEllx } from './sandbox/body_parse.js';
 
 function* collectEntryPoints(dir) {
   const items = yield readdir(dir, { withFileTypes: true });

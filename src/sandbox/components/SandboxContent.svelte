@@ -1,17 +1,17 @@
 <script>
   import { onMount, tick } from 'svelte';
-  import * as actions from '../runtime/lifecycle.js';
+  import * as actions from '../lifecycle.js';
   import Worksheet from './Worksheet.svelte';
   import NodeNavigator from './NodeNavigator.svelte';
   import HelpMenu from './HelpMenu.svelte';
   import ShortcutsHelper from './ShortcutsHelper.svelte';
   import Tailwind from './Tailwind.svelte';
-  import { combination } from '../runtime/utils/mod_keys.js';
-  import { SET_ACTIVE_CONTENT } from '../runtime/mutations.js';
+  import { combination } from '../../utils/mod_keys.js';
+  import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
-  import store, { Module, devServer, contents, getSheet } from '../runtime/store.js';
-  import CalcGraph from '../runtime/engine/calc_graph.js';
-  import mountEllxApp from '../runtime/mount_app.js';
+  import store, { Module, devServer, contents, getSheet } from '../store.js';
+  import CalcGraph from '../../runtime/engine/calc_graph.js';
+  import mountEllxApp from '../../runtime/mount_app.js';
 
   const htmlContentId = 'file:///src/index.html';
 

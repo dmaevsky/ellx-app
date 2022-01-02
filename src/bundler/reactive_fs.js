@@ -2,7 +2,7 @@ import { join } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { promises as fs } from 'fs';
 import { createAtom, batch } from 'quarx';
-import autoMemo from '../common/auto_memoize.js';
+import autoMemo from '../utils/auto_memoize.js';
 
 export default (watcher, options = {}) => {
   const {

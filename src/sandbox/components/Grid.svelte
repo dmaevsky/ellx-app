@@ -1,8 +1,8 @@
 <script>
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
-  import query from '../runtime/blocks.js';
-  import { setSelection, toggleComment, commentRange } from '../runtime/actions/edit.js';
-  import { CTRL, SHIFT, ALT, modifiers, combination } from '../runtime/utils/mod_keys.js';
+  import query from '../blocks.js';
+  import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
+  import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';

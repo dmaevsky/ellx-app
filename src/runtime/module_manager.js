@@ -3,7 +3,7 @@ import { isFlow } from 'conclure';
 import { asyncCell } from './engine/reactive_cell.js';
 import { exportCalcGraph } from './engine/calc_graph_export.js';
 import CalcGraph from './engine/calc_graph.js';
-import { observableMap } from './observable_map.js';
+import { observableMap } from './engine/observable_map.js';
 
 function removeScript(id) {
   const existingScript = document.getElementById(id);

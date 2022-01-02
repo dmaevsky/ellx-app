@@ -5,7 +5,7 @@ import chokidar from 'chokidar';
 
 import { createAtom, computed } from 'quarx';
 
-import { loadBody } from './sandbox/runtime/body_parse.js';
+import { loadBody } from './sandbox/body_parse.js';
 import reactiveBuild from './bundler/reactive_build.js';
 
 export function startDevPipe(ws, rootDir) {

@@ -6,7 +6,7 @@ import tokamak from 'tokamak';
 import resolver from 'tokamak/resolve';
 import reactiveFS from './reactive_fs.js';
 import { preloadEllxProject, transformModule } from './module_loader.js';
-import autoMemo from '../common/auto_memoize.js';
+import autoMemo from '../utils/auto_memoize.js';
 
 export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, updateModules) {
   const gc = new Set();

@@ -1,5 +1,5 @@
 import { observable, autorun, batch, untracked } from 'quarx';
-import { observableMap } from '../observable_map.js';
+import { observableMap } from './observable_map.js';
 
 import CalcNode from './calc_node.js';
 import { STALE } from './quack.js';

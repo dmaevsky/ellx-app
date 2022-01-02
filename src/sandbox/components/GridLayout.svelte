@@ -1,14 +1,14 @@
 <script>
   import { getContext } from 'svelte';
-  import { makeSpace } from '../runtime/actions/expansion';
-  import query from '../runtime/blocks';
+  import { makeSpace } from '../actions/expansion.js';
+  import query from '../blocks.js';
   import {
     expandable,
     getPrimaryKeys,
     getSecondaryKeys,
     expandOnce,
     expandTwice
-  } from '../runtime/iterate';
+  } from '../../runtime/iterate.js';
 
   import CustomRender from './CustomRender.svelte';
   import TextCell from './TextCell.svelte';

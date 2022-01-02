@@ -1,14 +1,14 @@
 import { undoable } from "tinyx/middleware/undo_redo";
 
-import objectId from "../utils/object_id";
-import query from "../blocks";
+import objectId from "../../utils/object_id.js";
+import query from "../blocks.js";
 
 import {
   INSERT_BLOCK,
   UPDATE_BLOCK,
   DELETE_BLOCK,
   SET_SELECTION,
-} from "../mutations";
+} from "../mutations.js";
 
 export function setSelection(thisSheet, selection) {
   thisSheet.commit(SET_SELECTION, { selection });

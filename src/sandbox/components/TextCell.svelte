@@ -1,8 +1,8 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { pull } from '../runtime/engine/pull';
-  import { show } from '../runtime/renderNode';
-  import replaceAll from '../runtime/utils/replace_all';
+  import { pull } from '../../runtime/engine/pull.js';
+  import { show } from '../../runtime/renderNode.js';
+  import replaceAll from '../../utils/replace_all.js';
 
   export let cell;
   let value = '[Cancelled]';

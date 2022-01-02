@@ -1,5 +1,5 @@
 import { autorun, createAtom, untracked } from 'quarx';
-import { isStale } from './engine/quack.js';
+import { isStale } from './quack.js';
 
 export function fromObservable(obs, options = {}) {
   return {

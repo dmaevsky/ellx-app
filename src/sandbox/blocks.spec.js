@@ -1,7 +1,7 @@
 import test from 'ava';
 
 import binarySearch from 'binary-search';
-import { xmur3, sfc32 } from './utils/prng.js';
+import { xmur3, sfc32 } from '../utils/prng.js';
 
 import query from './blocks.js';
 
