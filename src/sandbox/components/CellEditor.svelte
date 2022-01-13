@@ -8,6 +8,8 @@
   export let transparent = false;
   export let node = null;
 
+  let unparsed = false;
+
   let innerHTML;
 
   const parser = new ProgressiveEval(environment, () => {});
@@ -15,9 +17,6 @@
   function spanify(str, type) {
     let node_class;
     switch (type) {
-      case "Marker":
-        node_class = "highlight_marker";
-        break;
       case "Literal":
         node_class = "highlight_literal";
         break;
@@ -32,69 +31,47 @@
     return `<span${node_class ? ` class="${node_class}"` : ""}>${str}</span>`;
   }
 
+  function getTokens(str) {
+    try {
+      parser.parse(str);
+      return parser.nodes;
+    } catch {
+      console.log("~ ❌ Parser failed!", getCaret());
+      return null;
+    }
+  }
+
   function highlight(str) {
     let match = /^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)?\s*=([^=>].*)/.exec(str);
 
     if (!match) return str;
 
-    let nodes;
+    const [formula, leftHand, rightHand] = match;
+    const tokens = getTokens(rightHand);
 
-    str = match[2];
-
-    try {
-      parser.parse(str);
-      nodes = parser.nodes;
-    } catch {
-      console.log("~ ❌ Parser failed");
-    }
+    if (!tokens) return unparsed ? innerHTML : formula;
 
     let result = `<span id="highlight" class="highlighted_string">`
-        + spanify(match[1]) + spanify(" ") + spanify("=");
+        + (leftHand ? spanify(leftHand) : "") + spanify(" ") + spanify("=");
 
-    let nodePosition = 0;
+    let tokenPosition = 0;
 
-    if (!nodes) return str;
-
-    nodes.forEach((node) => {
-      if (
-          node.type !== "BinaryExpression" &&
-          node.type !== "ArrayLiteral" &&
-          node.type !== "ObjectLiteral" &&
-          node.type !== "MemberExpression" &&
-          node.type !== "CompoundExpression" &&
-          node.type !== "UnaryExpression" &&
-          node.type !== "CallExpression" &&
-          node.type !== "NewExpression" &&
-          node.type !== "TemplateLiteral" &&
-          node.type !== "ArrowFunction"
-      ) {
-        const spacer = str.substring(nodePosition, node.pos);
-        let tempResult = "";
-
-        [...spacer.matchAll(
-            /\s+|\S+/g
-        )].map((i) => {
-          i.forEach((item) => {
-            tempResult += spanify(item);
-          });
-        });
-        result += tempResult + spanify(node.text, node.type);
-        nodePosition = node.pos + node.text.length;
+    tokens.forEach(({ type, pos, text }) => {
+      if (type === "Literal" || type === "Identifier" || type === "BoundName") {
+        result += divideSpacer(rightHand.substring(tokenPosition, pos)) + spanify(text, type);
+        tokenPosition = pos + text.length;
       }
     });
 
-    const residual = str.substring(nodePosition, str.length);
+    result += divideSpacer(rightHand.substring(tokenPosition, rightHand.length)) + "</span>";
 
-    let temp = "";
-    [...residual.matchAll(
-        /\s+|\S+/g
-    )].map((i) => {
-      i.forEach((item) => {
-        temp += spanify(item);
-      });
-    });
+    return result;
+  }
 
-    result += temp + "</span>";
+  function divideSpacer(str) {
+    let result = "";
+
+    [...str.matchAll(/\s+|\S+/g)].map(i => i.forEach(item => result += spanify(item)));
 
     return result;
   }
@@ -141,14 +118,14 @@
     if (!node || !node.textContent.length) return;
 
     // Read editor input as plain text
-    value = node.textContent;
+    // value = node.textContent;
 
     // Store current caret position
     const caretPosition = getCaret();
 
     // Parse plain text and insert combination of spans as editor's inner HTML
     innerHTML = highlight(node.textContent);
-    // value = node.textContent;
+    value = node.textContent;
 
     // Wait until browser updates the DOM
     tick().then(() => {
@@ -157,8 +134,6 @@
 
       // Detect which node resides at computed caretPosition
       const nodes = document.querySelector("#highlight").childNodes;
-
-      // console.log("~ nodes: ", nodes);
 
       let caretNode = null;
       let caretOffset = 0;
@@ -182,8 +157,8 @@
   }
 
   onMount(() => {
-    node.textContent = value;
-    innerHTML = highlight(node.textContent);
+    innerHTML = highlight(value);
+    unparsed = true;
 
     tick().then(() => {
       let anchor = node;
@@ -199,9 +174,9 @@
       document.getSelection().empty();
       document.getSelection().setBaseAndExtent(anchor, offset, anchor, offset);
     })
+    autoSizeEditor();
   })
 
-  // Hack! Code duplication!
   async function autoSizeEditor() {
     await tick();
     if (node) {
@@ -211,8 +186,6 @@
       }
     }
   }
-  // Hack! Code duplication!
-
 </script>
 
 <div
@@ -225,7 +198,7 @@
   bind:innerHTML
   contenteditable="true"
   on:input={() => {
-    //handleHighlight();
+    handleHighlight();
     autoSizeEditor();
   }}
   on:keydown
@@ -234,8 +207,6 @@
     let text = (e.originalEvent || e).clipboardData.getData('text/plain');
     document.execCommand("insertHTML", false, text);
   }}
-  autocomplete="off"
-  autocorrect="off"
   spellcheck="false"
 ></div>
 
@@ -259,9 +230,6 @@
   }
   :global(.highlight_literal) {
     color: dodgerblue;
-  }
-  :global(.highlight_marker) {
-    color: orange;
   }
   :global(.highlight_bound-name) {
     color: teal;

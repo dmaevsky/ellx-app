@@ -160,8 +160,6 @@
       tick().then(() => {   // Restore caret position after editing input
         editor.selectionStart = editor.selectionEnd = caret;
       });
-
-      autoSizeEditor();
     }
   }
 
@@ -306,7 +304,6 @@
 
     if (combination(e) === 'Ctrl+Slash') {
       editorSession = toggleComment(editorSession);
-      autoSizeEditor();
       e.preventDefault();
       return;
     }
@@ -336,7 +333,6 @@
 
     await tick();
     takeFocus(editor);
-    autoSizeEditor();
   }
 
   function closeEditor(value, moveRight = false) {
@@ -377,16 +373,6 @@
       let x = window.scrollX, y = window.scrollY;
       el.focus({ preventScroll: true });    // TODO: Remove hack when Safari and Safari iOS will support preventScroll
       window.scrollTo(x, y);
-    }
-  }
-
-  async function autoSizeEditor() {
-    await tick();
-    if (editor) {
-      editor.style.removeProperty('width');
-      if (editor.scrollWidth > editor.clientWidth) {
-        editor.style.width = editor.scrollWidth + 5 + 'px';
-      }
     }
   }
 
@@ -543,7 +529,7 @@
         {transparent}
         bind:node={editor}
         bind:value={editorSession}
-        on:input={autoSizeEditor}
+        on:input
         on:keydown={editorKeyDown}
       />
     {/if}
