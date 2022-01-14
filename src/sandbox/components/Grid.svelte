@@ -175,8 +175,10 @@
   }
 
   function editorClick(e) {
+    const target = e.target.closest("#editor");
+
     if (isFormula) {
-      if (e.target !== editor) {
+      if (target !== editor) {
         e.preventDefault(); // Prevent select on drag
 
         highlightNode(e);
@@ -189,7 +191,7 @@
         insertRange = null
       }
     }
-    else if (e.target !== editor) {
+    else if (target !== editor) {
       takeFocus(container);
       jumpAway(e);
       editorSession = null;
@@ -287,7 +289,7 @@
 
   function editorKeyDown(e) {
     // Prevent default Ctrl+A behavior when Editor is not in focus
-    if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
+    if (combination(e) === "Ctrl+KeyA" && e.target.closest("#editor") !== editor) e.preventDefault();
 
     if (e.key === "Escape") {
       e.preventDefault();
@@ -502,7 +504,7 @@
   on:dblclick={(e) => {
     e.preventDefault();
     if (!editorSession) { startEditing() }
-    else if (e.target !== editor) {
+    else if (e.target.closest("#editor") !== editor) {
       jumpAway(e);
       editorSession = null;
       closeEditor();
