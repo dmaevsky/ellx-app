@@ -51,8 +51,10 @@
 
     if (!tokens) return unparsed ? innerHTML : formula;
 
+    const spacer = formula.substring(0, formula.length - rightHand.length - 1);
+
     let result = `<span id="highlight" class="highlighted_string">`
-        + (leftHand ? spanify(leftHand) : "") + spanify(" ") + spanify("=");
+        + (leftHand ? spanify(spacer)  : "" ) + spanify("=");
 
     let tokenPosition = 0;
 
@@ -78,12 +80,16 @@
 
   function getCaret() {
     // Input field is empty
-    if (!document.querySelector("#highlight")) return value.length;
+    // if (!document.querySelector("#highlight")) return value.length;
 
     // Get current caret position
     const { anchorNode, anchorOffset } = document.getSelection();
+    const highlight = document.querySelector("#highlight");
+
+    if (!highlight) return anchorOffset;
+
     const anchorParent = anchorNode.parentNode;
-    const nodes = document.querySelector("#highlight").childNodes;
+    const nodes = highlight.childNodes;
 
     let caretPosition = 0;
     let found = false;
@@ -118,14 +124,14 @@
     if (!node || !node.textContent.length) return;
 
     // Read editor input as plain text
-    // value = node.textContent;
+    value = node.textContent;
 
     // Store current caret position
     const caretPosition = getCaret();
 
     // Parse plain text and insert combination of spans as editor's inner HTML
     innerHTML = highlight(node.textContent);
-    value = node.textContent;
+    // value = node.textContent;
 
     // Wait until browser updates the DOM
     tick().then(() => {
@@ -133,21 +139,29 @@
       // to provide a flawless user experience
 
       // Detect which node resides at computed caretPosition
-      const nodes = document.querySelector("#highlight").childNodes;
+      const highlight = document.querySelector("#highlight");
 
       let caretNode = null;
       let caretOffset = 0;
       let currentPosition = 0;
 
-      for (let i = 0; i < nodes.length; i++) {
-        const nodeLength = nodes[i].textContent.length;
-        currentPosition += nodeLength;
+      if (highlight) {
+        const nodes = highlight.childNodes;
 
-        if (caretPosition <= currentPosition) {
-          caretNode = nodes[i].firstChild;
-          caretOffset = caretPosition - (currentPosition - nodeLength);
-          break;
+        for (let i = 0; i < nodes.length; i++) {
+          const nodeLength = nodes[i].textContent.length;
+          currentPosition += nodeLength;
+
+          if (caretPosition <= currentPosition) {
+            caretNode = nodes[i].firstChild;
+            caretOffset = caretPosition - (currentPosition - nodeLength);
+            break;
+          }
         }
+      }
+      else {
+        caretNode = node.lastChild;
+        caretOffset = caretPosition;
       }
 
       // Empty selection range and restore caret position
@@ -166,7 +180,6 @@
 
       if (value !== '') {
         const str = document.querySelector("#highlight");
-
         anchor = str? str.lastChild.lastChild : node.lastChild;
         offset = str? str.lastChild.textContent.length : node.textContent.length;
       }
@@ -186,6 +199,7 @@
       }
     }
   }
+
 </script>
 
 <div
