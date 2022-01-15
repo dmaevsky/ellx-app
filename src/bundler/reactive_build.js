@@ -21,8 +21,15 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
   let pjsons = {};
 
   function* loadPkgJSON(url) {
-    const pjson = yield files.get(url);
-    return pjsons[url] = pjson && JSON.parse(pjson);
+    const pjsonBody = yield files.get(url);
+    const pjson = pjsonBody && JSON.parse(pjsonBody);
+
+    pjsons[url] = pjson && {
+      code: { exports: pjson },
+      imports: {}
+    };
+
+    return pjson;
   }
 
   function* load(url) {

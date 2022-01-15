@@ -172,7 +172,9 @@
           class:bg-white={!transparent}
           class:dark:bg-dark-500={!transparent}
           class:bg-transparent={transparent}
-          class:header={header}
+          class:text-gray-700={header}
+          class:italic={header}
+          class:text-xs={header}
           class="gridlayout__cell gridlines"
         >
           <TextCell {cell}/>
@@ -190,12 +192,6 @@
 
   .gridlayout__container {
     position: relative;
-  }
-
-  .header {
-    @apply text-gray-700 italic;
-
-    font-size: 0.7rem;
   }
 
   .node {

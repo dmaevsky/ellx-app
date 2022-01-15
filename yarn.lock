@@ -738,13 +738,13 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
 
-conclure-quarx@^0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/conclure-quarx/-/conclure-quarx-0.4.3.tgz#11a4950e74a4b891633bb15407d492f92dc5b2ff"
-  integrity sha512-lG/zj3mmDSRueOJux5lKRXsTS66qNbCJJne6m2i62UY3C8TxN2pAEBUYxZAclArZXZYMNJPW+nHuU3Bmrtpuyw==
+conclure-quarx@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/conclure-quarx/-/conclure-quarx-0.5.0.tgz#76f70c1a21880a847caf1ca9f3ffbf92ed9e2f17"
+  integrity sha512-/4KhvKnZaFaB2xISXoRQEMC4HA78RyRz8hdEVfY9841XjCkJhoHMWw9tTeHdk0D84n5AN7SZUPeZ2c4TBPGA3A==
   dependencies:
     conclure "^2"
-    quarx "^3 >=3.4"
+    quarx "^4"
 
 conclure@^2, conclure@^2.0.0:
   version "2.0.0"
@@ -2650,10 +2650,10 @@ purgecss@^4.0.3:
     postcss "^8.2.1"
     postcss-selector-parser "^6.0.2"
 
-"quarx@^3 >=3.4", quarx@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/quarx/-/quarx-3.4.0.tgz#ba2ce545a709e46bb814f1164c26af010d7e6542"
-  integrity sha512-/NFVDTtIxJUvajWLmzphWyOKl+MC3MFGxHGutjkrRdeZHUjkbKvbbZ9yX/BzD6K4EPrJPwTj3xnuKYu5OABCHA==
+quarx@^4, quarx@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/quarx/-/quarx-4.0.0.tgz#bbbd5408170eb47711ac544067f9e2bcf73e0dfa"
+  integrity sha512-dKf1a4D0YDA80y90KdM8avirXs0GVthvi6grYPJopBHmao+c65+qZnFh1izrvYbhV4KIumyc2xCdmfeNi1rS3w==
 
 queue-microtask@^1.2.2:
   version "1.2.3"

@@ -7,6 +7,7 @@ import { createAtom, computed } from 'quarx';
 
 import { loadBody } from './sandbox/body_parse.js';
 import reactiveBuild from './bundler/reactive_build.js';
+import * as devEntryPoints from './bootstrap/entry_points.js';
 
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
@@ -77,11 +78,18 @@ export function startDevPipe(ws, rootDir) {
       .catch(console.error);
   });
 
+  function getEntryPoints() {
+    return [
+      ...Object.values(devEntryPoints),
+      ...entryPoints.get()
+    ];
+  }
+
   watcher
     .on('add', add)
     .on('unlink', unlink)
     .on('ready', () => cancelBuild = reactiveBuild(
-      () => [...entryPoints.get()],
+      getEntryPoints,
       watcher,
       rootDir,
       modules => send({

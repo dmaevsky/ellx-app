@@ -4,26 +4,7 @@ import { asyncCell } from './engine/reactive_cell.js';
 import { exportCalcGraph } from './engine/calc_graph_export.js';
 import CalcGraph from './engine/calc_graph.js';
 import { observableMap } from './engine/observable_map.js';
-
-function removeScript(id) {
-  const existingScript = document.getElementById(id);
-  if (existingScript) {
-    existingScript.remove();
-  }
-}
-
-function evalScript(id, code) {
-  removeScript(id);
-
-  const script = document.createElement('script');
-  script.id = id;
-  script.append(`//@ sourceURL=${id}\nwindow["${id}"] = function(module, exports, process, global, require){\n${code}\n}`);
-  document.body.append(script);
-
-  const result = window[id];
-  delete window[id];
-  return result;
-}
+import { removeScript, evalScript } from '../bootstrap/bootstrap.js';
 
 export default (map = new Map(), environment = 'staging') => {
   const moduleMap = observableMap(map, { name: 'moduleMap' });
