@@ -23,6 +23,7 @@
   let focused = false;
   let editorSession = null;
   let isFormula = false;
+  let caretPosition;
 
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
@@ -142,11 +143,52 @@
     highlight = [row, col];
   }
 
+  function getPosition(anchor, offset) {
+
+    const highlight = document.querySelector("#highlight");
+
+    if (!highlight) return offset;
+
+    const anchorParent = anchor.parentNode;
+    const nodes = highlight.childNodes;
+
+    let caretPosition = 0;
+    let found = false;
+
+    for (let i = 0; i < nodes.length; i++) {
+      const children = nodes[i].childNodes;
+
+      if (nodes[i] === anchorParent || nodes[i] === anchor) {
+        found = true;
+        caretPosition += offset;
+        break;
+      } else if (children.length > 1) {
+        for (let j = 0; j < children.length; j++) {
+          caretPosition += children[j].textContent.length;
+          if (children[j] === anchorParent) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) break;
+      caretPosition += nodes[i].textContent.length;
+    }
+
+    if (!found) caretPosition = editorSession.length;
+
+    return caretPosition;
+  }
+
+  let anchorNode, anchorOffset, focusNode, focusOffset;
+  let onInput;
+
   function setInsertRange(node) {
     if (node !== null) {
+      let { anchorNode, anchorOffset, focusNode, focusOffset } = document.getSelection();
       let [start, end] = insertRange
-              ? insertRange
-              : [editor.selectionStart, editor.selectionEnd];
+          ? insertRange
+          : [getPosition(anchorNode, anchorOffset), getPosition(focusNode, focusOffset)].sort((a, b) => a - b);
 
       editorSession = [
         editorSession.substring(0, start),
@@ -156,10 +198,8 @@
 
       const caret = start + node.length; // Remember insertion position
       insertRange = [start, caret];
-
-      tick().then(() => {   // Restore caret position after editing input
-        editor.selectionStart = editor.selectionEnd = caret;
-      });
+      caretPosition = caret;
+      onInput = false;
     }
   }
 
@@ -306,6 +346,8 @@
 
     if (combination(e) === 'Ctrl+Slash') {
       editorSession = toggleComment(editorSession);
+      onInput = false;
+      caretPosition = editorSession.length;
       e.preventDefault();
       return;
     }
@@ -530,6 +572,8 @@
       <CellEditor
         {transparent}
         bind:node={editor}
+        bind:caretPosition
+        bind:onInput
         bind:value={editorSession}
         on:input
         on:keydown={editorKeyDown}

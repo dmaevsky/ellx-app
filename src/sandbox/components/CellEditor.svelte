@@ -7,6 +7,7 @@
   export let value;
   export let transparent = false;
   export let node = null;
+  export let caretPosition;
 
   let unparsed = false;
 
@@ -36,7 +37,7 @@
       parser.parse(str);
       return parser.nodes;
     } catch {
-      console.log("~ ❌ Parser failed!", getCaret());
+      // console.log("~ ❌ Parser failed!", getCaret());
       return null;
     }
   }
@@ -127,47 +128,14 @@
     value = node.textContent;
 
     // Store current caret position
-    const caretPosition = getCaret();
+    caretPosition = getCaret();
 
     // Parse plain text and insert combination of spans as editor's inner HTML
     innerHTML = highlight(node.textContent);
     // value = node.textContent;
 
     // Wait until browser updates the DOM
-    tick().then(() => {
-      // Now initial range is reset and we have to restore caret position
-      // to provide a flawless user experience
-
-      // Detect which node resides at computed caretPosition
-      const highlight = document.querySelector("#highlight");
-
-      let caretNode = null;
-      let caretOffset = 0;
-      let currentPosition = 0;
-
-      if (highlight) {
-        const nodes = highlight.childNodes;
-
-        for (let i = 0; i < nodes.length; i++) {
-          const nodeLength = nodes[i].textContent.length;
-          currentPosition += nodeLength;
-
-          if (caretPosition <= currentPosition) {
-            caretNode = nodes[i].firstChild;
-            caretOffset = caretPosition - (currentPosition - nodeLength);
-            break;
-          }
-        }
-      }
-      else {
-        caretNode = node.lastChild;
-        caretOffset = caretPosition;
-      }
-
-      // Empty selection range and restore caret position
-      document.getSelection().empty();
-      document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
-    });
+    tick().then(() => restoreCaret());
   }
 
   onMount(() => {
@@ -200,6 +168,51 @@
     }
   }
 
+  function restoreCaret() {
+    // Now initial range is reset and we have to restore caret position
+    // to provide a flawless user experience
+
+    // Detect which node resides at computed caretPosition
+    const highlight = document.querySelector("#highlight");
+
+    let caretNode = null;
+    let caretOffset = 0;
+    let currentPosition = 0;
+
+    if (highlight) {
+      const nodes = highlight.childNodes;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const nodeLength = nodes[i].textContent.length;
+        currentPosition += nodeLength;
+
+        if (caretPosition <= currentPosition) {
+          caretNode = nodes[i].firstChild;
+          caretOffset = caretPosition - (currentPosition - nodeLength);
+          break;
+        }
+      }
+    }
+    else {
+      caretNode = node.lastChild;
+      caretOffset = caretPosition;
+    }
+
+    // Empty selection range and restore caret position
+    document.getSelection().empty();
+    document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
+  }
+
+  // Handle editorSession changes via insert or comments
+  $: if (!onInput) {
+    if (unparsed) innerHTML = highlight(value); // In not empty cell on mount
+
+    tick().then(() => restoreCaret());
+    autoSizeEditor();
+    onInput = true;
+  }
+
+  export let onInput = false;
 </script>
 
 <div
@@ -213,6 +226,7 @@
   bind:innerHTML
   contenteditable="true"
   on:input={() => {
+    onInput = true;
     handleHighlight();
     autoSizeEditor();
   }}
