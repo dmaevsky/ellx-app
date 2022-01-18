@@ -10,7 +10,7 @@
   export let caretPosition;
   export let onInput = false;
 
-  let unparsed = false;
+  let isPartlyParsed = false;
   let innerHTML;
 
   const parser = new ProgressiveEval(environment, () => {});
@@ -50,7 +50,7 @@
     const [formula, leftHand, rightHand] = match;
     const tokens = getTokens(rightHand);
 
-    if (!tokens) return unparsed ? innerHTML : formula;
+    if (!tokens) return isPartlyParsed ? innerHTML : formula;
 
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
@@ -117,7 +117,7 @@
   }
 
   function handleHighlight() {
-    if (!node || !node.textContent.length) return;
+    if (!node.textContent.length) return value = "";
     
     value = node.textContent;
     caretPosition = getCaret();
@@ -128,7 +128,7 @@
 
   onMount(() => {
     innerHTML = highlight(value);
-    unparsed = true;
+    isPartlyParsed = true;
 
     tick().then(() => {
       let anchor = node;
@@ -187,7 +187,7 @@
   }
   
   $: if (!onInput) {
-    if (unparsed) innerHTML = highlight(value);
+    if (isPartlyParsed) innerHTML = highlight(value);
 
     tick().then(() => restoreCaret());
     autoSizeEditor();
