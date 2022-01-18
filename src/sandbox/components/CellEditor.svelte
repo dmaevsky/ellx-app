@@ -8,9 +8,9 @@
   export let transparent = false;
   export let node = null;
   export let caretPosition;
+  export let onInput = false;
 
   let unparsed = false;
-
   let innerHTML;
 
   const parser = new ProgressiveEval(environment, () => {});
@@ -19,13 +19,13 @@
     let node_class;
     switch (type) {
       case "Literal":
-        node_class = "highlight_literal";
+        node_class = "highlight__literal";
         break;
       case "Identifier":
-        node_class = "highlight_identifier";
+        node_class = "highlight__identifier";
         break;
       case "BoundName":
-        node_class = "highlight_bound-name";
+        node_class = "highlight__bound-name";
         break;
     }
 
@@ -36,8 +36,8 @@
     try {
       parser.parse(str);
       return parser.nodes;
-    } catch {
-      // console.log("~ ❌ Parser failed!", getCaret());
+    } catch (e) {
+      console.log("Formula parsing error: ", e);
       return null;
     }
   }
@@ -80,10 +80,6 @@
   }
 
   function getCaret() {
-    // Input field is empty
-    // if (!document.querySelector("#highlight")) return value.length;
-
-    // Get current caret position
     const { anchorNode, anchorOffset } = document.getSelection();
     const highlight = document.querySelector("#highlight");
 
@@ -121,20 +117,12 @@
   }
 
   function handleHighlight() {
-    // Keep focus in editor on empty input
     if (!node || !node.textContent.length) return;
-
-    // Read editor input as plain text
+    
     value = node.textContent;
-
-    // Store current caret position
     caretPosition = getCaret();
-
-    // Parse plain text and insert combination of spans as editor's inner HTML
     innerHTML = highlight(node.textContent);
-    // value = node.textContent;
 
-    // Wait until browser updates the DOM
     tick().then(() => restoreCaret());
   }
 
@@ -169,10 +157,6 @@
   }
 
   function restoreCaret() {
-    // Now initial range is reset and we have to restore caret position
-    // to provide a flawless user experience
-
-    // Detect which node resides at computed caretPosition
     const highlight = document.querySelector("#highlight");
 
     let caretNode = null;
@@ -197,22 +181,19 @@
       caretNode = node.lastChild;
       caretOffset = caretPosition;
     }
-
-    // Empty selection range and restore caret position
+    
     document.getSelection().empty();
     document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
   }
-
-  // Handle editorSession changes via insert or comments
+  
   $: if (!onInput) {
-    if (unparsed) innerHTML = highlight(value); // In not empty cell on mount
+    if (unparsed) innerHTML = highlight(value);
 
     tick().then(() => restoreCaret());
     autoSizeEditor();
     onInput = true;
   }
 
-  export let onInput = false;
 </script>
 
 <div
@@ -254,13 +235,13 @@
     white-space: nowrap;
     overflow: hidden;
   }
-  :global(.highlight_identifier) {
+  :global(.highlight__identifier) {
     color: magenta;
   }
-  :global(.highlight_literal) {
+  :global(.highlight__literal) {
     color: dodgerblue;
   }
-  :global(.highlight_bound-name) {
+  :global(.highlight__bound-name) {
     color: teal;
   }
 </style>

@@ -24,6 +24,7 @@
   let editorSession = null;
   let isFormula = false;
   let caretPosition;
+  let onInput;
 
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
@@ -179,9 +180,6 @@
 
     return caretPosition;
   }
-
-  let anchorNode, anchorOffset, focusNode, focusOffset;
-  let onInput;
 
   function setInsertRange(node) {
     if (node !== null) {
