@@ -188,6 +188,8 @@
           ? insertRange
           : [getPosition(anchorNode, anchorOffset), getPosition(focusNode, focusOffset)].sort((a, b) => a - b);
 
+      onInput = false;
+
       editorSession = [
         editorSession.substring(0, start),
         node,
@@ -197,17 +199,13 @@
       const caret = start + node.length; // Remember insertion position
       insertRange = [start, caret];
       caretPosition = caret;
-      onInput = false;
     }
   }
 
   function gridClick(e) {
     if (e.target.nodeName === 'A') return;
 
-    if (isEditMode) {
-      editorClick(e);
-      return;
-    }
+    if (isEditMode) return editorClick(e);
 
     mouseCellSelection(e)
   }
@@ -342,7 +340,7 @@
       closeEditor(editorSession, true);
     }
 
-    if (combination(e) === 'Ctrl+Slash') {
+    if (combination(e) === 'Ctrl+Slash' && editorSession) {
       editorSession = toggleComment(editorSession);
       onInput = false;
       caretPosition = editorSession.length;

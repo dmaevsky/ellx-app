@@ -45,7 +45,10 @@
   function highlight(str) {
     let match = /^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)?\s*=([^=>].*)/.exec(str);
 
-    if (!match) return str;
+    if (!match) {
+      isPartlyParsed = false;
+      return str;
+    }
 
     const [formula, leftHand, rightHand] = match;
     const tokens = getTokens(rightHand);
@@ -68,6 +71,8 @@
 
     result += divideSpacer(rightHand.substring(tokenPosition, rightHand.length)) + "</span>";
 
+    isPartlyParsed = true;
+
     return result;
   }
 
@@ -79,16 +84,17 @@
     return result;
   }
 
-  function getCaret() {
+  function getCaretPosition() {
     const { anchorNode, anchorOffset } = document.getSelection();
     const highlight = document.querySelector("#highlight");
 
-    if (!highlight) return anchorOffset;
+    if (!highlight) return caretPosition = anchorOffset;
+
+    caretPosition = 0;
 
     const anchorParent = anchorNode.parentNode;
     const nodes = highlight.childNodes;
 
-    let caretPosition = 0;
     let found = false;
 
     for (let i = 0; i < nodes.length; i++) {
@@ -112,55 +118,13 @@
     }
 
     if (!found) caretPosition = value.length;
-
-    return caretPosition;
   }
 
-  function handleHighlight() {
-    if (!node.textContent.length) return value = "";
-    
-    value = node.textContent;
-    caretPosition = getCaret();
-    innerHTML = highlight(node.textContent);
-
-    tick().then(() => restoreCaret());
-  }
-
-  onMount(() => {
-    innerHTML = highlight(value);
-    isPartlyParsed = true;
-
-    tick().then(() => {
-      let anchor = node;
-      let offset = 0;
-
-      if (value !== '') {
-        const str = document.querySelector("#highlight");
-        anchor = str? str.lastChild.lastChild : node.lastChild;
-        offset = str? str.lastChild.textContent.length : node.textContent.length;
-      }
-
-      document.getSelection().empty();
-      document.getSelection().setBaseAndExtent(anchor, offset, anchor, offset);
-    })
-    autoSizeEditor();
-  })
-
-  async function autoSizeEditor() {
-    await tick();
-    if (node) {
-      node.style.removeProperty('width');
-      if (node.scrollWidth > node.clientWidth) {
-        node.style.width = node.scrollWidth + 5 + 'px';
-      }
-    }
-  }
-
-  function restoreCaret() {
-    const highlight = document.querySelector("#highlight");
-
+  function setCaretPosition() {
     let caretNode = null;
     let caretOffset = 0;
+
+    const highlight = document.querySelector("#highlight");
     let currentPosition = 0;
 
     if (highlight) {
@@ -176,6 +140,11 @@
           break;
         }
       }
+
+      if (!caretNode) {
+        caretNode = highlight.lastChild.lastChild;
+        caretOffset = caretNode.textContent.length;
+      }
     }
     else {
       caretNode = node.lastChild;
@@ -185,15 +154,54 @@
     document.getSelection().empty();
     document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
   }
-  
-  $: if (!onInput) {
-    if (isPartlyParsed) innerHTML = highlight(value);
 
-    tick().then(() => restoreCaret());
-    autoSizeEditor();
+  function handleInput() {
+    if (!node.textContent.length) return value = "";
+
     onInput = true;
+    value = node.textContent;
+
+    getCaretPosition()
+
+    innerHTML = highlight(node.textContent);
+
+    tick().then(() => setCaretPosition());
+    autoSizeEditor();
   }
 
+  async function autoSizeEditor() {
+    await tick();
+    if (node) {
+      node.style.removeProperty('width');
+      if (node.scrollWidth > node.clientWidth) {
+        node.style.width = node.scrollWidth + 5 + 'px';
+      }
+    }
+  }
+
+  onMount(() => {
+    innerHTML = highlight(value);
+
+    tick().then(() => {
+      let anchor = node;
+      let offset = 0;
+      if (value !== '') {
+        const str = document.querySelector("#highlight");
+        anchor = str? str.lastChild.lastChild : node.lastChild;
+        offset = str? str.lastChild.textContent.length : node.textContent.length;
+      }
+      document.getSelection().empty();
+      document.getSelection().setBaseAndExtent(anchor, offset, anchor, offset);
+    })
+
+    autoSizeEditor();
+  })
+
+  $: if (value && !onInput) {
+    innerHTML = highlight(value);
+    tick().then(() => setCaretPosition());
+    autoSizeEditor();
+  }
 </script>
 
 <div
@@ -206,11 +214,7 @@
   bind:this={node}
   bind:innerHTML
   contenteditable="true"
-  on:input={() => {
-    onInput = true;
-    handleHighlight();
-    autoSizeEditor();
-  }}
+  on:input={handleInput}
   on:keydown
   on:paste={(e) => {
     e.preventDefault();
