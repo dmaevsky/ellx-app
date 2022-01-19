@@ -4,7 +4,6 @@
   import NodeNavigator from './NodeNavigator.svelte';
   import HelpMenu from './HelpMenu.svelte';
   import ShortcutsHelper from './ShortcutsHelper.svelte';
-  import Tailwind from './Tailwind.svelte';
   import { combination } from '../../utils/mod_keys.js';
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
@@ -153,7 +152,3 @@
   />
   <ShortcutsHelper/>
 </div>
-
-
-
-<Tailwind/>

@@ -190,6 +190,10 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' fill='transparent' height='20'%3E%3Crect width='100' height='20' style='stroke-width:1;stroke:rgb(239,239,239)' /%3E%3C/svg%3E");
   }
 
+  :global(.dark) .gridlines {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' fill='transparent' height='20'%3E%3Crect width='100' height='20' style='stroke-width:1;stroke:rgb(50,50,50)' /%3E%3C/svg%3E");
+  }
+
   .gridlayout__container {
     position: relative;
   }
@@ -198,12 +202,8 @@
     color: #00325f;
   }
 
-  .gridlines :global(a) {
-    @apply text-blue-800 transition duration-100 underline;
-  }
-
-  .gridlines :global(.a:hover) {
-    @apply text-blue-400;
+  :global(.dark) .node {
+    color: #b3dbff;
   }
 
   .gridlayout__tile {
@@ -226,20 +226,12 @@
       linear-gradient(white, white);
     background-repeat: repeat;
   }
-  /*! purgecss start ignore */
-  :global(.mode-dark) .node {
-    color: #b3dbff;
-  }
 
-  :global(.mode-dark) .gridlayout__block-bg {
+  :global(.dark) .gridlayout__block-bg {
     position: absolute;
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFElEQVQImWNgQAIpKSkNpHIYGBgA4vwGscjvFCUAAAAASUVORK5CYII=),
       linear-gradient(#212121, #212121);
     background-repeat: repeat;
   }
 
-  :global(.mode-dark) .gridlines {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' fill='transparent' height='20'%3E%3Crect width='100' height='20' style='stroke-width:1;stroke:rgb(50,50,50)' /%3E%3C/svg%3E");
-  }
-  /*! purgecss end ignore */
 </style>

@@ -26,3 +26,13 @@
 >
 {@html parseLinks(value)}
 </div>
+
+<style>
+  :global(a) {
+    color: rgb(30, 64, 175);
+    text-decoration: underline;
+  }
+  :global(a:hover) {
+    color: rgb(66, 166, 245);
+  }
+</style>

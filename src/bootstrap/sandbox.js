@@ -55,6 +55,7 @@ function updateModules(modules) {
     const lifecycle = Module.require(LIFECYCLE);
     const { default: SandboxContent } = Module.require(SANDBOX_CONTENT);
 
+    document.body.innerHTML = '';
     sandboxComponent = new SandboxContent({ target: document.body });
 
     for (let [contentId, { nodes, layout }] of initSheetsQueue.entries()) {
