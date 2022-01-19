@@ -39,7 +39,8 @@ export function transformModule(id, text) {
     const result = svelte.compile(text, {
       generate: 'dom',
       format: 'esm',
-      filename: 'Component.svelte'
+      filename: 'Component.svelte',
+      immutable: true,
     });
 
     // TODO: report compile errors / warnings

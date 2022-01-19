@@ -2,7 +2,8 @@ import { batch } from 'quarx';
 import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations.js';
 import objectId from '../utils/object_id.js';
-import store, { Module, getSheet, notifyParent } from './store.js';
+import store, { getSheet, notifyServer } from './store.js';
+import { Module } from '../bootstrap/bootstrap.js';
 
 import CalcGraph from '../runtime/engine/calc_graph.js';
 
@@ -11,7 +12,7 @@ import { buildBlocks, saveBody } from './body_parse.js';
 const autoSave = new Map();
 
 function sendContent(contentId, blocks) {
-  notifyParent({
+  notifyServer({
     type: 'serialize',
     contentId,
     body: blocks && saveBody(blocks.values())
@@ -77,12 +78,8 @@ export function updateModules(modules) {
       if (modules[id] === 'deleted') {
         Module.remove(id);
       }
-      else if (id.endsWith('/package.json')) {
-        Module.set(id, { code: { exports: modules[id] } });
-      }
       else {
-        const node = modules[id];
-        Module.set(id, node);
+        Module.set(id, modules[id]);
       }
     }
   });

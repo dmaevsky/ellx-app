@@ -17,7 +17,7 @@ import { deploy } from "./deploy.js";
 
 import { conclude } from "conclure";
 
-const publicDir = join(__dirname, "../dist");
+const publicDir = join(__dirname, "./bootstrap");
 
 // first - parse the main command
 const mainDefinitions = [{ name: "command", defaultOption: true }];

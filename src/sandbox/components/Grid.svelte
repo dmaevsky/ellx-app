@@ -528,7 +528,7 @@
   class:overflow-auto={!overflowHidden}
   class:overflow-hidden={overflowHidden}
   class:bg-white={!transparent}
-  class:dark:bg-dark-500={!transparent}
+  class:dark:bg-slate-800={!transparent}
   class:bg-transparent={transparent}
   class:blurred-bg={transparent}
   class:dark:text-white={!transparent}

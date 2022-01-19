@@ -100,14 +100,9 @@ export function* deploy(rootDir, env) {
       throw new Error(`${id} could not be resolved`);
     }
 
-    if (id.endsWith('/package.json')) {
-      modules[id] = { code: { exports: node } };
-      continue;
-    }
-
     const { code } = node;
 
-    if (code !== undefined) {
+    if (typeof code === 'string') {
       delete node.code;
       node.src = appendFile(id.slice(7), code);
     }

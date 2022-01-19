@@ -1,4 +1,5 @@
-import store, { Module, oActiveContentId, contents } from './store.js';
+import store, { oActiveContentId, contents } from './store.js';
+import { Module } from '../bootstrap/bootstrap.js';
 import { UPDATE_CONTENT } from './mutations.js';
 import { computed } from 'quarx';
 

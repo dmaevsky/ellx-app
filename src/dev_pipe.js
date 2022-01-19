@@ -7,6 +7,7 @@ import { createAtom, computed } from 'quarx';
 
 import { loadBody } from './sandbox/body_parse.js';
 import reactiveBuild from './bundler/reactive_build.js';
+import * as devEntryPoints from './bootstrap/entry_points.js';
 
 export function startDevPipe(ws, rootDir) {
   const send = what => ws.send(JSON.stringify(what));
@@ -58,6 +59,15 @@ export function startDevPipe(ws, rootDir) {
     entryPointsAtom.reportChanged();
   }
 
+  const STYLESHEET = fileURLToPath(new URL('./bootstrap/sandbox.css', import.meta.url));
+
+  const change = path => {
+    if (path === STYLESHEET) {
+      console.log('[Update styles]');
+      send({ type: 'updateStyles'});
+    }
+  }
+
   ws.on('message', msg => {
     try {
       const { type, contentId, body } = JSON.parse(msg);
@@ -77,11 +87,19 @@ export function startDevPipe(ws, rootDir) {
       .catch(console.error);
   });
 
+  function getEntryPoints() {
+    return [
+      ...Object.values(devEntryPoints),
+      ...entryPoints.get()
+    ];
+  }
+
   watcher
     .on('add', add)
     .on('unlink', unlink)
+    .on('change', change)
     .on('ready', () => cancelBuild = reactiveBuild(
-      () => [...entryPoints.get()],
+      getEntryPoints,
       watcher,
       rootDir,
       modules => send({

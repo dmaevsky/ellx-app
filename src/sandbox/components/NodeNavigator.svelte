@@ -100,7 +100,7 @@
     stroke: #eee;
   }
 
-  :global(.mode-dark) .svg {
+  :global(.dark) .svg {
     fill: #333;
     stroke: #666;
   }
