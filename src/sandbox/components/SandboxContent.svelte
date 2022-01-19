@@ -102,9 +102,9 @@
 
   function toggleDark(v) {
     if (v) {
-      document.body.classList.add('mode-dark');
+      document.body.classList.add('dark');
     } else {
-      document.body.classList.remove('mode-dark');
+      document.body.classList.remove('dark');
     }
   }
 

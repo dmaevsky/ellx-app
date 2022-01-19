@@ -59,6 +59,15 @@ export function startDevPipe(ws, rootDir) {
     entryPointsAtom.reportChanged();
   }
 
+  const STYLESHEET = fileURLToPath(new URL('./bootstrap/sandbox.css', import.meta.url));
+
+  const change = path => {
+    if (path === STYLESHEET) {
+      console.log('[Update styles]');
+      send({ type: 'updateStyles'});
+    }
+  }
+
   ws.on('message', msg => {
     try {
       const { type, contentId, body } = JSON.parse(msg);
@@ -88,6 +97,7 @@ export function startDevPipe(ws, rootDir) {
   watcher
     .on('add', add)
     .on('unlink', unlink)
+    .on('change', change)
     .on('ready', () => cancelBuild = reactiveBuild(
       getEntryPoints,
       watcher,

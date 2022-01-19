@@ -23,6 +23,8 @@ function listen({ data }) {
   try {
     const { type, args } = JSON.parse(data);
 
+    if (type === "updateStyles") return updateStyles();
+
     const actions = Module
       ? Module.require(LIFECYCLE)
       : { init, dispose, updateModules };
@@ -66,6 +68,13 @@ function updateModules(modules) {
     console.error(error);
     devServer.close();
   }
+}
+
+function updateStyles() {
+  console.debug('STYLESHEET update ***');
+
+  const styleSheet = document.getElementById('stylesheet');
+  styleSheet.href = "sandbox.css?reload" + Math.random();
 }
 
 function disconnect() {

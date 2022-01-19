@@ -170,7 +170,7 @@
       {#each data as cell}
         <div
           class:bg-white={!transparent}
-          class:dark:bg-dark-500={!transparent}
+          class:dark:bg-slate-800={!transparent}
           class:bg-transparent={transparent}
           class:text-gray-700={header}
           class:italic={header}
