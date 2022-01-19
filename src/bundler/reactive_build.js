@@ -1,6 +1,5 @@
-import { autorun, createAtom } from 'quarx';
-import { reactiveFlow } from 'conclure-quarx';
-import { conclude } from 'conclure';
+import { createAtom } from 'quarx';
+import { reactiveFlow, autorunFlow } from 'conclure-quarx';
 import { allSettled } from 'conclure/combinators';
 import tokamak from 'tokamak';
 import resolver from 'tokamak/resolve';
@@ -21,8 +20,15 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
   let pjsons = {};
 
   function* loadPkgJSON(url) {
-    const pjson = yield files.get(url);
-    return pjsons[url] = pjson && JSON.parse(pjson);
+    const pjsonBody = yield files.get(url);
+    const pjson = pjsonBody && JSON.parse(pjsonBody);
+
+    pjsons[url] = pjson && {
+      code: { exports: pjson },
+      imports: {}
+    };
+
+    return pjson;
   }
 
   function* load(url) {
@@ -85,32 +91,30 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
     logger: console.debug
   });
 
-  let cancel;
-
-  return autorun(() => {
-    if (cancel) cancel();
-
+  function* build() {
     const entryPoints = getEntryPoints();
     console.log('Incremental build', entryPoints);
 
-    cancel = conclude(reactiveFlow(allSettled(entryPoints.map(id => loadModule(id)))), () => {
-      for (let dispose of gc) dispose();
-      gc.clear();
+    yield allSettled(entryPoints.map(id => loadModule(id)));
 
-      for (let id in bundle) {
-        if (/\.(html|md|ellx)$/.test(id)) {
-          delete bundle[id];
-          continue;
-        }
+    for (let dispose of gc) dispose();
+    gc.clear();
+
+    for (let id in bundle) {
+      if (/\.(html|md|ellx)$/.test(id)) {
+        delete bundle[id];
+        continue;
       }
+    }
 
-      updateModules({
-        ...bundle,
-        ...pjsons
-      });
-
-      bundle = {};
-      pjsons = {};
+    updateModules({
+      ...bundle,
+      ...pjsons
     });
-  }, { name: 'reactiveBuild' });
+
+    bundle = {};
+    pjsons = {};
+  }
+
+  return autorunFlow(build, { name: 'reactiveBundle' });
 }

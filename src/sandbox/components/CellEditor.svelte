@@ -9,7 +9,7 @@
   class="grid__editor grid__selection-border bg-white"
   class:dark:text-white={!transparent}
   class:dark:text-gray-800={transparent}
-  class:dark:bg-dark-500={!transparent}
+  class:dark:bg-slate-800={!transparent}
   bind:this={node}
   bind:value
   on:input

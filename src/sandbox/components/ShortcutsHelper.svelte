@@ -108,7 +108,9 @@
 </script>
 
 <div id="shortcuts-helper"
-     class="shortcuts-helper flex flex-col md:px-24 xl:px-44 dark:bg-gray-900 dark:text-white"
+     class="relative w-full py-4 px-16 overflow-auto pointer-events-auto
+            text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20
+            flex flex-col md:px-24 xl:px-44 dark:bg-gray-900 dark:text-white"
      class:hidden
 >
     <div class="absolute top-4 right-4 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
@@ -120,8 +122,8 @@
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:gap-x-12 lg:gap-x-8 xl:gap-x-12 gap-8 w-full">
         {#each shortcuts as item}
-            <div class="shortcut-list">
-                <h4 class="opacity-40">{item.group}</h4>
+            <div class="flex flex-col gap-2">
+                <h4 class="opacity-40 text-sm font-normal tracking-wide">{item.group}</h4>
                 {#each item.list as { title, keys }}
                     <Shortcut {title} {keys}/>
                 {/each}
@@ -129,23 +131,3 @@
         {/each}
     </div>
 </div>
-
-<style>
-    .hidden {
-        display: none;
-    }
-
-    .shortcuts-helper {
-        @apply relative w-full py-4 px-16 overflow-auto pointer-events-auto
-        text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20 ;
-    }
-
-    .shortcut-list {
-       @apply flex flex-col gap-2;
-    }
-
-    h4 {
-        @apply text-sm font-normal;
-        letter-spacing: 0.25px;
-    }
-</style>

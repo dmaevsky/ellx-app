@@ -41,7 +41,8 @@
 </script>
 
 <div id="node-navigator"
-  class="node-navigator bg-gray-100 text-gray-900 border-l border-gray-500 border-opacity-20 dark:bg-gray-900 dark:text-white"
+  class="flex-1 text-xs overflow-y-auto pointer-events-auto
+       bg-gray-100 text-gray-900 border-l border-gray-500 border-opacity-20 dark:bg-gray-900 dark:text-white"
   class:hidden
   on:mouseleave={() => { deps = [] }}
 >
@@ -62,12 +63,16 @@
           <div
             on:mouseenter={() => highlightDeps(node)}
             on:click={() => goTo(node, type)}
-            class="node"
+            class="node flex items-center cursor-pointer relative w-full"
             class:dependant={dependants.includes(node.id)}
             class:dep={deps.includes(node.id)}
             class:error={node.isError}
           >
-            <span class="id">{String(node)}</span>
+            <span
+              class="id mr-1 text-right truncate"
+              class:text-error-500={node.isError}
+            >{String(node)}</span>
+
             <div class="flex-grow" />
             <svg class="svg" height="20" width="20">
               <circle cx="12" cy="12" r="4" stroke-width={node.size > 0 ? 4 : 2} />
@@ -80,16 +85,9 @@
 </div>
 
 <style>
-  .node-navigator {
-    @apply flex-1 text-xs overflow-y-auto pointer-events-auto;
-  }
-
-  .hidden {
-    display: none;
-  }
-
   .id {
     opacity: 0.4;
+    max-width: 16rem;
   }
 
   .node:hover .id {
@@ -106,13 +104,14 @@
     stroke: #eee;
   }
 
-  :global(.mode-dark) .svg {
+  :global(.dark) .svg {
     fill: #333;
     stroke: #666;
   }
 
   .nodes:hover .dep .id {
-    @apply opacity-100 text-primary-500;
+    opacity: 1;
+    color: #237EB3;
   }
 
   .nodes:hover .dep .svg {
@@ -121,7 +120,8 @@
   }
 
   .nodes:hover .dependant .id {
-    @apply opacity-100 text-alert-500;
+    opacity: 1;
+    color: #ff9800;
   }
 
   .nodes:hover .dependant .svg {
@@ -129,22 +129,9 @@
     stroke: #ff9800;
   }
 
-  .nodes .error {
-    @apply text-error-500;
-  }
-
   .nodes .error .svg {
     fill: #f44336;
     stroke: #f44336;
-  }
-
-  .id {
-    @apply mr-1 text-right truncate;
-    max-width: 16rem;
-  }
-
-  .node {
-    @apply flex items-center cursor-pointer relative w-full;
   }
 
   @media (max-width: 768px) {

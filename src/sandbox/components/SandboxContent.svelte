@@ -1,15 +1,14 @@
 <script>
   import { onMount, tick } from 'svelte';
-  import * as actions from '../lifecycle.js';
   import Worksheet from './Worksheet.svelte';
   import NodeNavigator from './NodeNavigator.svelte';
   import HelpMenu from './HelpMenu.svelte';
   import ShortcutsHelper from './ShortcutsHelper.svelte';
-  import Tailwind from './Tailwind.svelte';
   import { combination } from '../../utils/mod_keys.js';
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
-  import store, { Module, devServer, contents, getSheet } from '../store.js';
+  import store, { contents, getSheet } from '../store.js';
+  import { Module } from '../../bootstrap/bootstrap.js';
   import CalcGraph from '../../runtime/engine/calc_graph.js';
   import mountEllxApp from '../../runtime/mount_app.js';
 
@@ -43,37 +42,10 @@
     document.getElementById(id).classList.toggle("hidden");
   }
 
-  function listen({ data }) {
-    try {
-      const { type, args } = JSON.parse(data);
-
-      if (type in actions) {
-        actions[type](...args);
-      }
-      else throw new Error('Unknown action', type);
-    }
-    catch (error) {
-      console.error(error.message);
-    }
-  }
-
   let mountPoint;
-  let devServerConnected = true;
-
-  function disconnect() {
-    devServerConnected = false;
-  }
 
   onMount(() => {
     mountEllxApp(mountPoint, htmlCalcGraph);
-
-    devServer.addEventListener('message', listen);
-    devServer.addEventListener('close', disconnect);
-
-    return () => {
-      devServer.removeEventListener('message', listen);
-      devServer.removeEventListener('close', disconnect);
-    }
   });
 
   function kbListen(e) {
@@ -130,9 +102,9 @@
 
   function toggleDark(v) {
     if (v) {
-      document.body.classList.add('mode-dark');
+      document.body.classList.add('dark');
     } else {
-      document.body.classList.remove('mode-dark');
+      document.body.classList.remove('dark');
     }
   }
 
@@ -164,11 +136,7 @@
 
 {#each sheets as contentId (contentId)}
   <div class="sheet" id="sheet-{escapeId(contentId)}" class:hidden={contentId !== activeContentId}>
-    {#if devServerConnected}
-      <Worksheet store={getSheet(contentId)}/>
-    {:else}
-      <div class="text-error-500">Dev server disconnected...</div>
-    {/if}
+    <Worksheet store={getSheet(contentId)}/>
   </div>
 {/each}
 
@@ -184,7 +152,3 @@
   />
   <ShortcutsHelper/>
 </div>
-
-
-
-<Tailwind/>
