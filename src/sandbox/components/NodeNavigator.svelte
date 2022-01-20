@@ -70,7 +70,7 @@
           >
             <span
               class="id mr-1 text-right truncate"
-              class:text-error-500={node.isError}
+              class:text-red-500={node.isError}
             >{String(node)}</span>
 
             <div class="flex-grow" />

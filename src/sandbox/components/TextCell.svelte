@@ -21,8 +21,7 @@
 </script>
 
 <div
-  class="text-black dark:text-gray-200"
-  class:text-error-900={value.startsWith("#ERR")}
+  class:text-red-500={value.startsWith("#ERR")}
   class:text-gray-500={value.startsWith("//")}
 >
 {@html parseLinks(value)}
