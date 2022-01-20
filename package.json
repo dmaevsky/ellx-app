@@ -43,6 +43,7 @@
     "node-fetch": "^2.6.1",
     "open": "^8.4.0",
     "polka": "^0.5.2",
+    "postcss": "^8.4.5",
     "quarx": "^4.0.0",
     "rd-parse": "^3.4.0",
     "rd-parse-jsexpr": "^2.1.0",
