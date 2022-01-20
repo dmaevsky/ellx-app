@@ -147,7 +147,6 @@
 >
   {#each tiles as { id, pos: [row, col, rowSpan, colSpan], data, component, node, header } (id)}
     <div
-      class:node={node}
       class={ data || component ? 'gridlayout__tile' : 'gridlayout__block-bg' }
       style={`
         transform: translate(${col * columnWidth}px, ${row * rowHeight}px);
@@ -173,6 +172,7 @@
           class:dark:bg-slate-800={!transparent}
           class:bg-transparent={transparent}
           class:text-gray-700={header}
+          class:text-blue-700={node}
           class:italic={header}
           class:text-xs={header}
           class="gridlayout__cell gridlines"
@@ -196,14 +196,6 @@
 
   .gridlayout__container {
     position: relative;
-  }
-
-  .node {
-    color: #00325f;
-  }
-
-  :global(.dark) .node {
-    color: #b3dbff;
   }
 
   .gridlayout__tile {

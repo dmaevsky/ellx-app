@@ -524,7 +524,7 @@
 </script>
 
 <div
-  class="w-full h-full grid__container text-black"
+  class="w-full h-full grid__container text-black dark:text-gray-200"
   class:overflow-auto={!overflowHidden}
   class:overflow-hidden={overflowHidden}
   class:bg-white={!transparent}
@@ -592,7 +592,6 @@
     border: none;
     font-size: 12px;
     font-family: Consolas, monaco, monospace;
-    color: black;
   }
   .grid__selection-border {
     border: 2px solid rgb(0, 128, 255);
