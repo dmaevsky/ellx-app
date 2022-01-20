@@ -64,7 +64,7 @@
       {#if $nodes[type] && $nodes[type].length}
         <div class="mt-2 caps">{type}</div>
         {#each $nodes[type] as node}
-          {#if !match.trim().length || String(node).includes(match.trim())}
+          {#if !match.trim().length || String(node).toLowerCase().includes(match.trim().toLowerCase())}
             <div
                 on:mouseenter={() => highlightDeps(node)}
                 on:click={() => goTo(node, type)}
