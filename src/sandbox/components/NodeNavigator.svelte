@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <div class="nodes z-10 px-4 flex flex-col align-center relative">
+  <div class="nodes px-4 flex flex-col align-center relative">
     {#each types as type}
       {#if $nodes[type] && $nodes[type].length}
         <div class="mt-2 caps">{type}</div>

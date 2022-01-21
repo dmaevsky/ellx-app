@@ -145,7 +145,7 @@
 
 <HelpMenu/>
 
-<div class="fixed top-0 left-0 z-100 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
+<div class="fixed top-0 left-0 z-50 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
   <NodeNavigator
           on:goToLine={goToLine}
           on:navigate={navigate}
