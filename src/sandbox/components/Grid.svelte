@@ -34,6 +34,8 @@
   let highlight = selection;
   let arrowRow, arrowCol;
 
+  $: if (selection && !document.querySelector("#node-navigator").classList.contains("hidden")) closeEditor();
+
   $: if (editorSession !== null) isFormula = detectFormula(editorSession)
 
   $: isEditMode = (editor !== null);
