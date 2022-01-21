@@ -1,11 +1,8 @@
 <script>
     import Shortcut from "./Shortcut.svelte";
+    import { togglePanel } from '../../utils/ui.js'
 
     let hidden = true;
-
-    function showPanel(id) {
-        document.getElementById(id).classList.toggle("hidden");
-    }
 </script>
 
 <div class="fixed bottom-4 right-4 flex flex-col gap-4 items-end"
@@ -16,11 +13,11 @@
       class:hidden
     >
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => {showPanel("node-navigator")}}>
+            on:click={() => togglePanel("#node-navigator")}>
             <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => {showPanel("shortcuts-helper")}}>
+            on:click={() => togglePanel("#shortcuts-helper")}>
             <Shortcut title="Keyboard shortcuts" keys={["Shift", "Alt", "?"]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">

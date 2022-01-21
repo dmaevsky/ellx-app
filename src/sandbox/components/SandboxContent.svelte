@@ -5,6 +5,7 @@
   import HelpMenu from './HelpMenu.svelte';
   import ShortcutsHelper from './ShortcutsHelper.svelte';
   import { combination } from '../../utils/mod_keys.js';
+  import { togglePanel } from '../../utils/ui.js'
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
   import store, { contents, getSheet } from '../store.js';
@@ -38,10 +39,6 @@
     return contentId.replace(/[^a-zA-Z0-9-_]+/g, '-');
   }
 
-  function togglePanel(id) {
-    document.getElementById(id).classList.toggle("hidden");
-  }
-
   let mountPoint;
 
   onMount(() => {
@@ -58,11 +55,11 @@
         return;
       case 'Alt+Slash':
         e.preventDefault();
-        togglePanel("shortcuts-helper");
+        togglePanel("#shortcuts-helper");
         return;
       case 'Alt+Period':
         e.preventDefault();
-        togglePanel("node-navigator");
+        togglePanel("#node-navigator");
         return;
     }
 
