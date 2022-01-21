@@ -53,7 +53,7 @@
     const [formula, leftHand, rightHand] = match;
     const tokens = getTokens(rightHand);
 
-    if (!tokens) return isPartlyParsed ? innerHTML : formula;
+    if (!tokens) return formula;
 
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
