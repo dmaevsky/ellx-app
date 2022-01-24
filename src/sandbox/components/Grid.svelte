@@ -3,9 +3,11 @@
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
+  import { togglePanel } from '../../utils/ui.js'
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
+  import Shortcut from "./Shortcut.svelte";
 
   export let blocks;
   export let calculated;
@@ -205,7 +207,20 @@
   }
 
   function gridClick(e) {
+    console.log("~ Mouse event (Grid): ", selection);
+    if (isContextMenu && e.button === 0 && !e.target.closest("#context-menu")) isContextMenu = false;
+
+    if (e.button === 2) { // Prevent right-click handling here
+      if (isEditMode) closeEditor();
+      return jumpAway(e);
+    }
+
     if (e.target.nodeName === 'A') return;
+
+    if (isContextMenu && e.target.closest("#context-menu")) {
+      e.preventDefault();
+      return;
+    }
 
     if (isEditMode) return editorClick(e);
 
@@ -272,7 +287,11 @@
   }
 
   function keyDown(e) {
+    console.log("~ Key event (Grid): ", e, e.key, e.code);
+
     if (e.target !== container || isEditMode) return;
+
+    if (e.key === 'Escape') isContextMenu = false;
 
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -290,6 +309,8 @@
     }
 
     let [rowStart, colStart, rowEnd, colEnd] = selection;
+
+    // if (e.key === "F12") return;
 
     const modKeys = modifiers(e);
 
@@ -439,6 +460,7 @@
     let [row, col] = getRowCol(coords);
 
     setSelection(thisSheet, [row, col, row, col]);
+    if (e.button === 2) return;
 
     // === Start mouse selection ===
     e.preventDefault();
@@ -505,6 +527,7 @@
 
   // Copy / Cut / Paste events subscription and forwarding
   const clipboardEvent = name => e => {
+    console.log("~ clipboardEvent: ", focused, selection);
     if (!focused) return;
     dispatch(name, e);
     e.preventDefault();
@@ -523,7 +546,87 @@
         document.removeEventListener(name, handlers[name]);
     }
   });
+
+  let isContextMenu = false;
+  let x, y;
+
+  async function handleContextMenu(e) {
+
+    console.log("~ Context menu fire");
+    e.preventDefault();
+    isContextMenu = true;
+
+    await tick();
+
+    // if (e.buttons !== 2) {
+    //   const [row, col] = selection;
+    //   [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
+    //   console.log("~ Keyboard context: ", selection, [x, y]);
+    // }
+    // else {
+      [x, y] = getCoords(e);
+      const menu = document.querySelector("#context-menu");
+      const windowInnerWidth = document.documentElement.clientWidth
+      const windowInnerHeight = document.documentElement.clientHeight
+      x = (x + menu.clientWidth >= windowInnerWidth) ? x - menu.clientWidth : x;
+      y = (y + menu.clientHeight >= windowInnerHeight) ? y - menu.clientHeight : y;
+      // console.log("~ Mouse context: ", selection, [x, y]);
+    // }
+  }
+
+  function eventGenerator(code, shiftKey = false, altKey = false) {
+    const event = new Event("keydown", {
+      "bubbles" : true,
+      "cancelable": true
+    });
+    event.code = code;
+    event.shiftKey = shiftKey;
+    event.altKey = altKey;
+    return event;
+  }
 </script>
+
+{#if isContextMenu}
+  <div id="context-menu" class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
+            dark:bg-gray-900 dark:text-white" style="left: {x}px; top: {y}px">
+    <ul class="flex flex-col">
+      {#each [
+        ["cut", ["Cmd", "X"]],
+        ["copy", ["Cmd", "C"]],
+        ["paste", ["Cmd", "V"]]
+      ] as [title, keys] }
+        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white hover:border-white cursor-pointer capitalize"
+            on:click={clipboardEvent(title)}>
+          <Shortcut {title} {keys}/>
+        </li>
+      {/each}
+      <hr class="py-2" />
+      {#each [
+        ["Insert Column", ["Space"], ["Space"]],
+        ["Remove Column", ["Backspace"], ["Backspace"]],
+        ["Insert Row", ["Space", true], ["Shift", "Space"]],
+        ["Remove Row", ["Backspace", true], ["Shift", "Backspace"]]
+      ] as [title, args, keys] }
+        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white hover:border-white cursor-pointer capitalize"
+            on:click={container.dispatchEvent(eventGenerator(...args))}>
+          <Shortcut {title} {keys}/>
+        </li>
+      {/each}
+      <hr class="py-2" />
+      {#each [
+        ["Expand horizontally", ["ArrowRight", true, true], ["Shift", "Alt", "→"]],
+        ["Collapse horizontally", ["ArrowLeft", true, true], ["Shift", "Alt", "←"]],
+        ["Expand vertically", ["ArrowDown", true, true], ["Shift", "Alt", "↓"]],
+        ["Collapse vertically", ["ArrowUp", true, true], ["Shift", "Alt", "↑"]]
+      ] as [title, args, keys] }
+        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white hover:border-white cursor-pointer capitalize"
+            on:click={container.dispatchEvent(eventGenerator(...args))}>
+          <Shortcut {title} {keys}/>
+        </li>
+      {/each}
+    </ul>
+  </div>
+{/if}
 
 <div
   class="w-full h-full grid__container text-black dark:text-gray-200"
@@ -539,8 +642,9 @@
   bind:this={container}
   on:keydown={keyDown}
   on:focus={() => focused = true}
-  on:blur={() => focused = false}
+  on:blur={() => {if (!isContextMenu) focused = false}}
   on:mousedown={gridClick}
+  on:contextmenu={handleContextMenu}
   on:dblclick={(e) => {
     e.preventDefault();
     if (!editorSession) { startEditing() }
