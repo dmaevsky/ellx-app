@@ -28,13 +28,12 @@
 
   function keyDown(e) {
     // Returns true if the keystroke is handled here, false otherwise
-    console.log("~ Key event (Worksheet): ", e, e.key, e.code);
 
     const isMacOS = navigator.userAgent.includes("Mac");
 
     let modifiers = (e.altKey << 2) + ((isMacOS ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
 
-    modifiers = isNaN(modifiers) ? 0 : modifiers;
+    modifiers = isNaN(modifiers) ? 0 : modifiers; // Default modifiers for synthetic keydown event
 
     // Prevent default Select All behavior
     if (modifiers === 2 && e.code === 'KeyA') {
@@ -66,13 +65,11 @@
     let [rowStart, colStart, rowEnd, colEnd] = selection;
 
     if (e.code === 'Backspace' || e.code === 'Space' || e.code === 'Tab') {
-      console.log("~ #1 Space pressed (Worksheet) modifiers: ", modifiers);
       let direction, shift;
       if (modifiers === 0 || modifiers === 6) { // No modifiers or Ctrl+Alt
         shift = shiftCellsH;
 
         if (e.code === 'Space') {
-          console.log("~ #2 Space pressed (Worksheet) ");
           colStart = colEnd = Math.min(colStart, colEnd);
           setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
         }
