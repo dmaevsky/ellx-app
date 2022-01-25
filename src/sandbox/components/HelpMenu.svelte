@@ -5,7 +5,7 @@
     let hidden = true;
 </script>
 
-<div class="fixed z-50 bottom-4 right-4 flex flex-col gap-4 items-end"
+<div class="fixed z-40 bottom-4 right-4 flex flex-col gap-4 items-end"
      on:mouseleave={() => {hidden = true}}>
     <ul
       class="py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs

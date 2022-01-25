@@ -109,7 +109,6 @@
     const container = document.querySelector(`#sheet-${escapeId(contentId)} .grid__container`);
     if (container) container.focus();
   }
-
 </script>
 
 <svelte:window
@@ -142,7 +141,10 @@
 
 <HelpMenu/>
 
-<div class="fixed top-0 left-0 z-50 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
+<div class="fixed top-0 left-0 z-40 pointer-events-none w-full h-screen flex flex-col justify-end items-end"
+    on:contextmenu={(e) => e.preventDefault()}
+    on:mousedown={(e) => e.preventDefault()}
+>
   <NodeNavigator
           on:goToLine={goToLine}
           on:navigate={navigate}
