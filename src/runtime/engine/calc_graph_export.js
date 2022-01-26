@@ -8,7 +8,7 @@ export function exportCalcGraph(id, getCalcGraph) {
       return true;
     },
     get(_, name) {
-      const node = getCalcGraph().nodes.get(name);
+      const node = getCalcGraph(id).nodes.get(name);
       if (!node) throw new Error(`${name} not found in ${id}`);
 
       const nodeId = id + ':' + name;

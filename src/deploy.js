@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import chokidar from 'chokidar';
 import { cps } from 'conclure/effects';
 import { all } from 'conclure/combinators';
@@ -8,6 +9,15 @@ import md5 from 'md5';
 import reactiveBuild from './bundler/reactive_build.js';
 import { abortableFetch } from './utils/fetch.js';
 import { loadBody as parseEllx } from './sandbox/body_parse.js';
+
+const execCommand = (cmd, cb) => {
+  const child = exec(cmd, (err, stdout, stderr) => {
+    console.log(stdout);
+    console.error(stderr);
+    cb(err);
+  });
+  return () => child.kill();
+}
 
 function* collectEntryPoints(dir) {
   const items = yield readdir(dir, { withFileTypes: true });
@@ -49,10 +59,20 @@ function build(entryPoints, rootDir, cb) {
   return cancel;
 }
 
+const MODULE_MANAGER    = 'file:///node_modules/@ellx/app/src/runtime/module_manager.js';
+const RUNTIME           = 'file:///node_modules/@ellx/app/src/runtime/runtime.js';
+
+function getContentType(path) {
+  if (path.endsWith('.html')) return 'text/html';
+  if (path.endsWith('.css')) return 'text/css';
+  return 'application/javascript';
+}
+
 export function* deploy(rootDir, env) {
   const files = (yield collectEntryPoints(`${rootDir}/src`))
     .map(path => path.slice(rootDir.length))
-    .map(path => pathToFileURL(path).href);
+    .map(path => pathToFileURL(path).href)
+    .concat([MODULE_MANAGER, RUNTIME]);
 
   // Load all sheets
   const sheets = Object.fromEntries(
@@ -108,19 +128,45 @@ export function* deploy(rootDir, env) {
     }
   }
 
-  const requireGraphSrc = appendFile('/bundle.js', 'var bundle = ' + JSON.stringify(modules));
-  const sheetsSrc = appendFile('/sheets.js', 'var sheets = ' + JSON.stringify(sheets));
-  const runtimeSrc = appendFile('/Runtime.js', yield readFile(join(rootDir, 'node_modules/@ellx/app/dist/runtime.js'), 'utf8'));
+  const bootstrapSrc = appendFile('/bootstrap.js', yield readFile(join(rootDir, 'node_modules/@ellx/app/src/bootstrap/bootstrap.js'), 'utf8'));
+
+  const modulesSrc = appendFile('/modules.js', 'export default ' + JSON.stringify(modules));
+  const sheetsSrc = appendFile('/sheets.js', 'export default ' + JSON.stringify(sheets));
 
   // Prepare index.html body
-  const injection = `
-      <script src="${requireGraphSrc}" defer></script>
-      <script src="${sheetsSrc}" defer></script>
-      <script src="${runtimeSrc}" defer onload="Runtime(bundle, sheets, '${env}')"></script>
-  `;
+  const injection = `<script type="module">
+    import { bootstrapModule, asyncRetry, prefetch } from "${bootstrapSrc}";
+    import modules from "${modulesSrc}";
+    import sheets from "${sheetsSrc}";
 
-  const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/public/sandbox.html'), 'utf8'))
-    .replace(`<link rel="stylesheet" href="/sandbox.css">`, injection);
+    async function run() {
+      const Module = await bootstrapModule(modules, '${env}');
+      const Runtime = await asyncRetry(Module.require)("${RUNTIME}");
+
+      Runtime.initializeEllxApp(Module, sheets);
+    }
+
+    prefetch(Object.values(modules));
+
+    run().catch(console.error);
+  </script>`;
+
+  // Styles
+  const twConfig = join(rootDir, 'tailwind.config.cjs');
+  const twStylesIn = join(rootDir, 'node_modules/@ellx/app/src/input.css');
+  const twStylesOut = join(rootDir, 'node_modules/@ellx/app/src/bootstrap/sandbox.css');
+
+  console.log('Generating styles...');
+
+  yield cps(execCommand,
+    `npx tailwindcss -c ${twConfig} -i ${twStylesIn} -o ${twStylesOut}`
+  );
+
+  const cssSrc = appendFile('/styles.css', yield readFile(twStylesOut, 'utf8'));
+
+  const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/src/bootstrap/index.html'), 'utf8'))
+    .replace(`<script type="module" src="sandbox.js"></script>`, injection)
+    .replace('sandbox.css', cssSrc);
 
   toDeploy.set('/index.html', indexHtml);
 
@@ -150,7 +196,7 @@ export function* deploy(rootDir, env) {
       method: 'PUT',
       body: toDeploy.get(path),
       headers: {
-        'Content-Type': path.endsWith('.html') ? 'text/html' : 'application/javascript',
+        'Content-Type': getContentType(path),
         'Cache-Control': path === '/index.html' ? 'max-age=60' : 'max-age=31536000'
       },
     })

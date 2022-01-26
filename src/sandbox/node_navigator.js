@@ -1,7 +1,8 @@
 import store, { oActiveContentId, contents } from './store.js';
-import { Module } from '../bootstrap/bootstrap.js';
 import { UPDATE_CONTENT } from './mutations.js';
 import { computed } from 'quarx';
+
+const Module = window.__ellx.Module;
 
 const getNodes = graph => graph && graph.nodes ? [...graph.nodes.toJS()] : [];
 

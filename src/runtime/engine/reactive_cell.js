@@ -23,10 +23,17 @@ export function asyncCell(it, options = {}) {
   // then this function will be called again when the task completes
 
   const atom = createAtom(() => cancel, { name });
-  whenFinished(it, ({ cancelled }) => !cancelled && atom.reportChanged());
 
-  atom.reportObserved();
-  throw STALE;
+  const promise = new Promise((resolve, reject) => whenFinished(it, ({ error, result, cancelled }) => {
+    if (!cancelled) {
+      atom.reportChanged();
+
+      if (error) reject(error);
+      else resolve(result);
+    }
+  }));
+
+  throw atom.reportObserved() ? STALE : promise;
 }
 
 export function reactiveCell(evaluate, options = {}) {

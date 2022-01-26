@@ -1,20 +1,7 @@
-import ModuleManager from './module_manager.js';
 import CalcGraph from './engine/calc_graph.js';
 import mountEllxApp from './mount_app.js';
 
-function hydrate(node) {
-  if (!node.src || node.code) return;
-
-  node.code = fetch(node.src)
-    .then(res => res.text())
-    .catch(console.error);
-}
-
-export default function initializeEllxApp(modules, sheets, environment) {
-  const Module = ModuleManager(new Map(Object.entries(modules)), environment);
-
-  Object.values(modules).forEach(hydrate);
-
+export function initializeEllxApp(Module, sheets) {
   const htmlContentId = 'file:///src/index.html';
 
   const htmlCalcGraph = new CalcGraph(
@@ -44,5 +31,6 @@ export default function initializeEllxApp(modules, sheets, environment) {
     Module.set(sheetId, cg);
   }
 
+  document.body.innerHTML = '';
   mountEllxApp(document.body, htmlCalcGraph);
 }

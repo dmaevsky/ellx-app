@@ -3,11 +3,12 @@ import { derived } from 'tinyx';
 import { UPDATE_CONTENT, REMOVE_CONTENT, INSERT_BLOCK } from './mutations.js';
 import objectId from '../utils/object_id.js';
 import store, { getSheet, notifyServer } from './store.js';
-import { Module } from '../bootstrap/bootstrap.js';
 
 import CalcGraph from '../runtime/engine/calc_graph.js';
 
 import { buildBlocks, saveBody } from './body_parse.js';
+
+const Module = window.__ellx.Module;
 
 const autoSave = new Map();
 
