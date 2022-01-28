@@ -7,6 +7,7 @@
   import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
 
   import Grid from './Grid.svelte';
+  import Shortcut from "./Shortcut.svelte";
 
   export let transparent;
   export let overflowHidden;
@@ -46,6 +47,7 @@
 
     if (modifiers === 0 && e.code === 'Escape') {
       if (copySelection) clearClipboard();
+      isContextMenu = false;
       return true;
     }
 
@@ -131,6 +133,81 @@
     }
     return false;
   }
+
+  function handleClipboard(type) {
+    if (type === "copy") copyToClipboard(thisSheet, selection, false);
+    if (type === "cut") copyToClipboard(thisSheet, selection, true);
+    if (type === "paste") pasteFromClipboard(thisSheet, selection);
+  }
+
+  let container;
+  let x, y;
+  const rowHeight = 20, columnWidth = 100;
+
+  function eventGenerator(code, shiftKey = false, altKey = false, ctrlKey = false) {
+    const event = new Event("keydown", {
+      "bubbles" : true,
+      "cancelable": true
+    });
+    event.code = code;
+    event.shiftKey = shiftKey;
+    event.altKey = altKey;
+    event.ctrlKey = ctrlKey;
+    if (navigator.platform.match('Mac') && ctrlKey) {
+      event.metaKey = true;
+      event.ctrlKey = false;
+    }
+    else {
+
+    }
+    return event;
+  }
+
+  function getCoords(e) {
+    const { left, top } = container.getBoundingClientRect();
+    const { clientWidth, clientHeight } = container;
+    const [x, y] = [e.pageX - left, e.pageY - top];
+
+    if (x >= clientWidth || y >= clientHeight) {
+      // Ignore clicks on scrollbars
+      e.stopPropagation();
+      return null;
+    }
+
+    return [x, y];
+  }
+
+  async function handleContextMenu(e) {
+    e.preventDefault();
+    isContextMenu = true;
+
+    await tick();
+
+    const windowInnerWidth = document.documentElement.clientWidth;
+    const windowInnerHeight = document.documentElement.clientHeight;
+    const menu = document.querySelector("#context-menu");
+
+    if (e.buttons !== 2) {
+      const [row, col] = selection;
+      [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
+    }
+    else {
+      [x, y] = getCoords(e);
+    }
+
+    x = (x + menu.clientWidth >= windowInnerWidth) ? x - menu.clientWidth : x;
+    y = (y + menu.clientHeight >= windowInnerHeight) ? y - menu.clientHeight : y;
+
+    menu.focus();
+  }
+
+  let menu;
+  let currentItem = -1;
+  let isContextMenu = false;
+
+  $: hidden = !isContextMenu;
+  $: if (!isContextMenu) currentItem = -1;
+
 </script>
 
 {#if blocks}
@@ -141,11 +218,149 @@
     {copySelection}
     {transparent}
     {overflowHidden}
+    bind:container
     bind:isEditMode
+    bind:isContextMenu
     onkeydown={keyDown}
     on:change={({ detail: {row, col, value} }) => editCell(thisSheet, row, col, value)}
-    on:copy={() => copyToClipboard(thisSheet, selection, false)}
-    on:cut={() => copyToClipboard(thisSheet, selection, true)}
-    on:paste={() => pasteFromClipboard(thisSheet, selection)}
+    on:copy={() => handleClipboard("copy")}
+    on:cut={() => handleClipboard("cut")}
+    on:paste={() => handleClipboard("paste")}
+    on:contextmenu={(e) => {
+      if (!isEditMode) handleContextMenu(e);
+      currentItem = -1;
+    }}
   />
 {/if}
+
+<div id="context-menu"
+     bind:this={menu}
+     on:contextmenu={(e) => e.preventDefault()}
+     on:mousedown={(e) => e.preventDefault()}
+     on:click={() => {isContextMenu = false}}
+     on:keydown={(e) => {
+       if (e.code === "Escape") return isContextMenu = false;
+
+       const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
+       const menuLength = menuItems.length;
+
+       if (e.code === "ArrowDown") {
+         currentItem++;
+         currentItem %= menuLength;
+         menuItems[currentItem].focus();
+       }
+
+       if (e.code === "ArrowUp") {
+         currentItem = Math.abs(--currentItem + menuLength);
+         currentItem %= menuLength;
+         menuItems[currentItem].focus();
+       }
+     }}
+     class:hidden
+     tabindex="-1"
+     class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
+          dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px">
+  <ul class="flex flex-col">
+    {#each [
+      ["cut", ["Cmd", "X"]],
+      ["copy", ["Cmd", "C"]],
+      ["paste", ["Cmd", "V"]]
+    ] as [title, keys] }
+      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
+          tabindex="-1"
+          on:click={() => {
+            handleClipboard(title);
+          }}
+          on:mouseenter={(e) => {
+            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
+            const menuLength = menuItems.length;
+            for (let i = 0; i < menuLength; i++) {
+              if (menuItems[i] === e.target)  {
+                currentItem = i;
+                break;
+              }
+            }
+            e.target.focus();
+          }}
+          on:keydown={(e) => {
+            if (e.code === "Enter") {
+              handleClipboard(title);
+              isContextMenu = false;
+            }
+          }}
+      >
+        <Shortcut {title} {keys}/>
+      </li>
+    {/each}
+    <hr class="my-2 opacity-60" />
+    {#each [
+      ["Shift cells right", ["Space"], ["Space"]],
+      ["Shift cells left", ["Backspace"], ["Backspace"]],
+      ["Insert row", ["Space", true], ["Shift", "Space"]],
+      ["Remove row", ["Backspace", true], ["Shift", "Backspace"]],
+      ["Shift cells down", ["Space", true, false, true], ["Cmd", "Shift", "Space"]],
+      ["Shift cells up", ["Backspace", true, false, true], ["Cmd", "Shift", "Backspace"]],
+      ["Insert column", ["Space", false, true, true], ["Cmd", "Alt", "Space"]],
+      ["Remove column", ["Backspace", false, true, true], ["Backspace"]],
+      ["Clear contents", ["Delete"], ["Delete"]]
+    ] as [title, args, keys] }
+      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
+          tabindex="-1"
+          on:click={container.dispatchEvent(eventGenerator(...args))}
+          on:mouseenter={(e) => {
+            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
+            const menuLength = menuItems.length;
+            for (let i = 0; i < menuLength; i++) {
+              if (menuItems[i] === e.target)  {
+                currentItem = i;
+                break;
+              }
+            }
+            e.target.focus();
+          }}
+          on:keydown={(e) => {
+            if (e.code === "Enter") {
+              container.dispatchEvent(eventGenerator(...args));
+              isContextMenu = false;
+            }
+          }}
+      >
+        <Shortcut {title} {keys}/>
+      </li>
+    {/each}
+    <hr class="my-2 opacity-60" />
+    {#each [
+      ["Expand in row", ["ArrowRight", true, true], ["Shift", "Alt", "→"]],
+      ["Collapse in row", ["ArrowLeft", true, true], ["Shift", "Alt", "←"]],
+      ["Expand in column", ["ArrowDown", true, true], ["Shift", "Alt", "↓"]],
+      ["Collapse in column", ["ArrowUp", true, true], ["Shift", "Alt", "↑"]],
+      ["Toggle row labels", ["KeyZ", true, true], ["Shift", "Alt", "Z"]],
+      ["Toggle column labels", ["KeyX", true, true], ["Shift", "Alt", "X"]],
+      ["Toggle comments", ["Slash", false, false, true], ["Ctrl", "//"]]
+    ] as [title, args, keys] }
+      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
+          tabindex="-1"
+          on:click={container.dispatchEvent(eventGenerator(...args))}
+          on:mouseenter={(e) => {
+            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
+            const menuLength = menuItems.length;
+            for (let i = 0; i < menuLength; i++) {
+              if (menuItems[i] === e.target)  {
+                currentItem = i;
+                break;
+              }
+            }
+            e.target.focus();
+          }}
+          on:keydown={(e) => {
+            if (e.code === "Enter") {
+              container.dispatchEvent(eventGenerator(...args));
+              isContextMenu = false;
+            }
+          }}
+      >
+        <Shortcut {title} {keys}/>
+      </li>
+    {/each}
+  </ul>
+</div>
