@@ -1,3 +1,5 @@
 export function togglePanel(selector) {
-    document.querySelector(selector).classList.toggle("hidden");
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.classList.toggle("hidden");
 }

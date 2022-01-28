@@ -3,6 +3,7 @@
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
+  import { getCaretPosition } from "../../utils/highlight";
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -146,49 +147,15 @@
     highlight = [row, col];
   }
 
-  function getPosition(anchor, offset) {
-
-    const highlight = document.querySelector("#highlight");
-
-    if (!highlight) return offset;
-
-    const anchorParent = anchor.parentNode;
-    const nodes = highlight.childNodes;
-
-    let caretPosition = 0;
-    let found = false;
-
-    for (let i = 0; i < nodes.length; i++) {
-      const children = nodes[i].childNodes;
-
-      if (nodes[i] === anchorParent || nodes[i] === anchor) {
-        found = true;
-        caretPosition += offset;
-        break;
-      } else if (children.length > 1) {
-        for (let j = 0; j < children.length; j++) {
-          caretPosition += children[j].textContent.length;
-          if (children[j] === anchorParent) {
-            found = true;
-            break;
-          }
-        }
-      }
-      if (found) break;
-      caretPosition += nodes[i].textContent.length;
-    }
-
-    if (!found) caretPosition = editorSession.length;
-
-    return caretPosition;
-  }
-
   function setInsertRange(node) {
     if (node !== null) {
       let { anchorNode, anchorOffset, focusNode, focusOffset } = document.getSelection();
+      const highlight = document.querySelector("#ellx-highlight");
+
       let [start, end] = insertRange
           ? insertRange
-          : [getPosition(anchorNode, anchorOffset), getPosition(focusNode, focusOffset)].sort((a, b) => a - b);
+          : [ getCaretPosition(highlight, anchorNode, anchorOffset, editorSession),
+              getCaretPosition(highlight, focusNode, focusOffset, editorSession)].sort((a, b) => a - b);
 
       onInput = false;
 

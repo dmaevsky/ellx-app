@@ -87,10 +87,6 @@
 </div>
 
 <style>
-  .hidden {
-    display: none;
-  }
-
   .node:hover .svg {
     fill: #237EB3;
     stroke: #eee;
