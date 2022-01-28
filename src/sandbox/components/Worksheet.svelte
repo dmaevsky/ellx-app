@@ -5,6 +5,7 @@
   import { editCell, clearRange, setSelection } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
+  import { getCoords } from "../../utils/ui";
 
   import Grid from './Grid.svelte';
   import Shortcut from "./Shortcut.svelte";
@@ -15,6 +16,16 @@
 
   let selection;
   let isEditMode;
+  let container;
+  let menu;
+  let currentItem = -1;
+  let isContextMenu = false;
+  let x, y;
+
+  const rowHeight = 20, columnWidth = 100;
+
+  $: hidden = !isContextMenu;
+  $: if (!isContextMenu) currentItem = -1;
 
   setContext('store', store);
   const thisSheet = store;
@@ -134,47 +145,30 @@
     return false;
   }
 
-  function handleClipboard(type) {
-    if (type === "copy") copyToClipboard(thisSheet, selection, false);
-    if (type === "cut") copyToClipboard(thisSheet, selection, true);
-    if (type === "paste") pasteFromClipboard(thisSheet, selection);
+  function handleClipboard(action) {
+    switch (action) {
+      case "copy":  copyToClipboard(thisSheet, selection, false); break;
+      case "cut":   copyToClipboard(thisSheet, selection, true); break;
+      case "paste": pasteFromClipboard(thisSheet, selection);
+    }
   }
 
-  let container;
-  let x, y;
-  const rowHeight = 20, columnWidth = 100;
-
-  function eventGenerator(code, shiftKey = false, altKey = false, ctrlKey = false) {
+  function createSyntheticEvent(code, shiftKey = false, altKey = false, ctrlKey = false) {
     const event = new Event("keydown", {
       "bubbles" : true,
       "cancelable": true
     });
+
     event.code = code;
     event.shiftKey = shiftKey;
     event.altKey = altKey;
     event.ctrlKey = ctrlKey;
+
     if (navigator.platform.match('Mac') && ctrlKey) {
       event.metaKey = true;
       event.ctrlKey = false;
     }
-    else {
-
-    }
     return event;
-  }
-
-  function getCoords(e) {
-    const { left, top } = container.getBoundingClientRect();
-    const { clientWidth, clientHeight } = container;
-    const [x, y] = [e.pageX - left, e.pageY - top];
-
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return null;
-    }
-
-    return [x, y];
   }
 
   async function handleContextMenu(e) {
@@ -192,7 +186,7 @@
       [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
     }
     else {
-      [x, y] = getCoords(e);
+      [x, y] = getCoords(container, e);
     }
 
     x = (x + menu.clientWidth >= windowInnerWidth) ? x - menu.clientWidth : x;
@@ -200,13 +194,6 @@
 
     menu.focus();
   }
-
-  let menu;
-  let currentItem = -1;
-  let isContextMenu = false;
-
-  $: hidden = !isContextMenu;
-  $: if (!isContextMenu) currentItem = -1;
 
 </script>
 
@@ -306,7 +293,7 @@
     ] as [title, args, keys] }
       <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
           tabindex="-1"
-          on:click={container.dispatchEvent(eventGenerator(...args))}
+          on:click={container.dispatchEvent(createSyntheticEvent(...args))}
           on:mouseenter={(e) => {
             const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
             const menuLength = menuItems.length;
@@ -320,7 +307,7 @@
           }}
           on:keydown={(e) => {
             if (e.code === "Enter") {
-              container.dispatchEvent(eventGenerator(...args));
+              container.dispatchEvent(createSyntheticEvent(...args));
               isContextMenu = false;
             }
           }}
@@ -340,7 +327,7 @@
     ] as [title, args, keys] }
       <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
           tabindex="-1"
-          on:click={container.dispatchEvent(eventGenerator(...args))}
+          on:click={container.dispatchEvent(createSyntheticEvent(...args))}
           on:mouseenter={(e) => {
             const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
             const menuLength = menuItems.length;
@@ -354,7 +341,7 @@
           }}
           on:keydown={(e) => {
             if (e.code === "Enter") {
-              container.dispatchEvent(eventGenerator(...args));
+              container.dispatchEvent(createSyntheticEvent(...args));
               isContextMenu = false;
             }
           }}
