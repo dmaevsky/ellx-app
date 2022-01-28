@@ -104,7 +104,7 @@
     stroke: #eee;
   }
 
-  :global(.dark) .svg {
+  :global(.dark) #node-navigator .svg {
     fill: #333;
     stroke: #666;
   }
