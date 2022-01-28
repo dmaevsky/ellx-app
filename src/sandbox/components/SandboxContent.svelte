@@ -121,18 +121,11 @@
 />
 
 <style>
-  /*! purgecss start ignore */
-  :global(html), :global(body) {
-    margin: 0;
-    padding: 0;
-    background-color: transparent !important;
-  }
   .sheet {
     position: absolute;
     width: 100%;
     height: 100%;
   }
-  /*! purgecss end ignore */
 </style>
 
 {#each sheets as contentId (contentId)}
