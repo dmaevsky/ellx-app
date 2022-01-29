@@ -13,11 +13,11 @@
       class:hidden
     >
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => togglePanel("#node-navigator")}>
+            on:click={() => togglePanel("#ellx-node-navigator")}>
             <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => togglePanel("#shortcuts-helper")}>
+            on:click={() => togglePanel("#ellx-shortcuts-helper")}>
             <Shortcut title="Keyboard shortcuts" keys={["Shift", "Alt", "?"]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">

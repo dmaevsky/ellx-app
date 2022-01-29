@@ -35,7 +35,7 @@
   let highlight = selection;
   let arrowRow, arrowCol;
 
-  $: if (selection && !document.querySelector("#node-navigator").classList.contains("hidden")) closeEditor();
+  $: if (selection && !document.querySelector("#ellx-node-navigator").classList.contains("hidden")) closeEditor();
 
   $: if (editorSession !== null) isFormula = detectFormula(editorSession)
 
@@ -180,7 +180,7 @@
   }
 
   function editorClick(e) {
-    const target = e.target.closest("#editor");
+    const target = e.target.closest("#ellx-cell-editor");
 
     if (isFormula) {
       if (target !== editor) {
@@ -294,7 +294,7 @@
 
   function editorKeyDown(e) {
     // Prevent default Ctrl+A behavior when Editor is not in focus
-    if (combination(e) === "Ctrl+KeyA" && e.target.closest("#editor") !== editor) e.preventDefault();
+    if (combination(e) === "Ctrl+KeyA" && e.target.closest("#ellx-cell-editor") !== editor) e.preventDefault();
 
     if (e.key === "Escape") {
       e.preventDefault();
@@ -511,7 +511,7 @@
   on:dblclick={(e) => {
     e.preventDefault();
     if (!editorSession) { startEditing() }
-    else if (e.target.closest("#editor") !== editor) {
+    else if (e.target.closest("#ellx-cell-editor") !== editor) {
       jumpAway(e);
       editorSession = null;
       closeEditor();

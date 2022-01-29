@@ -175,7 +175,7 @@
 
 <div
   tabindex="-1"
-  id="editor"
+  id="#ellx-cell-editor"
   class="grid__editor grid__selection-border bg-white"
   class:dark:text-white={!transparent}
   class:dark:text-gray-800={transparent}

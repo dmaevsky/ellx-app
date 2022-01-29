@@ -55,11 +55,11 @@
         return;
       case 'Alt+Slash':
         e.preventDefault();
-        togglePanel("#shortcuts-helper");
+        togglePanel("#ellx-shortcuts-helper");
         return;
       case 'Alt+Period':
         e.preventDefault();
-        togglePanel("#node-navigator");
+        togglePanel("#ellx-node-navigator");
         return;
     }
 
