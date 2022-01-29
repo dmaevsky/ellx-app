@@ -59,7 +59,7 @@
 
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
-    let result = `<span id="ellx-highlight" class="highlighted_string">`
+    let result = `<span id="ellx-highlight">`
         + (leftHand ? spanify(spacer)  : "" ) + spanify("=");
 
     let tokenPosition = 0;
