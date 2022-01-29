@@ -25,7 +25,7 @@
   let editorSession = null;
   let isFormula = false;
   let caretPosition;
-  let onInput;
+  let isChangedByInput;
 
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
@@ -157,7 +157,7 @@
           : [ getCaretPosition(highlight, anchorNode, anchorOffset, editorSession),
               getCaretPosition(highlight, focusNode, focusOffset, editorSession)].sort((a, b) => a - b);
 
-      onInput = false;
+      isChangedByInput = false;
 
       editorSession = [
         editorSession.substring(0, start),
@@ -311,7 +311,7 @@
 
     if (combination(e) === 'Ctrl+Slash' && editorSession) {
       editorSession = toggleComment(editorSession);
-      onInput = false;
+      isChangedByInput = false;
       caretPosition = editorSession.length;
       e.preventDefault();
       return;
@@ -538,7 +538,7 @@
         {transparent}
         bind:node={editor}
         bind:caretPosition
-        bind:onInput
+        bind:isChangedByInput
         bind:value={editorSession}
         on:input
         on:keydown={editorKeyDown}

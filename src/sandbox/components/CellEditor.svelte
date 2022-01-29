@@ -9,7 +9,7 @@
   export let transparent = false;
   export let node = null;
   export let caretPosition;
-  export let onInput = false;
+  export let isChangedByInput = false;
 
   let isPartlyParsed = false;
   let innerHTML;
@@ -124,7 +124,7 @@
   function handleInput() {
     if (!node.textContent.length) return value = "";
 
-    onInput = true;
+    isChangedByInput = true;
     value = node.textContent;
 
     const { anchorNode, anchorOffset } = document.getSelection();
@@ -166,7 +166,7 @@
     autoSizeEditor();
   })
 
-  $: if (value && !onInput) {
+  $: if (value && !isChangedByInput) { // If cell value has been modified by cell insertion action
     innerHTML = highlightInput(value);
     tick().then(() => setCaretPosition());
     autoSizeEditor();
