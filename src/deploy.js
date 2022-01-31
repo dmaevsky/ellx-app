@@ -68,7 +68,8 @@ function getContentType(path) {
   return 'application/javascript';
 }
 
-export function* deploy(rootDir, env) {
+export function* deploy(rootDir, { env, styles }) {
+  console.log({ env, styles });
   const files = (yield collectEntryPoints(`${rootDir}/src`))
     .map(path => path.slice(rootDir.length))
     .map(path => pathToFileURL(path).href)
@@ -153,7 +154,7 @@ export function* deploy(rootDir, env) {
 
   // Styles
   const twConfig = join(rootDir, 'tailwind.config.cjs');
-  const twStylesIn = join(rootDir, 'node_modules/@ellx/app/src/input.css');
+  const twStylesIn = join(rootDir, styles);
   const twStylesOut = join(rootDir, 'node_modules/@ellx/app/src/bootstrap/sandbox.css');
 
   console.log('Generating styles...');

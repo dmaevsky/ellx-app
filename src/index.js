@@ -66,11 +66,17 @@ if (mainOptions.command === "start") {
       default: process.env.NODE_ENV || "staging",
       type: String,
     },
+    {
+      name: "styles",
+      default: "node_modules/@ellx/app/src/input.css",
+      type: String,
+      alias: "s",
+    }
   ];
 
   const config = commandLineArgs(deployDefinitions, { argv });
 
-  conclude(deploy(process.cwd(), config.env), (err) => {
+  conclude(deploy(process.cwd(), config), (err) => {
     if (err) console.error(err);
   });
 } else {
