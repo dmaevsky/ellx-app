@@ -69,7 +69,6 @@ function getContentType(path) {
 }
 
 export function* deploy(rootDir, { env, styles }) {
-  console.log({ env, styles });
   const files = (yield collectEntryPoints(`${rootDir}/src`))
     .map(path => path.slice(rootDir.length))
     .map(path => pathToFileURL(path).href)
