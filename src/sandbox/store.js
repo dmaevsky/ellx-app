@@ -10,7 +10,8 @@ import { Module } from '../bootstrap/bootstrap.js';
 const store = makeStore({
   contents: new Map(),
   activeContentId: null,
-  nodeNavigatorOpen: false
+  nodeNavigatorOpen: false,
+  shortcutsHelperOpen: false
 });
 
 export default store;
@@ -28,5 +29,6 @@ export const contents = select(store, () => ['contents']);
 export const activeContent = select(store, ({ activeContentId }) => ['contents', activeContentId]);
 export const activeContentId = derived(store, s => s.activeContentId);
 export const nodeNavigatorOpen = withWritableTraits(select(store, () => 'nodeNavigatorOpen'));
+export const shortcutsHelperOpen = withWritableTraits(select(store, () => 'shortcutsHelperOpen'));
 
 export const oActiveContentId = toObservable(activeContentId, { name: 'activeContentId' });

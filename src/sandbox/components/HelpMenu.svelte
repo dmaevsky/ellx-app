@@ -1,7 +1,6 @@
 <script>
-  import { nodeNavigatorOpen } from '../store.js';
+  import { nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
   import Shortcut from "./Shortcut.svelte";
-  import { togglePanel } from '../../utils/ui.js'
 
   let hidden = true;
 </script>
@@ -18,7 +17,7 @@
             <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => togglePanel("#ellx-shortcuts-helper")}>
+            on:click={() => shortcutsHelperOpen.update(value => !value)}>
             <Shortcut title="Keyboard shortcuts" keys={["Shift", "Alt", "?"]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">

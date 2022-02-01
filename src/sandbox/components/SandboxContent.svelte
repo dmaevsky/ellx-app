@@ -8,7 +8,7 @@
   import { togglePanel } from '../../utils/ui.js'
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
-  import store, { contents, getSheet, nodeNavigatorOpen } from '../store.js';
+  import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
   import { Module } from '../../bootstrap/bootstrap.js';
   import CalcGraph from '../../runtime/engine/calc_graph.js';
   import mountEllxApp from '../../runtime/mount_app.js';
@@ -55,7 +55,7 @@
         return;
       case 'Alt+Slash':
         e.preventDefault();
-        togglePanel("#ellx-shortcuts-helper");
+        shortcutsHelperOpen.update(value => !value);
         return;
       case 'Alt+Period':
         e.preventDefault();
