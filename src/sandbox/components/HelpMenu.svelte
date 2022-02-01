@@ -1,8 +1,9 @@
 <script>
-    import Shortcut from "./Shortcut.svelte";
-    import { togglePanel } from '../../utils/ui.js'
+  import { nodeNavigatorOpen } from '../store.js';
+  import Shortcut from "./Shortcut.svelte";
+  import { togglePanel } from '../../utils/ui.js'
 
-    let hidden = true;
+  let hidden = true;
 </script>
 
 <div class="fixed bottom-4 right-4 flex flex-col gap-4 items-end"
@@ -13,7 +14,7 @@
       class:hidden
     >
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => togglePanel("#ellx-node-navigator")}>
+            on:click={() => nodeNavigatorOpen.update(value => !value)}>
             <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"

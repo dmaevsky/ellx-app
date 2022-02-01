@@ -2,7 +2,7 @@
   import { activeNodes, types } from '../node_navigator.js';
   import { createEventDispatcher } from 'svelte';
   import { fromObservable } from '../../runtime/engine/adapters.js';
-  import { togglePanel } from '../../utils/ui.js'
+  import { nodeNavigatorOpen } from '../store.js';
 
   const dispatch = createEventDispatcher();
   let deps = [], dependants = [];
@@ -44,7 +44,7 @@
 
 <div id="ellx-node-navigator"
   class="flex-1 pb-4 w-80 text-xs overflow-y-auto pointer-events-auto bg-gray-100 border-l border-gray-500 border-opacity-20 dark:bg-gray-900 dark:text-white"
-  class:hidden
+  class:hidden={!$nodeNavigatorOpen}
   on:mouseleave={() => { deps = [] }}
 >
   <div class="z-50 sticky top-0 pl-2 pr-4 pt-4 flex flex-row w-full gap-4 items-center bg-gray-100 dark:bg-gray-900">
@@ -52,7 +52,7 @@
            type="text" placeholder="Search..." bind:value={match}/>
     <div id="ellx-node-nav-toggle"
          class="cursor-pointer stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
-         on:click={() => togglePanel("#ellx-node-navigator")}>
+         on:click={() => nodeNavigatorOpen.update(value => !value)}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12.5 3.5L3.5 12.5" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M12.5 12.5L3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>

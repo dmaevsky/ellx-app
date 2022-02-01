@@ -3,7 +3,8 @@
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
-  import { getCaretPosition } from "../../utils/highlight";
+  import { getCaretPosition } from "../../utils/highlight.js";
+  import { nodeNavigatorOpen } from '../store.js';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -35,8 +36,6 @@
   let highlight = selection;
   let arrowRow, arrowCol;
 
-  $: if (selection && !document.querySelector("#ellx-node-navigator").classList.contains("hidden")) closeEditor();
-
   $: if (editorSession !== null) isFormula = detectFormula(editorSession)
 
   $: isEditMode = (editor !== null);
@@ -49,6 +48,8 @@
   }
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
+
+  $: if (selection && $nodeNavigatorOpen) closeEditor();
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);

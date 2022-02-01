@@ -3,7 +3,7 @@
 
   import ProgressiveEval from "../../runtime/engine/progressive_assembly.js";
   import * as environment from "../../runtime/engine/reserved_words.js";
-  import { getCaretPosition } from "../../utils/highlight";
+  import { getCaretPosition } from "../../utils/highlight.js";
 
   export let value;
   export let transparent = false;
