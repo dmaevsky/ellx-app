@@ -134,12 +134,13 @@
 
     innerHTML = highlightInput(node.textContent);
 
-    tick().then(() => setCaretPosition());
-    autoSizeEditor();
+    tick().then(() => {
+        setCaretPosition();
+        autoSizeEditor();
+    });
   }
 
-  async function autoSizeEditor() {
-    await tick();
+  function autoSizeEditor() {
     if (node) {
       node.style.removeProperty('width');
       if (node.scrollWidth > node.clientWidth) {
@@ -161,15 +162,18 @@
       }
       document.getSelection().empty();
       document.getSelection().setBaseAndExtent(anchor, offset, anchor, offset);
-    })
 
-    autoSizeEditor();
+      autoSizeEditor();
+    })
   })
 
   $: if (value && !isChangedByInput) { // If cell value has been modified by cell insertion action
     innerHTML = highlightInput(value);
-    tick().then(() => setCaretPosition());
-    autoSizeEditor();
+
+    tick().then(() => {
+      setCaretPosition();
+      autoSizeEditor();
+    });
   }
 </script>
 
