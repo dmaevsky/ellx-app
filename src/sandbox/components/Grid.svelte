@@ -3,6 +3,8 @@
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
+  import { getCaretPosition } from "../../utils/highlight.js";
+  import { nodeNavigatorOpen } from '../store.js';
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -23,6 +25,7 @@
   let focused = false;
   let editorSession = null;
   let isFormula = false;
+  let caretPosition;
 
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
@@ -41,9 +44,12 @@
     isArrowMode = false;
   } else {
     highlight = selection;
+    caretPosition = undefined;
   }
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
+
+  $: if (selection && $nodeNavigatorOpen) closeEditor();
 
   $: selectedBlockId = query(blocks).getAt(...selection.slice(0, 2));
   $: selectedBlock = blocks.get(selectedBlockId);
@@ -144,9 +150,13 @@
 
   function setInsertRange(node) {
     if (node !== null) {
+      let { anchorNode, anchorOffset, focusNode, focusOffset } = document.getSelection();
+      const highlight = document.querySelector("#ellx-highlight");
+
       let [start, end] = insertRange
-              ? insertRange
-              : [editor.selectionStart, editor.selectionEnd];
+          ? insertRange
+          : [ getCaretPosition(highlight, anchorNode, anchorOffset, editorSession),
+              getCaretPosition(highlight, focusNode, focusOffset, editorSession)].sort((a, b) => a - b);
 
       editorSession = [
         editorSession.substring(0, start),
@@ -156,29 +166,23 @@
 
       const caret = start + node.length; // Remember insertion position
       insertRange = [start, caret];
-
-      tick().then(() => {   // Restore caret position after editing input
-        editor.selectionStart = editor.selectionEnd = caret;
-      });
-
-      autoSizeEditor();
+      caretPosition = caret;
     }
   }
 
   function gridClick(e) {
     if (e.target.nodeName === 'A') return;
 
-    if (isEditMode) {
-      editorClick(e);
-      return;
-    }
+    if (isEditMode) return editorClick(e);
 
     mouseCellSelection(e)
   }
 
   function editorClick(e) {
+    const target = e.target.closest("#ellx-cell-editor");
+
     if (isFormula) {
-      if (e.target !== editor) {
+      if (target !== editor) {
         e.preventDefault(); // Prevent select on drag
 
         highlightNode(e);
@@ -191,7 +195,7 @@
         insertRange = null
       }
     }
-    else if (e.target !== editor) {
+    else if (target !== editor) {
       takeFocus(container);
       jumpAway(e);
       editorSession = null;
@@ -289,7 +293,7 @@
 
   function editorKeyDown(e) {
     // Prevent default Ctrl+A behavior when Editor is not in focus
-    if (combination(e) === "Ctrl+KeyA" && e.target !== editor) e.preventDefault();
+    if (combination(e) === "Ctrl+KeyA" && e.target.closest("#ellx-cell-editor") !== editor) e.preventDefault();
 
     if (e.key === "Escape") {
       e.preventDefault();
@@ -304,9 +308,9 @@
       closeEditor(editorSession, true);
     }
 
-    if (combination(e) === 'Ctrl+Slash') {
+    if (combination(e) === 'Ctrl+Slash' && editorSession) {
       editorSession = toggleComment(editorSession);
-      autoSizeEditor();
+      caretPosition = editorSession.length;
       e.preventDefault();
       return;
     }
@@ -336,7 +340,6 @@
 
     await tick();
     takeFocus(editor);
-    autoSizeEditor();
   }
 
   function closeEditor(value, moveRight = false) {
@@ -377,16 +380,6 @@
       let x = window.scrollX, y = window.scrollY;
       el.focus({ preventScroll: true });    // TODO: Remove hack when Safari and Safari iOS will support preventScroll
       window.scrollTo(x, y);
-    }
-  }
-
-  async function autoSizeEditor() {
-    await tick();
-    if (editor) {
-      editor.style.removeProperty('width');
-      if (editor.scrollWidth > editor.clientWidth) {
-        editor.style.width = editor.scrollWidth + 5 + 'px';
-      }
     }
   }
 
@@ -516,7 +509,7 @@
   on:dblclick={(e) => {
     e.preventDefault();
     if (!editorSession) { startEditing() }
-    else if (e.target !== editor) {
+    else if (e.target.closest("#ellx-cell-editor") !== editor) {
       jumpAway(e);
       editorSession = null;
       closeEditor();
@@ -542,8 +535,9 @@
       <CellEditor
         {transparent}
         bind:node={editor}
+        bind:caretPosition
         bind:value={editorSession}
-        on:input={autoSizeEditor}
+        on:input
         on:keydown={editorKeyDown}
       />
     {/if}

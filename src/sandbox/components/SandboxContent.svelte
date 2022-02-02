@@ -7,7 +7,7 @@
   import { combination } from '../../utils/mod_keys.js';
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
-  import store, { contents, getSheet } from '../store.js';
+  import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
   import CalcGraph from '../../runtime/engine/calc_graph.js';
   import mountEllxApp from '../../runtime/mount_app.js';
 
@@ -39,10 +39,6 @@
     return contentId.replace(/[^a-zA-Z0-9-_]+/g, '-');
   }
 
-  function togglePanel(id) {
-    document.getElementById(id).classList.toggle("hidden");
-  }
-
   let mountPoint;
 
   onMount(() => {
@@ -59,11 +55,11 @@
         return;
       case 'Alt+Slash':
         e.preventDefault();
-        togglePanel("shortcuts-helper");
+        shortcutsHelperOpen.update(value => !value);
         return;
       case 'Alt+Period':
         e.preventDefault();
-        togglePanel("node-navigator");
+        nodeNavigatorOpen.update(value => !value);
         return;
     }
 
@@ -139,7 +135,7 @@
 
 <HelpMenu/>
 
-<div class="fixed top-0 left-0 z-100 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
+<div class="fixed top-0 left-0 z-50 pointer-events-none w-full h-screen flex flex-col justify-end items-end">
   <NodeNavigator
           on:goToLine={goToLine}
           on:navigate={navigate}
