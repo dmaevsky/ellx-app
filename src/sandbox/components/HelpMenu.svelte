@@ -14,11 +14,11 @@
     >
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
             on:click={() => nodeNavigatorOpen.update(value => !value)}>
-            <Shortcut title="Node navigator" keys={["Shift", "Alt", "."]}/>
+            <Shortcut title="Node navigator" keys={["Alt", "."]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
             on:click={() => shortcutsHelperOpen.update(value => !value)}>
-            <Shortcut title="Keyboard shortcuts" keys={["Shift", "Alt", "?"]}/>
+            <Shortcut title="Keyboard shortcuts" keys={["Alt", "?"]}/>
         </li>
         <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
             <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default block">Documentation</a>

@@ -5,7 +5,6 @@
   import HelpMenu from './HelpMenu.svelte';
   import ShortcutsHelper from './ShortcutsHelper.svelte';
   import { combination } from '../../utils/mod_keys.js';
-  import { togglePanel } from '../../utils/ui.js'
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
   import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
