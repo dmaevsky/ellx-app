@@ -1,15 +1,14 @@
 <script>
-  import { tick, onMount } from "svelte";
+  import { tick } from "svelte";
 
   import ProgressiveEval from "../../runtime/engine/progressive_assembly.js";
   import * as environment from "../../runtime/engine/reserved_words.js";
   import { getCaretPosition } from "../../utils/highlight.js";
 
-  export let value;
+  export let value = "";
   export let transparent = false;
   export let node = null;
-  export let caretPosition;
-  export let isChangedByInput = false;
+  export let caretPosition = undefined;
 
   let isPartlyParsed = false;
   let innerHTML;
@@ -113,31 +112,12 @@
       }
     }
     else {
-      caretNode = node.lastChild;
-      caretOffset = caretPosition;
+      caretNode = node.lastChild ? node.lastChild : node;
+      caretOffset = caretPosition ? caretPosition : node.textContent.length;
     }
     
     document.getSelection().empty();
     document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
-  }
-
-  function handleInput() {
-    if (!node.textContent.length) return value = "";
-
-    isChangedByInput = true;
-    value = node.textContent;
-
-    const { anchorNode, anchorOffset } = document.getSelection();
-    const highlight = document.querySelector("#ellx-highlight");
-
-    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
-
-    innerHTML = highlightInput(node.textContent);
-
-    tick().then(() => {
-        setCaretPosition();
-        autoSizeEditor();
-    });
   }
 
   function autoSizeEditor() {
@@ -149,25 +129,7 @@
     }
   }
 
-  onMount(() => {
-    innerHTML = highlightInput(value);
-
-    tick().then(() => {
-      let anchor = node;
-      let offset = 0;
-      if (value !== '') {
-        const str = document.querySelector("#ellx-highlight");
-        anchor = str? str.lastChild.lastChild : node.lastChild;
-        offset = str? str.lastChild.textContent.length : node.textContent.length;
-      }
-      document.getSelection().empty();
-      document.getSelection().setBaseAndExtent(anchor, offset, anchor, offset);
-
-      autoSizeEditor();
-    })
-  })
-
-  $: if (value && !isChangedByInput) { // If cell value has been modified by cell insertion action
+  $: {
     innerHTML = highlightInput(value);
 
     tick().then(() => {
@@ -187,7 +149,12 @@
   bind:this={node}
   bind:innerHTML
   contenteditable="true"
-  on:input={handleInput}
+  on:input={() => {
+    const { anchorNode, anchorOffset } = document.getSelection();
+    const highlight = document.querySelector("#ellx-highlight");
+    value = node.textContent;
+    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
+  }}
   on:keydown
   on:paste={(e) => {
     e.preventDefault();

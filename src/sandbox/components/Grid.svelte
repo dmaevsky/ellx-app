@@ -26,7 +26,6 @@
   let editorSession = null;
   let isFormula = false;
   let caretPosition;
-  let isChangedByInput;
 
   let container = null, editor = null;
   const dispatch = createEventDispatcher();
@@ -45,6 +44,7 @@
     isArrowMode = false;
   } else {
     highlight = selection;
+    caretPosition = undefined;
   }
 
   $: if (isArrowMode) [arrowRow, arrowCol] = highlight;
@@ -157,8 +157,6 @@
           ? insertRange
           : [ getCaretPosition(highlight, anchorNode, anchorOffset, editorSession),
               getCaretPosition(highlight, focusNode, focusOffset, editorSession)].sort((a, b) => a - b);
-
-      isChangedByInput = false;
 
       editorSession = [
         editorSession.substring(0, start),
@@ -312,7 +310,6 @@
 
     if (combination(e) === 'Ctrl+Slash' && editorSession) {
       editorSession = toggleComment(editorSession);
-      isChangedByInput = false;
       caretPosition = editorSession.length;
       e.preventDefault();
       return;
@@ -539,7 +536,6 @@
         {transparent}
         bind:node={editor}
         bind:caretPosition
-        bind:isChangedByInput
         bind:value={editorSession}
         on:input
         on:keydown={editorKeyDown}
