@@ -28,11 +28,11 @@
 </div>
 
 <style>
-  :global(a) {
+  :global(.gridlines a) {
     color: rgb(30, 64, 175);
     text-decoration: underline;
   }
-  :global(a:hover) {
+  :global(.gridlines a:hover) {
     color: rgb(66, 166, 245);
   }
 </style>

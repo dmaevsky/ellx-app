@@ -10,12 +10,34 @@
   <link rel="mask-icon" href="https://ellx.io/safari-pinned-tab.svg" color="#5bbad5">
 
   <script type="module" src="sandbox.js"></script>
-  <link id="stylesheet" rel="stylesheet" href="sandbox.css">
+  <link id="stylesheet" rel="stylesheet" type="text/css" href="sandbox.css">
 
 </head>
 
 <body>
-  Bundling...
+  <div class="initial-load"></div>
 </body>
+
+<style>
+  @keyframes dotdotdot {
+    0% { content: "."; }
+    50% { content: ".."; }
+    100% { content: "..."; }
+  }
+
+  .initial-load {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-size: 80px;
+  }
+
+  .initial-load::after {
+    content: ".";
+    display: block;
+    animation: dotdotdot 3s linear infinite;
+  }
+</style>
 
 </html>

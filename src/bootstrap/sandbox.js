@@ -1,4 +1,5 @@
-import { bootstrapModules } from './bootstrap.js';
+import { bootstrapModule } from './bootstrap.js';
+
 import {
   LIFECYCLE,
   SANDBOX_CONTENT
@@ -14,7 +15,6 @@ window.__ellx = {
   devServer
 };
 
-let Module;
 let sandboxComponent;
 
 const initSheetsQueue = new Map();
@@ -25,8 +25,8 @@ function listen({ data }) {
 
     if (type === "updateStyles") return updateStyles();
 
-    const actions = Module
-      ? Module.require(LIFECYCLE)
+    const actions = window.__ellx.Module
+      ? window.__ellx.Module.require(LIFECYCLE)
       : { init, dispose, updateModules };
 
     if (type in actions) {
@@ -49,25 +49,25 @@ function dispose(contentId) {
 
 function updateModules(modules) {
   console.debug('INITIAL modules ***', modules);
-  const moduleMap = new Map(Object.entries(modules));
 
-  try {
-    Module = bootstrapModules(moduleMap);
+  bootstrapModule(modules)
+    .then(Module => {
+      window.__ellx.Module = Module;
 
-    const lifecycle = Module.require(LIFECYCLE);
-    const { default: SandboxContent } = Module.require(SANDBOX_CONTENT);
+      const lifecycle = Module.require(LIFECYCLE);
+      const { default: SandboxContent } = Module.require(SANDBOX_CONTENT);
 
-    document.body.innerHTML = '';
-    sandboxComponent = new SandboxContent({ target: document.body });
+      document.body.innerHTML = '';
+      sandboxComponent = new SandboxContent({ target: document.body });
 
-    for (let [contentId, { nodes, layout }] of initSheetsQueue.entries()) {
-      lifecycle.init(contentId, nodes, layout);
-    }
-  }
-  catch (error) {
-    console.error(error);
-    devServer.close();
-  }
+      for (let [contentId, { nodes, layout }] of initSheetsQueue.entries()) {
+        lifecycle.init(contentId, nodes, layout);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      devServer.close();
+    });
 }
 
 function updateStyles() {

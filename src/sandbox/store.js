@@ -5,7 +5,6 @@ import withWritableTraits from "tinyx/middleware/writable_traits";
 import { makeStore } from './make_store.js';
 import cgConnect from './cg_connect.js';
 import { toObservable } from '../runtime/engine/adapters.js';
-import { Module } from '../bootstrap/bootstrap.js';
 
 const store = makeStore({
   contents: new Map(),
@@ -22,7 +21,7 @@ export const notifyServer = payload => window.__ellx.devServer.send(JSON.stringi
 
 export const getSheet = (contentId) => applyMiddleware(
   select(store, () => ['contents', contentId]),
-  [enableUndoRedo, cgConnect(Module.get(contentId))]
+  [enableUndoRedo, cgConnect(window.__ellx.Module.get(contentId))]
 );
 
 export const contents = select(store, () => ['contents']);

@@ -8,9 +8,10 @@
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
   import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
-  import { Module } from '../../bootstrap/bootstrap.js';
   import CalcGraph from '../../runtime/engine/calc_graph.js';
   import mountEllxApp from '../../runtime/mount_app.js';
+
+  const Module = window.__ellx.Module;
 
   const htmlContentId = 'file:///src/index.html';
 
@@ -116,18 +117,11 @@
 />
 
 <style>
-  /*! purgecss start ignore */
-  :global(html), :global(body) {
-    margin: 0;
-    padding: 0;
-    background-color: transparent !important;
-  }
   .sheet {
     position: absolute;
     width: 100%;
     height: 100%;
   }
-  /*! purgecss end ignore */
 </style>
 
 {#each sheets as contentId (contentId)}

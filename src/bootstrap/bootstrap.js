@@ -1,13 +1,6 @@
-import { MODULE_MANAGER } from './entry_points.js';
-
 const npmDependencies = {
   'conclure':             'file:///node_modules/conclure/src/conclude.js',
-  'conclure/combinators': 'file:///node_modules/conclure/src/combinators.js',
-  'conclure/effects':     'file:///node_modules/conclure/src/effects.js',
   'quarx':                'file:///node_modules/quarx/index.js',
-  'conclure-quarx':       'file:///node_modules/conclure-quarx/src/index.js',
-  'rd-parse':             'file:///node_modules/rd-parse/src/index.js',
-  'rd-parse-jsexpr':      'file:///node_modules/rd-parse-jsexpr/src/grammar.js',
   'tokamak/resolve':      'file:///node_modules/tokamak/src/resolver.js'
 }
 
@@ -47,46 +40,129 @@ function evalScript(id, code) {
   return result;
 }
 
-export const bootstrapModules = modules => {
-  const exports = {
-    removeScript, evalScript
-  };
+const isPromise = p => p && typeof p.then === 'function';
 
-  modules.set('file:///node_modules/@ellx/app/src/bootstrap/bootstrap.js', {
-    code: { exports },
-    imports: {}
-  });
-
-  function requireModule(url, baseUrl) {
-    url = bootstrapResolve(url, baseUrl);
-
-    const node = modules.get(url);
-
-    if (!node) {
-      throw new Error(`Module ${url} is not found`);
+export const asyncRetry = f => async (...args) => {
+  while (true) {
+    try {
+      return f(...args);
     }
+    catch (e) {
+      if (!isPromise(e)) throw e;
+      await e;
+    }
+  }
+}
 
+const retry = f => {
+  const retryf = asyncRetry(f);
+
+  return (...args) => {
+    try {
+      return f(...args);
+    }
+    catch (e) {
+      if (!isPromise(e)) throw e;
+      throw e.then(() => retryf(...args));
+    }
+  }
+}
+
+export const bootstrapRequire = (resolveNode, environment = 'staging') => {
+
+  const requireModule = retry((url, baseUrl) => requireNode(resolveNode(url, baseUrl)));
+
+  function requireNode(node) {
     if (typeof node.code === 'object') {
+      if (isPromise(node.code)) {
+        throw node.code;
+      }
+
       return node.code.exports;
     }
 
     if (typeof node.code === 'string') {
-      node.code = evalScript(url, node.code);
+      node.code = evalScript(node.id, node.code);
     }
 
     const instantiate = node.code;
 
+    // We need to put an empty module first in order to handle circular deps
     const module = {
       exports: {}
     };
 
     node.code = module;
 
-    instantiate(module, module.exports, null, window, id => requireModule(id, url));
-    return module.exports;
+    try {
+      // Check static dependencies are present
+      for (let dependency in node.imports) {
+        const imported = requireModule(dependency, node.id);
+
+        for (let name in node.imports[dependency] || {}) {
+          if (name !== '*' && name !== 'default' && !(name in imported)) {
+            throw new Error(`${name} is not exported from ${dependency} (imported from ${node.id})`);
+          }
+        }
+      }
+
+      const process = {
+        env: {
+          NODE_ENV: environment
+        },
+        cwd: () => '.'
+      };
+
+      instantiate(module, module.exports, process, window, id => requireModule(id, node.id));
+      return module.exports;
+    }
+    catch (e) {
+      // Revert state to "uninstantiated"
+      node.code = instantiate;
+
+      if (e instanceof Error) {
+        if (!e.requireStack) {
+          e.requireStack = [node.id];
+        }
+        else e.requireStack.push(node.id);
+      }
+      throw e;
+    }
   }
 
-  const { default: ModuleManager } = requireModule(MODULE_MANAGER);
+  return requireModule;
+}
 
-  return exports.Module = ModuleManager(modules);
+export function prefetch(nodes) {
+  for (let node of nodes) {
+    if (!node.src || node.code) continue;
+
+    node.code = fetch(node.src)
+      .then(res => res.text())
+      .then(code => node.code = code)
+      .catch(console.error);
+  }
+}
+
+const MODULE_MANAGER = 'file:///node_modules/@ellx/app/src/runtime/module_manager.js';
+
+export async function bootstrapModule(modules, environment = 'staging') {
+  const moduleMap = new Map(Object.entries(modules));
+
+  const resolveNode = (url, baseUrl) => {
+    url = bootstrapResolve(url, baseUrl);
+
+    const node = moduleMap.get(url);
+
+    if (!node) {
+      throw new Error(`Module ${url} is not found`);
+    }
+    return node;
+  }
+
+  const asyncRequire = asyncRetry(bootstrapRequire(resolveNode, environment));
+
+  const { default: ModuleManager } = await asyncRequire(MODULE_MANAGER);
+
+  return ModuleManager(moduleMap, bootstrapRequire, environment);
 }
