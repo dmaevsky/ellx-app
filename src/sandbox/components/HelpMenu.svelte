@@ -5,7 +5,7 @@
   let hidden = true;
 </script>
 
-<div class="fixed bottom-4 right-4 flex flex-col gap-4 items-end"
+<div class="fixed z-40 bottom-4 right-4 flex flex-col gap-4 items-end"
      on:mouseleave={() => {hidden = true}}>
     <ul
       class="py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
@@ -28,7 +28,7 @@
         </li>
     </ul>
     <div
-      class="opacity-40 flex flex-col items-center justify-around text-center p-1 h-8 w-8 rounded-full
+      class="z-50 opacity-40 flex flex-col items-center justify-around text-center p-1 h-8 w-8 rounded-full
             bg-gray-100 fill-current text-gray-900 border border-gray-900
             focus:outline-none hover:opacity-100 dark:bg-gray-900 dark:fill-current dark:text-white dark:border-white"
       class:opacity-100={!hidden}
