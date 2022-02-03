@@ -2,10 +2,10 @@
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
+  import { nodeNavigatorOpen, contextMenuOpen } from '../store.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
   import { getCaretPosition } from "../../utils/highlight.js";
-  import { nodeNavigatorOpen } from '../store.js';
-  import { getCoords } from "../../utils/ui";
+  import { getCoords } from "../../utils/ui.js";
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -18,29 +18,27 @@
   export let transparent = false;
   export let overflowHidden = false;
   export let isEditMode;
-  export let isContextMenu;
   export let container = null;
 
   const thisSheet = getContext('store');
   const { nRows, nCols } = $thisSheet;
   const rowHeight = 20, columnWidth = 100;
+  const dispatch = createEventDispatcher();
 
+  let editor = null;
   let focused = false;
   let editorSession = null;
   let isFormula = false;
   let caretPosition;
-
-  let editor = null;
-  const dispatch = createEventDispatcher();
 
   let isArrowMode = false;
   let insertRange = null;
   let highlight = selection;
   let arrowRow, arrowCol;
 
-  $: if (!isContextMenu) takeFocus(container); // Focus on grid when context menu is closed
+  $: if (!$contextMenuOpen) takeFocus(container); // Focus on grid when context menu is closed
 
-  $: if (container) container.style = isContextMenu ? "height: 100%; overflow: hidden;" : ""; // Prevent grid scrolling
+  $: if (container) container.style = $contextMenuOpen ? "height: 100%; overflow: hidden;" : ""; // Prevent grid scrolling
 
   $: if (editorSession !== null) isFormula = detectFormula(editorSession);
 
@@ -51,6 +49,7 @@
     isArrowMode = false;
   } else {
     highlight = selection;
+    contextMenuOpen.set(false);
     caretPosition = undefined;
   }
 
@@ -164,9 +163,9 @@
   }
 
   function gridClick(e) {
-    if (isContextMenu && e.button === 0) isContextMenu = false;
+    if ($contextMenuOpen && e.button === 0) contextMenuOpen.set(false);
 
-    if (e.button === 2 && !e.target.closest("#editor")) {
+    if (e.button === 2 && !e.target.closest("#ellx-cell-editor")) {
       if (isEditMode) return closeEditor();
 
       let coords = getCoords(container, e);
@@ -297,7 +296,7 @@
     }
 
     e.preventDefault();
-    if (!isContextMenu) setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
+    if (!$contextMenuOpen) setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
   }
 
   function editorKeyDown(e) {
@@ -514,7 +513,7 @@
   bind:this={container}
   on:keydown={keyDown}
   on:focus={() => focused = true}
-  on:blur={() => {if (!isContextMenu) focused = false}}
+  on:blur={() => {if (!$contextMenuOpen) focused = false}}
   on:mousedown={gridClick}
   on:contextmenu
   on:dblclick={(e) => {

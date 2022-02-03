@@ -7,7 +7,7 @@
   import { combination } from '../../utils/mod_keys.js';
   import { SET_ACTIVE_CONTENT } from '../mutations.js';
 
-  import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
+  import store, { contents, getSheet, nodeNavigatorOpen, shortcutsHelperOpen, contextMenuOpen } from '../store.js';
   import CalcGraph from '../../runtime/engine/calc_graph.js';
   import mountEllxApp from '../../runtime/mount_app.js';
 
@@ -135,12 +135,12 @@
 <HelpMenu/>
 
 <div class="fixed top-0 left-0 z-40 pointer-events-none w-full h-screen flex flex-col justify-end items-end"
-    on:contextmenu={(e) => e.preventDefault()}
-    on:mousedown={(e) => e.preventDefault()}
+  on:contextmenu={(e) => e.preventDefault()}
+  on:mousedown={() => contextMenuOpen.set(false)}
 >
   <NodeNavigator
-          on:goToLine={goToLine}
-          on:navigate={navigate}
+    on:goToLine={goToLine}
+    on:navigate={navigate}
   />
   <ShortcutsHelper/>
 </div>

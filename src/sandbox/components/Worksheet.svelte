@@ -6,6 +6,7 @@
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
   import { getCoords } from "../../utils/ui";
+  import { contextMenuOpen } from '../store.js';
 
   import Grid from './Grid.svelte';
   import Shortcut from "./Shortcut.svelte";
@@ -19,13 +20,11 @@
   let container;
   let menu;
   let currentItem = -1;
-  let isContextMenu = false;
   let x, y;
 
   const rowHeight = 20, columnWidth = 100;
 
-  $: hidden = !isContextMenu;
-  $: if (!isContextMenu) currentItem = -1;
+  $: if (!$contextMenuOpen) currentItem = -1;
 
   setContext('store', store);
   const thisSheet = store;
@@ -58,7 +57,7 @@
 
     if (modifiers === 0 && e.code === 'Escape') {
       if (copySelection) clearClipboard();
-      isContextMenu = false;
+      contextMenuOpen.set(false);
       return true;
     }
 
@@ -173,7 +172,7 @@
 
   async function handleContextMenu(e) {
     e.preventDefault();
-    isContextMenu = true;
+    $contextMenuOpen = true;
 
     await tick();
 
@@ -181,6 +180,7 @@
     const windowInnerHeight = document.documentElement.clientHeight;
     const menu = document.querySelector("#context-menu");
 
+    // TODO: Make more intelligent context menu positioning
     if (e.buttons !== 2) {
       const [row, col] = selection;
       [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
@@ -207,7 +207,6 @@
     {overflowHidden}
     bind:container
     bind:isEditMode
-    bind:isContextMenu
     onkeydown={keyDown}
     on:change={({ detail: {row, col, value} }) => editCell(thisSheet, row, col, value)}
     on:copy={() => handleClipboard("copy")}
@@ -224,9 +223,9 @@
      bind:this={menu}
      on:contextmenu={(e) => e.preventDefault()}
      on:mousedown={(e) => e.preventDefault()}
-     on:click={() => {isContextMenu = false}}
+     on:click={() => {contextMenuOpen.set(false)}}
      on:keydown={(e) => {
-       if (e.code === "Escape") return isContextMenu = false;
+       if (e.code === "Escape") return contextMenuOpen.set(false);
 
        const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
        const menuLength = menuItems.length;
@@ -243,11 +242,12 @@
          menuItems[currentItem].focus();
        }
      }}
-     class:hidden
+     class:hidden={!$contextMenuOpen}
      tabindex="-1"
      class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
           dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px">
   <ul class="flex flex-col">
+    <!-- TODO: Reafctor this stuff -->
     {#each [
       ["cut", ["Cmd", "X"]],
       ["copy", ["Cmd", "C"]],
@@ -255,7 +255,7 @@
     ] as [title, keys] }
       <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
           tabindex="-1"
-          on:click={() => {
+          on:mousedown={() => {
             handleClipboard(title);
           }}
           on:mouseenter={(e) => {
@@ -272,7 +272,7 @@
           on:keydown={(e) => {
             if (e.code === "Enter") {
               handleClipboard(title);
-              isContextMenu = false;
+              contextMenuOpen.set(false);
             }
           }}
       >
@@ -293,7 +293,7 @@
     ] as [title, args, keys] }
       <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
           tabindex="-1"
-          on:click={container.dispatchEvent(createSyntheticEvent(...args))}
+          on:mousedown={container.dispatchEvent(createSyntheticEvent(...args))}
           on:mouseenter={(e) => {
             const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
             const menuLength = menuItems.length;
@@ -308,7 +308,7 @@
           on:keydown={(e) => {
             if (e.code === "Enter") {
               container.dispatchEvent(createSyntheticEvent(...args));
-              isContextMenu = false;
+              contextMenuOpen.set(false);
             }
           }}
       >
@@ -327,7 +327,7 @@
     ] as [title, args, keys] }
       <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
           tabindex="-1"
-          on:click={container.dispatchEvent(createSyntheticEvent(...args))}
+          on:mousedown={container.dispatchEvent(createSyntheticEvent(...args))}
           on:mouseenter={(e) => {
             const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
             const menuLength = menuItems.length;
@@ -342,7 +342,7 @@
           on:keydown={(e) => {
             if (e.code === "Enter") {
               container.dispatchEvent(createSyntheticEvent(...args));
-              isContextMenu = false;
+              contextMenuOpen.set(false);
             }
           }}
       >
