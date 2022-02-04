@@ -9,7 +9,7 @@
   import { contextMenuOpen } from '../store.js';
 
   import Grid from './Grid.svelte';
-  import Shortcut from "./Shortcut.svelte";
+  import MenuItem from './MenuItem.svelte';
 
   export let transparent;
   export let overflowHidden;
@@ -152,7 +152,7 @@
     }
   }
 
-  function createSyntheticEvent(code, shiftKey = false, altKey = false, ctrlKey = false) {
+  function dispatchSyntheticEvent(code, shiftKey = false, altKey = false, ctrlKey = false) {
     const event = new Event("keydown", {
       "bubbles" : true,
       "cancelable": true
@@ -167,7 +167,8 @@
       event.metaKey = true;
       event.ctrlKey = false;
     }
-    return event;
+
+    container.dispatchEvent(event);
   }
 
   function positionMenu(e) {
@@ -178,7 +179,6 @@
     const menuHeight = menu.clientHeight;
     const menuWidth = menu.clientWidth;
 
-    // TODO: Make more intelligent context menu positioning
     if (e.buttons !== 2) {
       const [row, col] = selection;
       [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
@@ -194,7 +194,7 @@
     else {
       if (y + menuHeight > windowHeight) {
         if (y >= menuHeight) y -= menuHeight;
-        else y = windowHeight - menuHeight;
+        else y = windowHeight - (menuHeight + 2); // Prevent vertical scrollbar by excluding menu border width
       }
     }
 
@@ -213,6 +213,49 @@
     await tick();
 
     positionMenu(e);
+  }
+
+  function handleMouseHover(e) {
+    const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
+    const menuLength = menuItems.length;
+    for (let i = 0; i < menuLength; i++) {
+      if (menuItems[i] === e.target)  {
+        currentItem = i;
+        break;
+      }
+    }
+    e.target.focus();
+  }
+
+  const menuItems = [
+    ["cut", ["Cmd", "X"]],
+    ["copy", ["Cmd", "C"]],
+    ["paste", ["Cmd", "V"]],
+    ["-"],
+    ["Shift cells right", ["Space"], ["Space"]],
+    ["Shift cells left", ["Backspace"], ["Backspace"]],
+    ["Insert row", ["Shift", "Space"], ["Space", true]],
+    ["Remove row", ["Shift", "Backspace"], ["Backspace", true]],
+    ["Shift cells down", ["Cmd", "Shift", "Space"], ["Space", true, false, true]],
+    ["Shift cells up", ["Cmd", "Shift", "Backspace"], ["Backspace", true, false, true]],
+    ["Insert column", ["Cmd", "Alt", "Space"], ["Space", false, true, true]],
+    ["Remove column", ["Backspace"], ["Backspace", false, true, true]],
+    ["Clear contents", ["Delete"], ["Delete"]],
+    ["-"],
+    ["Expand in row", ["Shift", "Alt", "→"], ["ArrowRight", true, true]],
+    ["Collapse in row", ["Shift", "Alt", "←"], ["ArrowLeft", true, true]],
+    ["Expand in column", ["Shift", "Alt", "↓"], ["ArrowDown", true, true]],
+    ["Collapse in column", ["Shift", "Alt", "↑"], ["ArrowUp", true, true]],
+    ["Toggle row labels", ["Shift", "Alt", "Z"], ["KeyZ", true, true]],
+    ["Toggle column labels", ["Shift", "Alt", "X"], ["KeyX", true, true]],
+    ["Toggle comments", ["Ctrl", "//"], ["Slash", false, false, true]]
+  ];
+
+  function onkeydown(e, fn) {
+    if (e.code === "Enter") {
+     fn();
+     contextMenuOpen.set(false);
+    }
   }
 
 </script>
@@ -240,134 +283,55 @@
 {/if}
 
 <div id="ellx-context-menu"
-     bind:this={menu}
-     on:contextmenu={(e) => e.preventDefault()}
-     on:mousedown={(e) => e.preventDefault()}
-     on:click={() => {contextMenuOpen.set(false)}}
-     on:keydown={(e) => {
-       if (e.code === "Escape") return contextMenuOpen.set(false);
+  bind:this={menu}
+  on:contextmenu={(e) => e.preventDefault()}
+  on:mousedown={(e) => e.preventDefault()}
+  on:click={() => {contextMenuOpen.set(false)}}
+  on:keydown={(e) => {
+    if (e.code === "Escape") return contextMenuOpen.set(false);
+    if (e.shiftKey) e.preventDefault(); // Prevent keyboard select
 
-       const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
-       const menuLength = menuItems.length;
+    const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== ""); // Ignore dividers
+    const menuLength = menuItems.length;
 
-       if (e.code === "ArrowDown") {
-         currentItem++;
-         currentItem %= menuLength;
-         menuItems[currentItem].focus();
-       }
+    if (e.code === "ArrowDown") {
+      currentItem++;
+      currentItem %= menuLength;
+      menuItems[currentItem].focus();
+    }
 
-       if (e.code === "ArrowUp") {
-         currentItem = Math.abs(--currentItem + menuLength);
-         currentItem %= menuLength;
-         menuItems[currentItem].focus();
-       }
-     }}
-     class:hidden={!$contextMenuOpen}
-     tabindex="-1"
-     class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
-          dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px">
+    if (e.code === "ArrowUp") {
+      currentItem = Math.abs(--currentItem + menuLength);
+      currentItem %= menuLength;
+      menuItems[currentItem].focus();
+    }
+  }}
+  class:hidden={!$contextMenuOpen}
+  tabindex="-1"
+  class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
+      dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px"
+>
   <ul class="flex flex-col">
-    <!-- TODO: Reafctor this stuff -->
-    {#each [
-      ["cut", ["Cmd", "X"]],
-      ["copy", ["Cmd", "C"]],
-      ["paste", ["Cmd", "V"]]
-    ] as [title, keys] }
-      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
-          tabindex="-1"
-          on:mousedown={() => {
-            handleClipboard(title);
-          }}
-          on:mouseenter={(e) => {
-            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
-            const menuLength = menuItems.length;
-            for (let i = 0; i < menuLength; i++) {
-              if (menuItems[i] === e.target)  {
-                currentItem = i;
-                break;
-              }
-            }
-            e.target.focus();
-          }}
-          on:keydown={(e) => {
-            if (e.code === "Enter") {
-              handleClipboard(title);
-              contextMenuOpen.set(false);
-            }
-          }}
-      >
-        <Shortcut {title} {keys}/>
-      </li>
-    {/each}
-    <hr class="my-2 opacity-60" />
-    {#each [
-      ["Shift cells right", ["Space"], ["Space"]],
-      ["Shift cells left", ["Backspace"], ["Backspace"]],
-      ["Insert row", ["Space", true], ["Shift", "Space"]],
-      ["Remove row", ["Backspace", true], ["Shift", "Backspace"]],
-      ["Shift cells down", ["Space", true, false, true], ["Cmd", "Shift", "Space"]],
-      ["Shift cells up", ["Backspace", true, false, true], ["Cmd", "Shift", "Backspace"]],
-      ["Insert column", ["Space", false, true, true], ["Cmd", "Alt", "Space"]],
-      ["Remove column", ["Backspace", false, true, true], ["Backspace"]],
-      ["Clear contents", ["Delete"], ["Delete"]]
-    ] as [title, args, keys] }
-      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
-          tabindex="-1"
-          on:mousedown={container.dispatchEvent(createSyntheticEvent(...args))}
-          on:mouseenter={(e) => {
-            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
-            const menuLength = menuItems.length;
-            for (let i = 0; i < menuLength; i++) {
-              if (menuItems[i] === e.target)  {
-                currentItem = i;
-                break;
-              }
-            }
-            e.target.focus();
-          }}
-          on:keydown={(e) => {
-            if (e.code === "Enter") {
-              container.dispatchEvent(createSyntheticEvent(...args));
-              contextMenuOpen.set(false);
-            }
-          }}
-      >
-        <Shortcut {title} {keys}/>
-      </li>
-    {/each}
-    <hr class="my-2 opacity-60" />
-    {#each [
-      ["Expand in row", ["ArrowRight", true, true], ["Shift", "Alt", "→"]],
-      ["Collapse in row", ["ArrowLeft", true, true], ["Shift", "Alt", "←"]],
-      ["Expand in column", ["ArrowDown", true, true], ["Shift", "Alt", "↓"]],
-      ["Collapse in column", ["ArrowUp", true, true], ["Shift", "Alt", "↑"]],
-      ["Toggle row labels", ["KeyZ", true, true], ["Shift", "Alt", "Z"]],
-      ["Toggle column labels", ["KeyX", true, true], ["Shift", "Alt", "X"]],
-      ["Toggle comments", ["Slash", false, false, true], ["Ctrl", "//"]]
-    ] as [title, args, keys] }
-      <li class="px-4 py-1 focus:bg-blue-600 focus:text-white focus:border-white focus:outline-none cursor-pointer capitalize"
-          tabindex="-1"
-          on:mousedown={container.dispatchEvent(createSyntheticEvent(...args))}
-          on:mouseenter={(e) => {
-            const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
-            const menuLength = menuItems.length;
-            for (let i = 0; i < menuLength; i++) {
-              if (menuItems[i] === e.target)  {
-                currentItem = i;
-                break;
-              }
-            }
-            e.target.focus();
-          }}
-          on:keydown={(e) => {
-            if (e.code === "Enter") {
-              container.dispatchEvent(createSyntheticEvent(...args));
-              contextMenuOpen.set(false);
-            }
-          }}
-      >
-        <Shortcut {title} {keys}/>
-      </li>
+    {#each menuItems as [title, keys, args] }
+      {#if title !== "-"}
+        {#if !args}
+          <MenuItem
+            {title} {keys}
+            onmousedown={() => handleClipboard(title)}
+            onmouseenter={handleMouseHover}
+            onkeydown={(e) => onkeydown(e, () => handleClipboard(title))}
+          />
+        {:else}
+          <MenuItem
+            {title} {keys}
+            onmousedown={() => dispatchSyntheticEvent(...args)}
+            onmouseenter={handleMouseHover}
+            onkeydown={(e) => onkeydown(e, () => dispatchSyntheticEvent(...args))}
+          />
+        {/if}
+      {:else}
+        <hr class="my-2 opacity-60" />
+      {/if}
     {/each}
   </ul>
 </div>
