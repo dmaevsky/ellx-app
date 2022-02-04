@@ -111,6 +111,7 @@
             text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20
             flex flex-col md:px-24 xl:px-44 dark:bg-gray-900 dark:text-white"
      class:hidden={!$shortcutsHelperOpen}
+     on:mousedown={(e) => e.preventDefault()}
 >
     <div class="absolute top-4 right-4 stroke-current text-gray-900 dark:text-white opacity-40 hover:opacity-100"
          on:click={() => shortcutsHelperOpen.update(value => !value)}>

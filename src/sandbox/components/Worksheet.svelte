@@ -170,15 +170,13 @@
     return event;
   }
 
-  async function handleContextMenu(e) {
-    e.preventDefault();
-    $contextMenuOpen = true;
+  function positionMenu(e) {
+    const windowHeight = document.documentElement.clientHeight;
+    const windowWidth = document.documentElement.clientWidth;
 
-    await tick();
-
-    const windowInnerWidth = document.documentElement.clientWidth;
-    const windowInnerHeight = document.documentElement.clientHeight;
-    const menu = document.querySelector("#context-menu");
+    const menu = document.querySelector("#ellx-context-menu");
+    const menuHeight = menu.clientHeight;
+    const menuWidth = menu.clientWidth;
 
     // TODO: Make more intelligent context menu positioning
     if (e.buttons !== 2) {
@@ -189,10 +187,32 @@
       [x, y] = getCoords(container, e);
     }
 
-    x = (x + menu.clientWidth >= windowInnerWidth) ? x - menu.clientWidth : x;
-    y = (y + menu.clientHeight >= windowInnerHeight) ? y - menu.clientHeight : y;
+    if (windowHeight < menuHeight) {
+      menu.style = (windowHeight < menuHeight) ? "height: 100vh; overflow-y: scroll" : "";
+      y = windowHeight - menuHeight;
+    }
+    else {
+      if (y + menuHeight > windowHeight) {
+        if (y >= menuHeight) y -= menuHeight;
+        else y = windowHeight - menuHeight;
+      }
+    }
+
+    if (x + menuWidth > windowWidth) {
+      if (x >= menuWidth) x -= menuWidth;
+      else x = windowWidth - menuWidth;
+    }
 
     menu.focus();
+  }
+
+  async function handleContextMenu(e) {
+    e.preventDefault();
+    $contextMenuOpen = true;
+
+    await tick();
+
+    positionMenu(e);
   }
 
 </script>
@@ -219,7 +239,7 @@
   />
 {/if}
 
-<div id="context-menu"
+<div id="ellx-context-menu"
      bind:this={menu}
      on:contextmenu={(e) => e.preventDefault()}
      on:mousedown={(e) => e.preventDefault()}

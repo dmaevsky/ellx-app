@@ -113,6 +113,23 @@
 
 <svelte:window
   on:keydown={kbListen}
+  on:resize={() => {
+    if ($contextMenuOpen) {
+      const windowHeight = document.documentElement.clientHeight;
+      const menu = document.querySelector("#ellx-context-menu");
+      const menuStyle = menu.style;
+
+      menuStyle.height = "auto"; // Drop style to calculate menu height
+
+      if (windowHeight < menu.clientHeight) {
+        menuStyle.height = "100vh"
+        menuStyle.overflowY = "scroll"
+      }
+      else {
+        menuStyle.overflowY = "hidden";
+      }
+    }
+  }}
 />
 
 <style>
