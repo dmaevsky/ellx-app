@@ -5,11 +5,9 @@
   import { editCell, clearRange, setSelection } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
-  import { getCoords } from "../../utils/ui";
-  import { contextMenuOpen } from '../store.js';
 
   import Grid from './Grid.svelte';
-  import MenuItem from './MenuItem.svelte';
+  import ContextMenu from './ContextMenu.svelte';
 
   export let transparent;
   export let overflowHidden;
@@ -18,13 +16,7 @@
   let selection;
   let isEditMode;
   let container;
-  let menu;
-  let currentItem = -1;
-  let x, y;
-
-  const rowHeight = 20, columnWidth = 100;
-
-  $: if (!$contextMenuOpen) currentItem = -1;
+  let event;
 
   setContext('store', store);
   const thisSheet = store;
@@ -44,8 +36,6 @@
 
     let modifiers = (e.altKey << 2) + ((isMacOS ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
 
-    modifiers = isNaN(modifiers) ? 0 : modifiers; // Default modifiers for synthetic keydown event
-
     // Prevent default Select All behavior
     if (modifiers === 2 && e.code === 'KeyA') {
       e.preventDefault();
@@ -57,7 +47,6 @@
 
     if (modifiers === 0 && e.code === 'Escape') {
       if (copySelection) clearClipboard();
-      contextMenuOpen.set(false);
       return true;
     }
 
@@ -152,112 +141,6 @@
     }
   }
 
-  function dispatchSyntheticEvent(code, shiftKey = false, altKey = false, ctrlKey = false) {
-    const event = new Event("keydown", {
-      "bubbles" : true,
-      "cancelable": true
-    });
-
-    event.code = code;
-    event.shiftKey = shiftKey;
-    event.altKey = altKey;
-    event.ctrlKey = ctrlKey;
-
-    if (navigator.platform.match('Mac') && ctrlKey) {
-      event.metaKey = true;
-      event.ctrlKey = false;
-    }
-
-    container.dispatchEvent(event);
-  }
-
-  function positionMenu(e) {
-    const windowHeight = document.documentElement.clientHeight;
-    const windowWidth = document.documentElement.clientWidth;
-
-    const menu = document.querySelector("#ellx-context-menu");
-    const menuHeight = menu.clientHeight;
-    const menuWidth = menu.clientWidth;
-
-    if (e.buttons !== 2) {
-      const [row, col] = selection;
-      [x, y] = [(col + 1) * columnWidth, (row + 1) * rowHeight];
-    }
-    else {
-      [x, y] = getCoords(container, e);
-    }
-
-    if (windowHeight < menuHeight) {
-      menu.style = (windowHeight < menuHeight) ? "height: 100vh; overflow-y: scroll" : "";
-      y = windowHeight - menuHeight;
-    }
-    else {
-      if (y + menuHeight > windowHeight) {
-        if (y >= menuHeight) y -= menuHeight;
-        else y = windowHeight - (menuHeight + 2); // Prevent vertical scrollbar by excluding menu border width
-      }
-    }
-
-    if (x + menuWidth > windowWidth) {
-      if (x >= menuWidth) x -= menuWidth;
-      else x = windowWidth - menuWidth;
-    }
-
-    menu.focus();
-  }
-
-  async function handleContextMenu(e) {
-    e.preventDefault();
-    $contextMenuOpen = true;
-
-    await tick();
-
-    positionMenu(e);
-  }
-
-  function handleMouseHover(e) {
-    const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== "");
-    const menuLength = menuItems.length;
-    for (let i = 0; i < menuLength; i++) {
-      if (menuItems[i] === e.target)  {
-        currentItem = i;
-        break;
-      }
-    }
-    e.target.focus();
-  }
-
-  const menuItems = [
-    ["cut", ["Cmd", "X"]],
-    ["copy", ["Cmd", "C"]],
-    ["paste", ["Cmd", "V"]],
-    ["-"],
-    ["Shift cells right", ["Space"], ["Space"]],
-    ["Shift cells left", ["Backspace"], ["Backspace"]],
-    ["Insert row", ["Shift", "Space"], ["Space", true]],
-    ["Remove row", ["Shift", "Backspace"], ["Backspace", true]],
-    ["Shift cells down", ["Cmd", "Shift", "Space"], ["Space", true, false, true]],
-    ["Shift cells up", ["Cmd", "Shift", "Backspace"], ["Backspace", true, false, true]],
-    ["Insert column", ["Cmd", "Alt", "Space"], ["Space", false, true, true]],
-    ["Remove column", ["Backspace"], ["Backspace", false, true, true]],
-    ["Clear contents", ["Delete"], ["Delete"]],
-    ["-"],
-    ["Expand in row", ["Shift", "Alt", "→"], ["ArrowRight", true, true]],
-    ["Collapse in row", ["Shift", "Alt", "←"], ["ArrowLeft", true, true]],
-    ["Expand in column", ["Shift", "Alt", "↓"], ["ArrowDown", true, true]],
-    ["Collapse in column", ["Shift", "Alt", "↑"], ["ArrowUp", true, true]],
-    ["Toggle row labels", ["Shift", "Alt", "Z"], ["KeyZ", true, true]],
-    ["Toggle column labels", ["Shift", "Alt", "X"], ["KeyX", true, true]],
-    ["Toggle comments", ["Ctrl", "//"], ["Slash", false, false, true]]
-  ];
-
-  function onkeydown(e, fn) {
-    if (e.code === "Enter") {
-     fn();
-     contextMenuOpen.set(false);
-    }
-  }
-
 </script>
 
 {#if blocks}
@@ -276,62 +159,17 @@
     on:cut={() => handleClipboard("cut")}
     on:paste={() => handleClipboard("paste")}
     on:contextmenu={(e) => {
-      if (!isEditMode) handleContextMenu(e);
-      currentItem = -1;
+      if (!isEditMode) {
+        e.preventDefault();
+        event = e;
+      }
     }}
   />
 {/if}
 
-<div id="ellx-context-menu"
-  bind:this={menu}
-  on:contextmenu={(e) => e.preventDefault()}
-  on:mousedown={(e) => e.preventDefault()}
-  on:click={() => {contextMenuOpen.set(false)}}
-  on:keydown={(e) => {
-    if (e.code === "Escape") return contextMenuOpen.set(false);
-    if (e.shiftKey) e.preventDefault(); // Prevent keyboard select
-
-    const menuItems = [...menu.firstChild.children].filter(item => item.innerText !== ""); // Ignore dividers
-    const menuLength = menuItems.length;
-
-    if (e.code === "ArrowDown") {
-      currentItem++;
-      currentItem %= menuLength;
-      menuItems[currentItem].focus();
-    }
-
-    if (e.code === "ArrowUp") {
-      currentItem = Math.abs(--currentItem + menuLength);
-      currentItem %= menuLength;
-      menuItems[currentItem].focus();
-    }
-  }}
-  class:hidden={!$contextMenuOpen}
-  tabindex="-1"
-  class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
-      dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px"
->
-  <ul class="flex flex-col">
-    {#each menuItems as [title, keys, args] }
-      {#if title !== "-"}
-        {#if !args}
-          <MenuItem
-            {title} {keys}
-            onmousedown={() => handleClipboard(title)}
-            onmouseenter={handleMouseHover}
-            onkeydown={(e) => onkeydown(e, () => handleClipboard(title))}
-          />
-        {:else}
-          <MenuItem
-            {title} {keys}
-            onmousedown={() => dispatchSyntheticEvent(...args)}
-            onmouseenter={handleMouseHover}
-            onkeydown={(e) => onkeydown(e, () => dispatchSyntheticEvent(...args))}
-          />
-        {/if}
-      {:else}
-        <hr class="my-2 opacity-60" />
-      {/if}
-    {/each}
-  </ul>
-</div>
+<ContextMenu
+  bind:container
+  bind:event
+  bind:selection
+  {handleClipboard}
+/>
