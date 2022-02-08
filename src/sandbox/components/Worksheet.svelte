@@ -158,7 +158,7 @@
     on:paste={() => handleClipboard("paste")}
     on:contextmenu={(e) => {
       if (!isEditMode) {
-        e.preventDefault();
+        e.preventDefault(); // Enable default context menu for editor only
         event = e;
       }
     }}
@@ -166,8 +166,8 @@
 {/if}
 
 <ContextMenu
-  bind:container
-  bind:event
-  bind:selection
+  {container}
+  {event}
+  {selection}
   {handleClipboard}
 />

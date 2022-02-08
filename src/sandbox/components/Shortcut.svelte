@@ -1,9 +1,7 @@
 <script>
   import { isMac } from "../../utils/ui.js";
 
-  export let
-      title,
-      keys = [];
+  export let title, keys = [];
 
   const switchCmd = isMac() ? "Cmd" : "Ctrl";
 </script>

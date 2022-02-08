@@ -109,6 +109,19 @@
     menu.focus();
   }
 
+  function handleKeyDown(e) {
+    if (e.code === "Escape") return contextMenuOpen.set(false);
+
+    if (e.shiftKey) e.preventDefault(); // Prevent keyboard select
+
+    if (e.code === "ArrowDown" || e.code === "ArrowUp") {
+      if (e.code === "ArrowDown") currentItem = ++currentItem % menuLength;
+      else currentItem = (currentItem > 0) ? --currentItem : menuLength - 1;
+
+      menuNodes[currentItem].focus();
+    }
+  }
+
   $: if (event) {
     contextMenuOpen.set(true);
     currentItem = -1;
@@ -122,21 +135,8 @@
   bind:this={menu}
   on:contextmenu={(e) => e.preventDefault()}
   on:mousedown={(e) => e.preventDefault()}
-  on:click={() => {contextMenuOpen.set(false)}}
-  on:keydown={(e) => {
-    if (e.code === "Escape") return contextMenuOpen.set(false);
-    if (e.shiftKey) e.preventDefault(); // Prevent keyboard select
-
-    if (e.code === "ArrowDown") {
-      currentItem = ++currentItem % menuLength;
-      menuNodes[currentItem].focus();
-    }
-
-    if (e.code === "ArrowUp") {
-      currentItem = (currentItem > 0) ? --currentItem : menuLength - 1;
-      menuNodes[currentItem].focus();
-    }
-  }}
+  on:click={() => contextMenuOpen.set(false)}
+  on:keydown={handleKeyDown}
   class:hidden={!$contextMenuOpen}
   tabindex="-1"
   class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
