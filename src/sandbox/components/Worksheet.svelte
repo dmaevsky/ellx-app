@@ -5,6 +5,7 @@
   import { editCell, clearRange, setSelection } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
+  import { isMac } from "../../utils/ui.js";
 
   import Grid from './Grid.svelte';
   import ContextMenu from './ContextMenu.svelte';
@@ -31,10 +32,7 @@
 
   function keyDown(e) {
     // Returns true if the keystroke is handled here, false otherwise
-
-    const isMacOS = navigator.userAgent.includes("Mac");
-
-    let modifiers = (e.altKey << 2) + ((isMacOS ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
+    let modifiers = (e.altKey << 2) + ((isMac() ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
 
     // Prevent default Select All behavior
     if (modifiers === 2 && e.code === 'KeyA') {

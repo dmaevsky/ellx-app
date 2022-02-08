@@ -11,3 +11,7 @@ export function getCoords(element, e) {
 
     return [x, y];
 }
+
+export function isMac() {
+    return navigator.platform.toLowerCase().indexOf('mac') >= 0
+}

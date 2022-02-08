@@ -1,9 +1,11 @@
+import { isMac } from "./ui.js";
+
 export const SHIFT = 1;
 export const CTRL = 2;
 export const ALT = 4;
 
 export const modifiers = e => e.shiftKey +
-  ((navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey) << 1) +
+  ((navigator.platform.toLowerCase().indexOf('mac') >= 0 ? e.metaKey : e.ctrlKey) << 1) +
   (e.altKey << 2);
 
 export const combination = e => {

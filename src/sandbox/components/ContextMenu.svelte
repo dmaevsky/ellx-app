@@ -1,7 +1,7 @@
 <script>
   import { tick, onMount } from 'svelte';
   import { contextMenuOpen } from '../store.js';
-  import { getCoords } from "../../utils/ui";
+  import { getCoords, isMac } from "../../utils/ui.js";
 
   import MenuItem from './MenuItem.svelte';
 
@@ -38,7 +38,7 @@
     ["Collapse in column", ["Shift", "Alt", "↑"], ["ArrowUp", true, true]],
     ["Toggle row labels", ["Shift", "Alt", "Z"], ["KeyZ", true, true]],
     ["Toggle column labels", ["Shift", "Alt", "X"], ["KeyX", true, true]],
-    ["Toggle comments", ["Ctrl", "//"], ["Slash", false, false, true]]
+    ["Toggle comments", ["Cmd", "//"], ["Slash", false, false, true]]
   ];
 
   onMount(() => {
@@ -68,7 +68,7 @@
     event.altKey = altKey;
     event.ctrlKey = ctrlKey;
 
-    if (navigator.platform.match('Mac') && ctrlKey) {
+    if (isMac() && ctrlKey) {
       event.metaKey = true;
       event.ctrlKey = false;
     }
@@ -113,9 +113,7 @@
     contextMenuOpen.set(true);
     currentItem = -1;
 
-    tick().then(() => {
-      positionMenu(event);
-    });
+    tick().then(() => positionMenu(event));
   }
 
 </script>
@@ -145,7 +143,7 @@
   dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px"
 >
   <ul class="flex flex-col">
-    {#each menuItems as [title, keys, args] }
+    {#each menuItems as [title, keys, args]}
       {#if title !== "-"}
         {#if !args}
           <MenuItem
