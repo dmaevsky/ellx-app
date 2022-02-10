@@ -2,6 +2,7 @@
   import { tick, onMount } from 'svelte';
   import { contextMenuOpen } from '../store.js';
   import { getCoords, isMac } from "../../utils/ui.js";
+  import { shortcuts } from "../../utils/shortcuts.js";
 
   import MenuItem from './MenuItem.svelte';
 
@@ -16,29 +17,18 @@
   let menuNodes;
   let menuLength;
 
+  function getShortcuts(str) {
+    return shortcuts.filter(i => i.tag.includes(str)).map(({ title, keys }) => [title, keys]);
+  }
+
   const rowHeight = 20, columnWidth = 100;
+
   const menuItems = [
-    ["Cut", ["Cmd", "KeyX"]],
-    ["Copy", ["Cmd", "KeyC"]],
-    ["Paste", ["Cmd", "KeyV"]],
+    ...getShortcuts("clipboard"),
     ["-"],
-    ["Shift cells right", ["Space"]],
-    ["Shift cells left", ["Backspace"]],
-    ["Insert row", ["Shift", "Space"]],
-    ["Remove row", ["Shift", "Backspace"]],
-    ["Shift cells down", ["Cmd", "Shift", "Space"]],
-    ["Shift cells up", ["Cmd", "Shift", "Backspace"]],
-    ["Insert column", ["Cmd", "Alt", "Space"]],
-    ["Remove column", ["Backspace"]],
-    ["Clear contents", ["Delete"]],
+    ...getShortcuts("grid"),
     ["-"],
-    ["Expand in row", ["Shift", "Alt", "ArrowRight"]],
-    ["Collapse in row", ["Shift", "Alt", "ArrowLeft"]],
-    ["Expand in column", ["Shift", "Alt", "ArrowDown"]],
-    ["Collapse in column", ["Shift", "Alt", "ArrowUp"]],
-    ["Toggle row labels", ["Shift", "Alt", "KeyZ"]],
-    ["Toggle column labels", ["Shift", "Alt", "KeyX"]],
-    ["Toggle comments", ["Cmd", "Slash"]]
+    ...getShortcuts("expansion")
   ];
 
   onMount(() => {
@@ -80,7 +70,9 @@
           event.ctrlKey = false;
         }
       }
-      else event.code = key;
+      else {
+        event.code = key;
+      }
     });
 
     container.dispatchEvent(event);
