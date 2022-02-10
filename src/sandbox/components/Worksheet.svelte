@@ -132,7 +132,7 @@
   }
 
   function handleClipboard(action) {
-    switch (action) {
+    switch (action.toLowerCase()) {
       case "copy":  copyToClipboard(thisSheet, selection, false); break;
       case "cut":   copyToClipboard(thisSheet, selection, true); break;
       case "paste": pasteFromClipboard(thisSheet, selection);

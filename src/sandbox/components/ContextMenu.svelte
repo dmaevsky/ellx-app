@@ -18,27 +18,27 @@
 
   const rowHeight = 20, columnWidth = 100;
   const menuItems = [
-    ["cut", ["Cmd", "X"]],
-    ["copy", ["Cmd", "C"]],
-    ["paste", ["Cmd", "V"]],
+    ["Cut", ["Cmd", "KeyX"]],
+    ["Copy", ["Cmd", "KeyC"]],
+    ["Paste", ["Cmd", "KeyV"]],
     ["-"],
-    ["Shift cells right", ["Space"], ["Space"]],
-    ["Shift cells left", ["Backspace"], ["Backspace"]],
-    ["Insert row", ["Shift", "Space"], ["Space", true]],
-    ["Remove row", ["Shift", "Backspace"], ["Backspace", true]],
-    ["Shift cells down", ["Cmd", "Shift", "Space"], ["Space", true, false, true]],
-    ["Shift cells up", ["Cmd", "Shift", "Backspace"], ["Backspace", true, false, true]],
-    ["Insert column", ["Cmd", "Alt", "Space"], ["Space", false, true, true]],
-    ["Remove column", ["Backspace"], ["Backspace", false, true, true]],
-    ["Clear contents", ["Delete"], ["Delete"]],
+    ["Shift cells right", ["Space"]],
+    ["Shift cells left", ["Backspace"]],
+    ["Insert row", ["Shift", "Space"]],
+    ["Remove row", ["Shift", "Backspace"]],
+    ["Shift cells down", ["Cmd", "Shift", "Space"]],
+    ["Shift cells up", ["Cmd", "Shift", "Backspace"]],
+    ["Insert column", ["Cmd", "Alt", "Space"]],
+    ["Remove column", ["Backspace"]],
+    ["Clear contents", ["Delete"]],
     ["-"],
-    ["Expand in row", ["Shift", "Alt", "→"], ["ArrowRight", true, true]],
-    ["Collapse in row", ["Shift", "Alt", "←"], ["ArrowLeft", true, true]],
-    ["Expand in column", ["Shift", "Alt", "↓"], ["ArrowDown", true, true]],
-    ["Collapse in column", ["Shift", "Alt", "↑"], ["ArrowUp", true, true]],
-    ["Toggle row labels", ["Shift", "Alt", "Z"], ["KeyZ", true, true]],
-    ["Toggle column labels", ["Shift", "Alt", "X"], ["KeyX", true, true]],
-    ["Toggle comments", ["Cmd", "//"], ["Slash", false, false, true]]
+    ["Expand in row", ["Shift", "Alt", "ArrowRight"]],
+    ["Collapse in row", ["Shift", "Alt", "ArrowLeft"]],
+    ["Expand in column", ["Shift", "Alt", "ArrowDown"]],
+    ["Collapse in column", ["Shift", "Alt", "ArrowUp"]],
+    ["Toggle row labels", ["Shift", "Alt", "KeyZ"]],
+    ["Toggle column labels", ["Shift", "Alt", "KeyX"]],
+    ["Toggle comments", ["Cmd", "Slash"]]
   ];
 
   onMount(() => {
@@ -57,21 +57,31 @@
     e.target.focus();
   }
 
-  function dispatchSyntheticEvent(code, shiftKey = false, altKey = false, ctrlKey = false) {
+  function dispatchSyntheticEvent(keys) {
     const event = new Event("keydown", {
       "bubbles" : true,
       "cancelable": true
     });
 
-    event.code = code;
-    event.shiftKey = shiftKey;
-    event.altKey = altKey;
-    event.ctrlKey = ctrlKey;
+    // Event is dispatched only if all modifiers are explicitly set
+    event.shiftKey = false;
+    event.altKey = false;
+    event.ctrlKey = false;
+    event.metaKey = false;
 
-    if (isMac() && ctrlKey) {
-      event.metaKey = true;
-      event.ctrlKey = false;
-    }
+    keys.forEach(key => {
+      if (key === "Shift") event.shiftKey = true;
+      else if (key === "Alt") event.altKey = true;
+      else if (key === "Cmd") {
+        event.ctrlKey = true;
+
+        if (isMac()) {
+          event.metaKey = true;
+          event.ctrlKey = false;
+        }
+      }
+      else event.code = key;
+    });
 
     container.dispatchEvent(event);
   }
@@ -145,7 +155,7 @@
   <ul class="flex flex-col">
     {#each menuItems as [title, keys, args]}
       {#if title !== "-"}
-        {#if !args}
+        {#if (title === "Copy" || title === "Cut" || title === "Paste")}
           <MenuItem
             {title} {keys}
             onmousedown={() => handleClipboard(title)}
@@ -160,11 +170,13 @@
         {:else}
           <MenuItem
             {title} {keys}
-            onmousedown={() => dispatchSyntheticEvent(...args)}
+            onmousedown={() => {
+              dispatchSyntheticEvent(keys)
+            }}
             onmouseenter={handleMouseHover}
             onkeydown={(e) => {
               if (e.code === "Enter") {
-                dispatchSyntheticEvent(...args);
+                dispatchSyntheticEvent(keys)
                 contextMenuOpen.set(false);
               }
             }}
