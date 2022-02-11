@@ -11,7 +11,7 @@
     {#if key === ".." || key === "/" }
       <span class="opacity-40">{key}</span>
     {:else}
-      <kbd class="px-1 opacity-60 border border-gray-900 border-opacity-20 text-xs rounded-sm dark:border dark:border-white dark:border-opacity-20" >
+      <kbd class="px-1 pt-px pb-0 opacity-60 border border-gray-900 border-opacity-20 text-xs rounded dark:border dark:border-white dark:border-opacity-20" >
         {#if      key === "ArrowDown"}  {"↓"}
         {:else if key === "ArrowUp"}    {"↑"}
         {:else if key === "ArrowLeft"}  {"←"}

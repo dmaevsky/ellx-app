@@ -17,18 +17,18 @@
   let menuNodes;
   let menuLength;
 
-  function getShortcuts(str) {
+  function getShortcutsByTag(str) {
     return shortcuts.filter(i => i.tag.includes(str)).map(({ title, keys }) => [title, keys]);
   }
 
   const rowHeight = 20, columnWidth = 100;
 
   const menuItems = [
-    ...getShortcuts("clipboard"),
+    ...getShortcutsByTag("clipboard"),
     ["-"],
-    ...getShortcuts("grid"),
+    ...getShortcutsByTag("grid"),
     ["-"],
-    ...getShortcuts("expansion")
+    ...getShortcutsByTag("expansion")
   ];
 
   onMount(() => {

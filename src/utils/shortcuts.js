@@ -128,7 +128,7 @@ export const shortcuts = [
   },
   {
     "title": "Insert Column",
-    "keys": ["Cmd", "Alt", "Shift", "Space"],
+    "keys": ["Cmd", "Alt", "Space"],
     "tag": "grid"
   },
   {

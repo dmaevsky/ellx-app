@@ -1,8 +1,14 @@
 <script>
   import { nodeNavigatorOpen, shortcutsHelperOpen, contextMenuOpen } from '../store.js';
+  import { shortcuts } from "../../utils/shortcuts.js";
   import Shortcut from "./Shortcut.svelte";
 
   let hidden = true;
+
+  function getShortcutByTitle(str) {
+    return shortcuts.find(i => i.title === str).keys;
+  }
+
 </script>
 
 <div class="fixed z-40 bottom-4 right-4 flex flex-col gap-4 items-end"
@@ -20,11 +26,11 @@
   >
     <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
         on:click={() => nodeNavigatorOpen.update(value => !value)}>
-        <Shortcut title="Node navigator" keys={["Alt", "."]}/>
+        <Shortcut title="Toggle Node Navigator" keys={getShortcutByTitle("Toggle Node Navigator")}/>
     </li>
     <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
         on:click={() => shortcutsHelperOpen.update(value => !value)}>
-        <Shortcut title="Keyboard shortcuts" keys={["Alt", "?"]}/>
+        <Shortcut title="Toggle Shortcuts" keys={getShortcutByTitle("Toggle Shortcuts")}/>
     </li>
     <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
         <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default block">Documentation</a>
