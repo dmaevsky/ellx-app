@@ -1,6 +1,6 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
@@ -8,9 +8,11 @@
     "node": ">=14.17.0"
   },
   "bin": {
-    "ellx": "./src/index.js"
+    "ellx": "./src/cli.js"
   },
   "scripts": {
+    "dev:tailwind": "tailwindcss -c ./tailwind.config.cjs -i ./src/input.css -o ./src/bootstrap/sandbox.css --watch",
+    "dev": "concurrently \"./src/cli.js start\" \"npm run dev:tailwind\"",
     "test": "ava -v"
   },
   "ava": {
@@ -57,6 +59,7 @@
   },
   "devDependencies": {
     "acorn": "^8.4.1",
-    "ava": "^3.15.0"
+    "ava": "^3.15.0",
+    "concurrently": "^7.0.0"
   }
 }

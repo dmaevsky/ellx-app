@@ -1,6 +1,7 @@
 import { bootstrapModule } from './bootstrap.js';
 
 import {
+  MODULE_MANAGER,
   LIFECYCLE,
   SANDBOX_CONTENT
 } from './entry_points.js';
@@ -15,6 +16,7 @@ window.__ellx = {
   devServer
 };
 
+let lifecycle;
 let sandboxComponent;
 
 const initSheetsQueue = new Map();
@@ -25,9 +27,7 @@ function listen({ data }) {
 
     if (type === "updateStyles") return updateStyles();
 
-    const actions = window.__ellx.Module
-      ? window.__ellx.Module.require(LIFECYCLE)
-      : { init, dispose, updateModules };
+    const actions = lifecycle || { init, dispose, updateModules };
 
     if (type in actions) {
       return actions[type](...args);
@@ -50,12 +50,16 @@ function dispose(contentId) {
 function updateModules(modules) {
   console.debug('INITIAL modules ***', modules);
 
-  bootstrapModule(modules)
+  const prefix = Object.keys(modules).find(id => id.startsWith('file:///node_modules/@ellx/app/'))
+    ? 'file:///node_modules/@ellx/app/src/'
+    : 'file:///src/';
+
+  bootstrapModule(modules, prefix + MODULE_MANAGER)
     .then(Module => {
       window.__ellx.Module = Module;
 
-      const lifecycle = Module.require(LIFECYCLE);
-      const { default: SandboxContent } = Module.require(SANDBOX_CONTENT);
+      lifecycle = Module.require(prefix + LIFECYCLE);
+      const { default: SandboxContent } = Module.require(prefix + SANDBOX_CONTENT);
 
       document.body.innerHTML = '';
       sandboxComponent = new SandboxContent({ target: document.body });

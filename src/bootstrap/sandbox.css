@@ -550,16 +550,17 @@ Ensure the default browser behavior of the `hidden` attribute.
   position: relative;
 }
 
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
 .bottom-4 {
   bottom: 1rem;
 }
 
 .right-4 {
   right: 1rem;
-}
-
-.top-4 {
-  top: 1rem;
 }
 
 .top-0 {
@@ -570,16 +571,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   left: 0px;
 }
 
-.mt-6 {
-  margin-top: 1.5rem;
+.top-4 {
+  top: 1rem;
 }
 
-.mt-4 {
-  margin-top: 1rem;
+.z-50 {
+  z-index: 50;
 }
 
-.mr-1 {
-  margin-right: 0.25rem;
+.mt-2 {
+  margin-top: 0.5rem;
 }
 
 .block {
@@ -618,6 +619,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   height: 2rem;
 }
 
+.h-6 {
+  height: 1.5rem;
+}
+
 .h-screen {
   height: 100vh;
 }
@@ -628,6 +633,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 
 .w-8 {
   width: 2rem;
+}
+
+.w-80 {
+  width: 20rem;
 }
 
 .flex-1 {
@@ -698,16 +707,16 @@ Ensure the default browser behavior of the `hidden` attribute.
   gap: 1rem;
 }
 
+.gap-2 {
+  gap: 0.5rem;
+}
+
 .gap-1 {
   gap: 0.25rem;
 }
 
 .gap-8 {
   gap: 2rem;
-}
-
-.gap-2 {
-  gap: 0.5rem;
 }
 
 .overflow-auto {
@@ -807,6 +816,11 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-bottom: 0.25rem;
 }
 
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -822,12 +836,24 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-right: 4rem;
 }
 
-.text-center {
-  text-align: center;
+.pb-4 {
+  padding-bottom: 1rem;
 }
 
-.text-right {
-  text-align: right;
+.pl-2 {
+  padding-left: 0.5rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.text-center {
+  text-align: center;
 }
 
 .text-xs {
@@ -880,6 +906,10 @@ Ensure the default browser behavior of the `hidden` attribute.
 .text-gray-500 {
   --tw-text-opacity: 1;
   color: rgb(107 114 128 / var(--tw-text-opacity));
+}
+
+.text-opacity-100 {
+  --tw-text-opacity: 1;
 }
 
 .opacity-40 {
