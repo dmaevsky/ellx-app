@@ -1,11 +1,11 @@
 <script>
   import { shortcutsHelperOpen } from '../store.js';
-  import { shortcuts } from "../../utils/shortcuts.js";
+  import { helperShortcuts } from "../../utils/shortcuts.js";
 
   import Shortcut from "./Shortcut.svelte";
 
   function getShortcuts(str) {
-    return shortcuts.filter(i => i.tag.includes(str));
+    return helperShortcuts.filter(i => i.tag.includes(str));
   }
 
   const shortcutsGroups = ["grid", "expansion", "interface", "common"].map(i => [i, getShortcuts(i)]);

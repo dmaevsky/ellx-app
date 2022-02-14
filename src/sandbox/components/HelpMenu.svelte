@@ -1,12 +1,12 @@
 <script>
   import { nodeNavigatorOpen, shortcutsHelperOpen, contextMenuOpen } from '../store.js';
-  import { shortcuts } from "../../utils/shortcuts.js";
+  import { helperShortcuts } from "../../utils/shortcuts.js";
   import Shortcut from "./Shortcut.svelte";
 
   let hidden = true;
 
   function getShortcutByTitle(str) {
-    return shortcuts.find(i => i.title === str).keys;
+    return helperShortcuts.find(i => i.title === str).keys;
   }
 
 </script>

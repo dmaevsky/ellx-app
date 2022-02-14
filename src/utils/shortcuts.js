@@ -1,42 +1,4 @@
-export const shortcuts = [
-  // UI
-  {
-    "title": "Toggle Shortcuts",
-    "keys": ["Alt", "?"],
-    "tag": "interface"
-  },
-  {
-    "title": "Toggle Node Navigator",
-    "keys": ["Alt", "."],
-    "tag": "interface"
-  },
-  {
-    "title": "Switch to Layout",
-    "keys": ["Alt", "1"],
-    "tag": "interface"
-  },
-  {
-    "title": "Switch to Sheet",
-    "keys": ["Alt", "2", "..", "9"],
-    "tag": "interface"
-  },
-  {
-    "title": "Toggle Dark Mode",
-    "keys": ["Alt", "KeyD"],
-    "tag": "interface"
-  },
-
-  // Common
-  {
-    "title": "Undo",
-    "keys": ["Cmd", "KeyZ"],
-    "tag": "common"
-  },
-  {
-    "title": "Redo",
-    "keys": ["Cmd", "Shift", "KeyZ"],
-    "tag": "common"
-  },
+const clipboardActions = [
   {
     "title": "Copy",
     "keys": ["Cmd", "KeyC"],
@@ -51,7 +13,12 @@ export const shortcuts = [
     "title": "Paste",
     "keys": ["Cmd", "KeyV"],
     "tag": "common clipboard"
-  },
+  }
+];
+
+export const shortcuts = [
+  // Common
+  ...clipboardActions,
 
   // Expansion and Labels
   {
@@ -95,7 +62,7 @@ export const shortcuts = [
     "tag": "expansion"
   },
 
-  // Cell edit
+  // Grid
   {
     "title": "Shift Cells Right",
     "keys": ["Space"],
@@ -104,16 +71,6 @@ export const shortcuts = [
   {
     "title": "Shift Cells Left",
     "keys": ["Backspace"],
-    "tag": "grid"
-  },
-  {
-    "title": "Insert Row",
-    "keys": ["Shift", "Space"],
-    "tag": "grid"
-  },
-  {
-    "title": "Remove Row",
-    "keys": ["Shift", "Backspace"],
     "tag": "grid"
   },
   {
@@ -127,6 +84,16 @@ export const shortcuts = [
     "tag": "grid"
   },
   {
+    "title": "Insert Row",
+    "keys": ["Shift", "Space"],
+    "tag": "grid"
+  },
+  {
+    "title": "Remove Row",
+    "keys": ["Shift", "Backspace"],
+    "tag": "grid"
+  },
+  {
     "title": "Insert Column",
     "keys": ["Cmd", "Alt", "Space"],
     "tag": "grid"
@@ -137,3 +104,84 @@ export const shortcuts = [
     "tag": "grid"
   }
 ];
+
+export const helperShortcuts = [
+  // Grid
+  {
+    "title": "Shift Right / Left",
+    "keys": ["Space", "/", "Backspace"],
+    "tag": "grid"
+  },
+  {
+    "title": "Shift Down / Up",
+    "keys": ["Cmd", "Shift", "Space", "/", "Backspace"],
+    "tag": "grid"
+  },
+  {
+    "title": "Insert / Remove Row",
+    "keys": ["Shift", "Space", "/", "Backspace"],
+    "tag": "grid"
+  },
+  {
+    "title": "Insert / Remove Column",
+    "keys": ["Cmd", "Alt", "Space", "/", "Backspace"],
+    "tag": "grid"
+  },
+
+  // Expansion
+  {
+    "title": "Expand / Collapse in Row",
+    "keys": ["Shift", "Alt", "ArrowRight", "/", "ArrowLeft"],
+    "tag": "expansion"
+  },
+  {
+    "title": "Expand / Collapse in Column",
+    "keys": ["Shift", "Alt", "ArrowDown", "/", "ArrowUp"],
+    "tag": "expansion"
+  },
+  {
+    "title": "Toggle Row / Column Labels",
+    "keys": ["Shift", "Alt", "KeyZ", "/", "KeyX"],
+    "tag": "expansion"
+  },
+
+  // Interface
+  {
+    "title": "Toggle Shortcuts",
+    "keys": ["Alt", "?"],
+    "tag": "interface"
+  },
+  {
+    "title": "Toggle Node Navigator",
+    "keys": ["Alt", "."],
+    "tag": "interface"
+  },
+  {
+    "title": "Switch to Layout",
+    "keys": ["Alt", "1"],
+    "tag": "interface"
+  },
+  {
+    "title": "Switch to Sheet",
+    "keys": ["Alt", "2", "..", "9"],
+    "tag": "interface"
+  },
+  {
+    "title": "Toggle Dark Mode",
+    "keys": ["Alt", "KeyD"],
+    "tag": "interface"
+  },
+
+  // Common
+  {
+    "title": "Undo",
+    "keys": ["Cmd", "KeyZ"],
+    "tag": "common"
+  },
+  {
+    "title": "Redo",
+    "keys": ["Cmd", "Shift", "KeyZ"],
+    "tag": "common"
+  },
+  ...clipboardActions
+]
