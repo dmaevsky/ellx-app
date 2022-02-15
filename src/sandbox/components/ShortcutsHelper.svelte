@@ -12,9 +12,9 @@
 </script>
 
 <div id="ellx-shortcuts-helper"
-  class="relative w-full py-4 px-16 overflow-auto pointer-events-auto
+  class="relative w-full py-4 px-12 overflow-auto pointer-events-auto
         text-xs bg-gray-100 text-gray-900 border-t border-gray-500 border-opacity-20
-        flex flex-col md:px-24 xl:px-44 dark:bg-gray-900 dark:text-white"
+        flex flex-col dark:bg-gray-900 dark:text-white"
   class:hidden={!$shortcutsHelperOpen}
   on:mousedown={(e) => e.preventDefault()}
 >
