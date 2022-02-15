@@ -140,7 +140,7 @@ export function* deploy(rootDir, { env, styles }) {
     import sheets from "${sheetsSrc}";
 
     async function run() {
-      const Module = await bootstrapModule(modules, '${env}');
+      const Module = await bootstrapModule(modules, "file:///node_modules/@ellx/app/src/runtime/module_manager.js", '${env}');
       const Runtime = await asyncRetry(Module.require)("${RUNTIME}");
 
       Runtime.initializeEllxApp(Module, sheets);

@@ -115,7 +115,7 @@
       caretNode = node.lastChild ? node.lastChild : node;
       caretOffset = caretPosition ? caretPosition : node.textContent.length;
     }
-    
+
     document.getSelection().empty();
     document.getSelection().setBaseAndExtent(caretNode, caretOffset, caretNode, caretOffset);
   }

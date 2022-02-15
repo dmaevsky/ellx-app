@@ -144,9 +144,7 @@ export function prefetch(nodes) {
   }
 }
 
-const MODULE_MANAGER = 'file:///node_modules/@ellx/app/src/runtime/module_manager.js';
-
-export async function bootstrapModule(modules, environment = 'staging') {
+export async function bootstrapModule(modules, MODULE_MANAGER, environment = 'staging') {
   const moduleMap = new Map(Object.entries(modules));
 
   const resolveNode = (url, baseUrl) => {

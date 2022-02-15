@@ -56,7 +56,8 @@ export default (map = new Map(), bootstrapRequire, environment = 'staging') => {
       if (module.dispose) module.dispose();
     }
     else {
-      removeScript(id);
+      const script = document.getElementById(id);
+      if (script) script.remove();
     }
     moduleMap.delete(id);
   }

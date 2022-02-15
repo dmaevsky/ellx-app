@@ -87,9 +87,13 @@ export function startDevPipe(ws, rootDir) {
       .catch(console.error);
   });
 
+  const prefix = import.meta.url.includes('/node_modules/@ellx/app/')
+    ? 'file:///node_modules/@ellx/app/src/'
+    : 'file:///src/';
+
   function getEntryPoints() {
     return [
-      ...Object.values(devEntryPoints),
+      ...Object.values(devEntryPoints).map(path => prefix + path),
       ...entryPoints.get()
     ];
   }
