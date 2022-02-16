@@ -24,7 +24,7 @@
 
 <div class="flex flex-row content-center items-baseline justify-between gap-4">
   <p class="flex-grow">{title}</p>
-  <p class="flex flex-row flex-wrap justify-end gap-1">
+  <p class="flex flex-row justify-end gap-1">
   {#each keys as key}
     {#if key === ".." || key === "/" }
       <span class="opacity-40">{key}</span>
