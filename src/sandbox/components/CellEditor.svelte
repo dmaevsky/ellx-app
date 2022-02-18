@@ -129,6 +129,42 @@
     }
   }
 
+  function appendNbsp(el) {
+    return el.textContent.substr(0, el.textContent.length - 1) + '\xa0';
+  }
+
+  function handleInput() {
+    let { anchorNode, anchorOffset } = document.getSelection();
+    const highlight = document.querySelector("#ellx-highlight");
+
+    // Remove <br/> at the end of contenteditable div in Firefox
+    const brElement = node.lastElementChild;
+
+    if (brElement && (brElement.tagName = "BR")) {
+      if (highlight) {
+        const el = highlight.lastElementChild;
+
+        if (el.lastElementChild) {
+          el.lastElementChild.remove();
+          el.textContent = appendNbsp(el);
+        }
+      }
+      else {
+        brElement.remove();
+
+        const el = node.lastChild;
+
+        if (el) {
+          el.textContent = appendNbsp(el);
+          anchorOffset = el.textContent.length;
+        }
+      }
+    }
+
+    value = node.textContent;
+    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
+  }
+
   $: {
     innerHTML = highlightInput(value);
 
@@ -149,12 +185,7 @@
   bind:this={node}
   bind:innerHTML
   contenteditable="true"
-  on:input={() => {
-    const { anchorNode, anchorOffset } = document.getSelection();
-    const highlight = document.querySelector("#ellx-highlight");
-    value = node.textContent;
-    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
-  }}
+  on:input={handleInput}
   on:keydown
   on:paste={(e) => {
     e.preventDefault();
