@@ -111,7 +111,6 @@
     }
 
     if (windowHeight < menuHeight) {
-      menu.style = (windowHeight < menuHeight) ? "height: 100vh; overflow-y: scroll" : "";
       y = windowHeight - menuHeight;
     }
     else {
@@ -138,7 +137,7 @@
 
 </script>
 
-<div id="ellx-context-menu" class="absolute z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs dark:bg-gray-900 dark:text-white focus:outline-none" style="left: {x}px; top: {y}px"
+<div id="ellx-context-menu" class="absolute flex flex-col z-50 font-sans py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs dark:bg-gray-900 dark:text-white focus:outline-none max-h-screen overflow-y-auto" style="left: {x}px; top: {y}px"
   tabindex="-1"
   bind:this={menu}
   on:contextmenu={(e) => e.preventDefault()}
