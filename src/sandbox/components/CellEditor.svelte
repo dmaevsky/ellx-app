@@ -4,6 +4,7 @@
   import ProgressiveEval from "../../runtime/engine/progressive_assembly.js";
   import * as environment from "../../runtime/engine/reserved_words.js";
   import { getCaretPosition } from "../../utils/highlight.js";
+  import { isFirefox } from "../../utils/ui.js"
 
   export let value = "";
   export let transparent = false;
@@ -129,35 +130,17 @@
     }
   }
 
-  function appendNbsp(el) {
-    return el.textContent.substr(0, el.textContent.length - 1) + '\xa0';
-  }
-
   function handleInput() {
     let { anchorNode, anchorOffset } = document.getSelection();
     const highlight = document.querySelector("#ellx-highlight");
 
-    // Remove <br/> at the end of contenteditable div in Firefox
-    const brElement = node.lastElementChild;
+    if (isFirefox()) {
+      let brElement = highlight ? highlight.lastChild.lastChild : node.lastChild;
 
-    if (brElement && (brElement.tagName = "BR")) {
-      if (highlight) {
-        const el = highlight.lastElementChild;
-
-        if (el.lastElementChild) {
-          el.lastElementChild.remove();
-          el.textContent = appendNbsp(el);
-        }
-      }
-      else {
+      if (brElement && (brElement.tagName === "BR")) {
         brElement.remove();
-
-        const el = node.lastChild;
-
-        if (el) {
-          el.textContent = appendNbsp(el);
-          anchorOffset = el.textContent.length;
-        }
+        const el = highlight ? highlight.lastChild : node.lastChild;
+        if (el) el.textContent = el.textContent.substr(0, el.textContent.length - 1) + '\xa0';
       }
     }
 
