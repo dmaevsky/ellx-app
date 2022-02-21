@@ -4,7 +4,7 @@
   import query from '../blocks.js';
   import { editCell, clearRange, setSelection } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
-  import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
+  import { clipboard, clearClipboard, handleClipboard } from '../actions/copypaste.js';
   import { isMac } from "../../utils/ui.js";
 
   import Grid from './Grid.svelte';
@@ -131,14 +131,6 @@
     return false;
   }
 
-  function handleClipboard(action) {
-    switch (action.toLowerCase()) {
-      case "copy":  copyToClipboard(thisSheet, selection, false); break;
-      case "cut":   copyToClipboard(thisSheet, selection, true); break;
-      case "paste": pasteFromClipboard(thisSheet, selection);
-    }
-  }
-
 </script>
 
 {#if blocks}
@@ -153,9 +145,9 @@
     bind:isEditMode
     onkeydown={keyDown}
     on:change={({ detail: {row, col, value} }) => editCell(thisSheet, row, col, value)}
-    on:copy={() => handleClipboard("copy")}
-    on:cut={() => handleClipboard("cut")}
-    on:paste={() => handleClipboard("paste")}
+    on:copy={() => handleClipboard("copy", thisSheet, selection)}
+    on:cut={() => handleClipboard("cut", thisSheet, selection)}
+    on:paste={() => handleClipboard("paste", thisSheet, selection)}
     on:contextmenu={(e) => {
       if (!isEditMode) {
         e.preventDefault(); // Enable default context menu for editor only
@@ -169,5 +161,4 @@
   {container}
   {event}
   {selection}
-  {handleClipboard}
 />

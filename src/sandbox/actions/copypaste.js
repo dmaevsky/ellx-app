@@ -102,3 +102,11 @@ export function clearClipboard() {
   if (unsubscribe) unsubscribe();
   clipboard.commit(SET_CLIPBOARD, null);
 }
+
+export function handleClipboard(action, sheet, selection) {
+  switch (action.toLowerCase()) {
+    case "copy":  copyToClipboard(sheet, selection, false); break;
+    case "cut":   copyToClipboard(sheet, selection, true); break;
+    case "paste": pasteFromClipboard(sheet, selection);
+  }
+}

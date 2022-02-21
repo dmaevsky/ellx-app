@@ -1,12 +1,12 @@
 <script>
-  import { tick, onMount } from 'svelte';
+  import { tick, onMount, getContext } from 'svelte';
   import { contextMenuOpen } from '../store.js';
   import { getCoords, isMac } from "../../utils/ui.js";
   import { shortcuts } from "../../utils/shortcuts.js";
+  import { handleClipboard } from "../actions/copypaste.js";
 
   import Shortcut from "./Shortcut.svelte";
 
-  export let handleClipboard;
   export let container;
   export let selection;
   export let event;
@@ -17,6 +17,7 @@
   let menuNodes;
   let menuLength;
 
+  const thisSheet = getContext('store');
   const rowHeight = 20, columnWidth = 100;
 
   const menuItems = [
@@ -92,7 +93,7 @@
   }
 
   function handleMenuAction(title, keys, tag) {
-    if (tag.includes("clipboard")) handleClipboard(title);
+    if (tag.includes("clipboard")) handleClipboard(title, thisSheet, selection);
     else dispatchSyntheticEvent(keys);
   }
 
