@@ -14,6 +14,15 @@
   let isPartlyParsed = false;
   let innerHTML;
 
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
   function getTokens(str) {
     const parser = new ProgressiveEval(environment, () => {});
 
@@ -49,13 +58,13 @@
 
     if (!match) {
       isPartlyParsed = false;
-      return str;
+      return escapeHtml(str);
     }
 
     const [formula, leftHand, rightHand] = match;
     const tokens = getTokens(rightHand);
 
-    if (!tokens) return formula;
+    if (!tokens) return escapeHtml(formula);
 
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
@@ -66,7 +75,7 @@
 
     tokens.forEach(({ type, pos, text }) => {
       if (type === "Literal" || type === "Identifier" || type === "BoundName") {
-        result += divideSpacer(rightHand.substring(tokenPosition, pos)) + spanify(text, type);
+        result += divideSpacer(rightHand.substring(tokenPosition, pos)) + spanify(escapeHtml(text), type);
         tokenPosition = pos + text.length;
       }
     });
