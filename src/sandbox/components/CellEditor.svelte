@@ -14,13 +14,8 @@
   let isPartlyParsed = false;
   let innerHTML;
 
-  function escapeHtml(unsafe) {
-    return unsafe
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
+  function escapeHtml(str) {
+    return str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   }
 
   function getTokens(str) {
@@ -153,8 +148,12 @@
       }
     }
 
-    value = node.textContent;
-    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
+    value = node.textContent.replaceAll(/\s*[\r\n|\r|\n]\s*/g, ''); // Allow multiline pasting
+
+    tick().then(() => {
+      autoSizeEditor();
+      caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
+    })
   }
 
   $: {
