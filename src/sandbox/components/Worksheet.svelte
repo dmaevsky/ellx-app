@@ -4,9 +4,11 @@
   import query from '../blocks.js';
   import { editCell, clearRange, setSelection } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
-  import { clipboard, copyToClipboard, pasteFromClipboard, clearClipboard } from '../actions/copypaste.js';
+  import { clipboard, clearClipboard, handleClipboard } from '../actions/copypaste.js';
+  import { isMac } from "../../utils/ui.js";
 
   import Grid from './Grid.svelte';
+  import ContextMenu from './ContextMenu.svelte';
 
   export let transparent;
   export let overflowHidden;
@@ -14,6 +16,8 @@
 
   let selection;
   let isEditMode;
+  let container;
+  let event;
 
   setContext('store', store);
   const thisSheet = store;
@@ -28,10 +32,7 @@
 
   function keyDown(e) {
     // Returns true if the keystroke is handled here, false otherwise
-
-    const isMacOS = navigator.userAgent.includes("Mac");
-
-    let modifiers = (e.altKey << 2) + ((isMacOS ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
+    let modifiers = (e.altKey << 2) + ((isMac() ? e.metaKey : e.ctrlKey) << 1) + e.shiftKey;
 
     // Prevent default Select All behavior
     if (modifiers === 2 && e.code === 'KeyA') {
@@ -129,6 +130,7 @@
     }
     return false;
   }
+
 </script>
 
 {#if blocks}
@@ -139,11 +141,24 @@
     {copySelection}
     {transparent}
     {overflowHidden}
+    bind:container
     bind:isEditMode
     onkeydown={keyDown}
     on:change={({ detail: {row, col, value} }) => editCell(thisSheet, row, col, value)}
-    on:copy={() => copyToClipboard(thisSheet, selection, false)}
-    on:cut={() => copyToClipboard(thisSheet, selection, true)}
-    on:paste={() => pasteFromClipboard(thisSheet, selection)}
+    on:copy={() => handleClipboard("copy", thisSheet, selection)}
+    on:cut={() => handleClipboard("cut", thisSheet, selection)}
+    on:paste={() => handleClipboard("paste", thisSheet, selection)}
+    on:contextmenu={(e) => {
+      if (!isEditMode) {
+        e.preventDefault(); // Enable default context menu for editor only
+        event = e;
+      }
+    }}
   />
 {/if}
+
+<ContextMenu
+  {container}
+  {event}
+  {selection}
+/>

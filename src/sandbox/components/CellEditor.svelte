@@ -4,6 +4,7 @@
   import ProgressiveEval from "../../runtime/engine/progressive_assembly.js";
   import * as environment from "../../runtime/engine/reserved_words.js";
   import { getCaretPosition } from "../../utils/highlight.js";
+  import { isFirefox } from "../../utils/ui.js"
 
   export let value = "";
   export let transparent = false;
@@ -12,6 +13,15 @@
 
   let isPartlyParsed = false;
   let innerHTML;
+
+  function escapeHtml(str) {
+    return str
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", "&#039;");
+  }
 
   function getTokens(str) {
     const parser = new ProgressiveEval(environment, () => {});
@@ -48,13 +58,13 @@
 
     if (!match) {
       isPartlyParsed = false;
-      return str;
+      return escapeHtml(str);
     }
 
     const [formula, leftHand, rightHand] = match;
     const tokens = getTokens(rightHand);
 
-    if (!tokens) return formula;
+    if (!tokens) return escapeHtml(formula);
 
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
@@ -65,7 +75,7 @@
 
     tokens.forEach(({ type, pos, text }) => {
       if (type === "Literal" || type === "Identifier" || type === "BoundName") {
-        result += divideSpacer(rightHand.substring(tokenPosition, pos)) + spanify(text, type);
+        result += divideSpacer(rightHand.substring(tokenPosition, pos)) + spanify(escapeHtml(text), type);
         tokenPosition = pos + text.length;
       }
     });
@@ -129,6 +139,28 @@
     }
   }
 
+  function handleInput() {
+    let { anchorNode, anchorOffset } = document.getSelection();
+    const highlight = document.querySelector("#ellx-highlight");
+
+    if (isFirefox()) {
+      let brElement = highlight ? highlight.lastChild.lastChild : node.lastChild;
+
+      if (brElement && (brElement.tagName === "BR")) {
+        brElement.remove();
+        const el = highlight ? highlight.lastChild : node.lastChild;
+        if (el) el.textContent = el.textContent.substr(0, el.textContent.length - 1) + '\xa0';
+      }
+    }
+
+    value = node.textContent.replaceAll(/\r|\n|\s{2,}/g, ''); // Allow multiline pasting
+
+    tick().then(() => {
+      autoSizeEditor();
+      caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
+    })
+  }
+
   $: {
     innerHTML = highlightInput(value);
 
@@ -149,12 +181,7 @@
   bind:this={node}
   bind:innerHTML
   contenteditable="true"
-  on:input={() => {
-    const { anchorNode, anchorOffset } = document.getSelection();
-    const highlight = document.querySelector("#ellx-highlight");
-    value = node.textContent;
-    caretPosition = getCaretPosition(highlight, anchorNode, anchorOffset, value);
-  }}
+  on:input={handleInput}
   on:keydown
   on:paste={(e) => {
     e.preventDefault();

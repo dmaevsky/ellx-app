@@ -10,7 +10,8 @@ const store = makeStore({
   contents: new Map(),
   activeContentId: null,
   nodeNavigatorOpen: false,
-  shortcutsHelperOpen: false
+  shortcutsHelperOpen: false,
+  contextMenuOpen: false
 });
 
 export default store;
@@ -29,5 +30,6 @@ export const activeContent = select(store, ({ activeContentId }) => ['contents',
 export const activeContentId = derived(store, s => s.activeContentId);
 export const nodeNavigatorOpen = withWritableTraits(select(store, () => 'nodeNavigatorOpen'));
 export const shortcutsHelperOpen = withWritableTraits(select(store, () => 'shortcutsHelperOpen'));
+export const contextMenuOpen = withWritableTraits(select(store, () => 'contextMenuOpen'));
 
 export const oActiveContentId = toObservable(activeContentId, { name: 'activeContentId' });

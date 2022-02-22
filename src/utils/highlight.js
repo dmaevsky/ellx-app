@@ -15,15 +15,18 @@ export function getCaretPosition(highlight, anchor, offset, str) {
       found = true;
       caretPosition += offset;
       break;
-    } else if (children.length > 1) {
+    }
+    else if (children.length > 1) {
       for (let j = 0; j < children.length; j++) {
         caretPosition += children[j].textContent.length;
+
         if (children[j] === anchorParent) {
           found = true;
           break;
         }
       }
     }
+
     if (found) break;
     caretPosition += nodes[i].textContent.length;
   }

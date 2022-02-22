@@ -1,34 +1,46 @@
 <script>
-  import { nodeNavigatorOpen, shortcutsHelperOpen } from '../store.js';
+  import { nodeNavigatorOpen, shortcutsHelperOpen, contextMenuOpen } from '../store.js';
+  import { helperShortcuts } from "../../utils/shortcuts.js";
   import Shortcut from "./Shortcut.svelte";
 
   let hidden = true;
+
+  function getShortcutByTitle(str) {
+    return helperShortcuts.find(i => i.title === str).keys;
+  }
+
 </script>
 
-<div class="fixed bottom-4 right-4 flex flex-col gap-4 items-end"
-     on:mouseleave={() => {hidden = true}}>
-    <ul
-      class="py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
-            flex flex-col dark:bg-gray-900 dark:text-white"
-      class:hidden
-    >
-        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => nodeNavigatorOpen.update(value => !value)}>
-            <Shortcut title="Node navigator" keys={["Alt", "."]}/>
-        </li>
-        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
-            on:click={() => shortcutsHelperOpen.update(value => !value)}>
-            <Shortcut title="Keyboard shortcuts" keys={["Alt", "?"]}/>
-        </li>
-        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
-            <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default block">Documentation</a>
-        </li>
-        <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
-            <a href="https://ellx.io/explore" target="_blank" class="w-full cursor-default block">Explore</a>
-        </li>
-    </ul>
+<div class="fixed z-40 bottom-4 right-4 flex flex-col gap-4 items-end"
+   on:mouseleave={() => {hidden = true}}
+   on:mousedown={(e) => {
+     e.preventDefault()
+     contextMenuOpen.set(false);
+   }}
+   on:contextmenu={(e) => e.preventDefault()}
+>
+  <ul
+    class="py-2 rounded-sm bg-gray-100 text-gray-900 border border-gray-500 border-opacity-20 text-xs
+          flex flex-col dark:bg-gray-900 dark:text-white"
+    class:hidden
+  >
+    <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
+        on:click={() => nodeNavigatorOpen.update(value => !value)}>
+        <Shortcut title="Toggle Node Navigator" keys={getShortcutByTitle("Toggle Node Navigator")}/>
+    </li>
+    <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default"
+        on:click={() => shortcutsHelperOpen.update(value => !value)}>
+        <Shortcut title="Toggle Shortcuts" keys={getShortcutByTitle("Toggle Shortcuts")}/>
+    </li>
+    <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
+        <a href="https://docs.ellx.app/" target="_blank" class="w-full cursor-default block">Documentation</a>
+    </li>
+    <li class="px-4 py-1 hover:bg-blue-600 hover:text-white cursor-default">
+        <a href="https://ellx.io/explore" target="_blank" class="w-full cursor-default block">Explore</a>
+    </li>
+  </ul>
     <div
-      class="opacity-40 flex flex-col items-center justify-around text-center p-1 h-8 w-8 rounded-full
+      class="z-50 opacity-40 flex flex-col items-center justify-around text-center p-1 h-8 w-8 rounded-full
             bg-gray-100 fill-current text-gray-900 border border-gray-900
             focus:outline-none hover:opacity-100 dark:bg-gray-900 dark:fill-current dark:text-white dark:border-white"
       class:opacity-100={!hidden}

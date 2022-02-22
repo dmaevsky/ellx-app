@@ -2,9 +2,10 @@
   import { tick, createEventDispatcher, onMount, getContext } from 'svelte';
   import query from '../blocks.js';
   import { setSelection, toggleComment, commentRange } from '../actions/edit.js';
+  import { nodeNavigatorOpen, contextMenuOpen } from '../store.js';
   import { CTRL, SHIFT, ALT, modifiers, combination } from '../../utils/mod_keys.js';
   import { getCaretPosition } from "../../utils/highlight.js";
-  import { nodeNavigatorOpen } from '../store.js';
+  import { getCoords } from "../../utils/ui.js";
 
   import GridLayout from './GridLayout.svelte';
   import CellEditor from './CellEditor.svelte';
@@ -17,25 +18,29 @@
   export let transparent = false;
   export let overflowHidden = false;
   export let isEditMode;
+  export let container = null;
 
   const thisSheet = getContext('store');
   const { nRows, nCols } = $thisSheet;
   const rowHeight = 20, columnWidth = 100;
+  const dispatch = createEventDispatcher();
 
+  let editor = null;
   let focused = false;
   let editorSession = null;
   let isFormula = false;
   let caretPosition;
-
-  let container = null, editor = null;
-  const dispatch = createEventDispatcher();
 
   let isArrowMode = false;
   let insertRange = null;
   let highlight = selection;
   let arrowRow, arrowCol;
 
-  $: if (editorSession !== null) isFormula = detectFormula(editorSession)
+  $: if (!$contextMenuOpen) takeFocus(container); // Focus on grid when context menu is closed
+
+  $: if (container) container.style = $contextMenuOpen ? "height: 100%; overflow: hidden;" : ""; // Prevent grid scrolling
+
+  $: if (editorSession !== null) isFormula = detectFormula(editorSession);
 
   $: isEditMode = (editor !== null);
 
@@ -44,6 +49,7 @@
     isArrowMode = false;
   } else {
     highlight = selection;
+    contextMenuOpen.set(false);
     caretPosition = undefined;
   }
 
@@ -99,20 +105,6 @@
   })(copySelection);
   $: requestAnimationFrame(() => scrollIntoView(isEditMode? highlight : selection));
 
-  function getCoords(e) {
-    const { left, top } = container.getBoundingClientRect();
-    const { clientWidth, clientHeight } = container;
-    const [x, y] = [e.pageX - left, e.pageY - top];
-
-    if (x >= clientWidth || y >= clientHeight) {
-      // Ignore clicks on scrollbars
-      e.stopPropagation();
-      return null;
-    }
-
-    return [x, y];
-  }
-
   function getRowCol([x, y]) {
     return [
       Math.floor((y + container.scrollTop) / rowHeight),
@@ -121,7 +113,7 @@
   }
 
   function getNodeContent(e) {
-    let coords = getCoords(e);
+    let coords = getCoords(container, e);
     if (!coords) return;
     let [row, col] = getRowCol(coords);
 
@@ -141,14 +133,14 @@
   }
 
   function highlightNode(e) {
-    let coords = getCoords(e);
+    let coords = getCoords(container, e);
     if (!coords) return;
     let [row, col] = getRowCol(coords);
 
-    highlight = [row, col];
+    highlight = [row, col]; // TODO: Make highlight the same length as selection
   }
 
-  function setInsertRange(node) {
+  function setInsertionRange(node) {
     if (node !== null) {
       let { anchorNode, anchorOffset, focusNode, focusOffset } = document.getSelection();
       const highlight = document.querySelector("#ellx-highlight");
@@ -164,13 +156,29 @@
         editorSession.substring(end, editorSession.length)
       ].join("");
 
-      const caret = start + node.length; // Remember insertion position
+      const caret = start + node.length;
       insertRange = [start, caret];
       caretPosition = caret;
     }
   }
 
   function gridClick(e) {
+    if ($contextMenuOpen && e.button === 0) contextMenuOpen.set(false);
+
+    if (e.button === 2 && !e.target.closest("#ellx-cell-editor")) {
+      if (isEditMode) return closeEditor();
+
+      let coords = getCoords(container, e);
+      if (!coords) return;
+      let [row, col] = getRowCol(coords);
+      const [rowStart, colStart, rowEnd, colEnd] = selection;
+
+      let isInRange = (rowStart <= row) && (row <= rowEnd) && (colStart <= col) && (col <= colEnd);
+
+      if (!isInRange) return jumpAway(e);
+      return;
+    }
+
     if (e.target.nodeName === 'A') return;
 
     if (isEditMode) return editorClick(e);
@@ -189,7 +197,7 @@
 
         [arrowRow, arrowCol] = highlight;
 
-        setInsertRange(getNodeContent(e));
+        setInsertionRange(getNodeContent(e));
       }
       else {
         insertRange = null
@@ -288,7 +296,7 @@
     }
 
     e.preventDefault();
-    setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
+    if (!$contextMenuOpen) setSelection(thisSheet, [rowStart, colStart, rowEnd, colEnd]);
   }
 
   function editorKeyDown(e) {
@@ -328,7 +336,7 @@
       e.preventDefault();
 
       if ((highlight[0] !== selection[0] || highlight[1] !== selection[1]) && isFormula) {
-        setInsertRange(getValue(arrowRow, arrowCol));
+        setInsertionRange(getValue(arrowRow, arrowCol));
       }
     } else {
       insertRange = null
@@ -384,11 +392,11 @@
   }
 
   function jumpAway(e) {
-    let coords = getCoords(e);
+    let coords = getCoords(container, e);
     if (!coords) return;
     let [row, col] = getRowCol(coords);
 
-    setSelection(thisSheet, [row, col, row, col]);
+    if (e.button === 2) setSelection(thisSheet, [row, col, row, col])
     e.preventDefault(); // Prevent select on drag
   }
 
@@ -399,7 +407,7 @@
   function mouseCellSelection(e) {
     takeFocus(container);
 
-    let coords = getCoords(e);
+    let coords = getCoords(container, e);
     if (!coords) return;
     let [row, col] = getRowCol(coords);
 
@@ -488,6 +496,7 @@
         document.removeEventListener(name, handlers[name]);
     }
   });
+
 </script>
 
 <div
@@ -504,8 +513,9 @@
   bind:this={container}
   on:keydown={keyDown}
   on:focus={() => focused = true}
-  on:blur={() => focused = false}
+  on:blur={() => {if (!$contextMenuOpen) focused = false}}
   on:mousedown={gridClick}
+  on:contextmenu
   on:dblclick={(e) => {
     e.preventDefault();
     if (!editorSession) { startEditing() }
