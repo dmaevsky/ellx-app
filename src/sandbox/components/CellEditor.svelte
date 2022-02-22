@@ -15,7 +15,12 @@
   let innerHTML;
 
   function escapeHtml(str) {
-    return str.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    return str
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", "&#039;");
   }
 
   function getTokens(str) {
@@ -148,7 +153,7 @@
       }
     }
 
-    value = node.textContent.replaceAll(/\s*[\r\n|\r|\n]\s*/g, ''); // Allow multiline pasting
+    value = node.textContent.replaceAll(/\r|\n|\s{2,}/g, ''); // Allow multiline pasting
 
     tick().then(() => {
       autoSizeEditor();
