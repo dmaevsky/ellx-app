@@ -69,7 +69,7 @@
     const spacer = formula.substring(0, formula.length - rightHand.length - 1);
 
     let result = `<span id="ellx-highlight">`
-        + (leftHand ? spanify(spacer)  : "" ) + spanify("=");
+      + (leftHand ? spanify(spacer)  : "" ) + spanify("=");
 
     let tokenPosition = 0;
 
@@ -161,6 +161,12 @@
     })
   }
 
+  function handlePaste(e) {
+    e.preventDefault();
+    let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    document.execCommand("insertHTML", false, escapeHtml(text));
+  }
+
   $: {
     innerHTML = highlightInput(value);
 
@@ -183,11 +189,7 @@
   contenteditable="true"
   on:input={handleInput}
   on:keydown
-  on:paste={(e) => {
-    e.preventDefault();
-    let text = (e.originalEvent || e).clipboardData.getData('text/plain');
-    document.execCommand("insertHTML", false, text);
-  }}
+  on:paste={handlePaste}
   spellcheck="false"
 ></div>
 
