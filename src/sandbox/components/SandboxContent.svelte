@@ -130,7 +130,7 @@
   </div>
 {/each}
 
-<div id="md" bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
+<div bind:this={mountPoint} class:hidden={htmlContentId !== activeContentId}>
 </div>
 
 <HelpMenu/>

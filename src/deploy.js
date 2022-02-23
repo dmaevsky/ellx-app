@@ -9,6 +9,7 @@ import md5 from 'md5';
 import reactiveBuild from './bundler/reactive_build.js';
 import { abortableFetch } from './utils/fetch.js';
 import { loadBody as parseEllx } from './sandbox/body_parse.js';
+import { resolveIndex } from './resolve_index.js';
 
 const execCommand = (cmd, cb) => {
   const child = exec(cmd, (err, stdout, stderr) => {
@@ -151,10 +152,12 @@ export function* deploy(rootDir, { env, styles }) {
     run().catch(console.error);
   </script>`;
 
+  const publicDir = join(rootDir, 'node_modules/@ellx/app/src/bootstrap');
+
   // Styles
   const twConfig = join(rootDir, 'tailwind.config.cjs');
   const twStylesIn = join(rootDir, styles);
-  const twStylesOut = join(rootDir, 'node_modules/@ellx/app/src/bootstrap/sandbox.css');
+  const twStylesOut = join(publicDir, 'sandbox.css');
 
   console.log('Generating styles...');
 
@@ -164,7 +167,7 @@ export function* deploy(rootDir, { env, styles }) {
 
   const cssSrc = appendFile('/styles.css', yield readFile(twStylesOut, 'utf8'));
 
-  const indexHtml = (yield readFile(join(rootDir, 'node_modules/@ellx/app/src/bootstrap/index.html'), 'utf8'))
+  const indexHtml = (yield resolveIndex(publicDir, rootDir))
     .replace(`<script type="module" src="sandbox.js"></script>`, injection)
     .replace('sandbox.css', cssSrc);
 
