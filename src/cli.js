@@ -12,6 +12,7 @@ import open from "open";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+import { resolveIndex } from './resolve_index.js';
 import { startDevPipe } from "./dev_pipe.js";
 import { deploy } from "./deploy.js";
 
@@ -41,11 +42,9 @@ if (mainOptions.command === "start") {
 
   polka({ server })
     .use(serve(publicDir))
-    .get("*", (req, res, next) =>
-      readFile(join(publicDir, "index.html"), "utf8", (error, body) => {
-        if (error) next(error);
-        else res.end(body);
-      })
+    .get("*", (req, res, next) => resolveIndex(publicDir, process.cwd())
+      .then(body => res.end(body))
+      .catch(error => next(error))
     )
     .listen(config.port, (err) => {
       if (err) throw err;
@@ -68,7 +67,7 @@ if (mainOptions.command === "start") {
     },
     {
       name: "styles",
-      default: "node_modules/@ellx/app/src/input.css",
+      defaultValue: "node_modules/@ellx/app/src/input.css",
       type: String,
       alias: "s",
     }
