@@ -2,7 +2,7 @@
   import { tick, setContext } from 'svelte';
   import { undo, redo } from 'tinyx/middleware/undo_redo';
   import query from '../blocks.js';
-  import { editCell, clearRange, setSelection } from '../actions/edit.js';
+  import { editCell, clearRange, setSelection, normalize } from '../actions/edit.js';
   import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, clearClipboard, handleClipboard } from '../actions/copypaste.js';
   import { isMac } from "../../utils/ui.js";
@@ -61,10 +61,16 @@
       redo(thisSheet);
     }
 
-    let [rowStart, colStart, rowEnd, colEnd] = selection;
+    let [rowStart, colStart, rowEnd, colEnd] = normalize(selection);
+
+    const [rows, cols] = [rowEnd - rowStart, colEnd - colStart];
+    const isColumn = !cols;
+    const isRow = !rows;
+    const isVector = isRow || isColumn; // Check array dimension
 
     if (e.code === 'Backspace' || e.code === 'Space' || e.code === 'Tab') {
       let direction, shift;
+
       if (modifiers === 0 || modifiers === 6) { // No modifiers or Ctrl+Alt
         shift = shiftCellsH;
 
@@ -94,6 +100,78 @@
       direction = e.code === 'Backspace' ? -1 : 1;
 
       shift(thisSheet, [rowStart, colStart, rowEnd, colEnd], direction);
+      return true;
+    }
+
+    if (modifiers === 4 && e.code === "BracketLeft") {
+      if (isRow && isColumn) return true; // No action on single cell
+
+      let result = [];
+
+      if (isVector) {
+        result = makeVector(rowStart, colStart, isColumn? rows : cols, isColumn);
+      }
+      else {
+        for (let i = 0; i <= rows; i++) {
+          result[i] = makeVector(rowStart + i, colStart, cols, isColumn);
+        }
+      }
+
+      writeData(rowStart, colStart, result);
+
+      tick().then(() => {
+        let blockId = query(blocks).getAt(rowStart, colStart);
+        const labels = { top: false, left: false };
+
+        if (isVector) {
+          let step = isColumn ? { v: 10, vTabSize: 10 } : { h: 10, hTabSize: 10 };
+          changeExpansion(thisSheet, blockId, { labels, step });
+        }
+
+        else {
+          let step = { v: 10, vTabSize: 10 };
+          changeExpansion(thisSheet, blockId, { labels, step });
+          step = { h: 10, hTabSize: 10 };
+          changeExpansion(thisSheet, blockId, { labels, step });
+        }
+      });
+
+      return true;
+    }
+
+    if (modifiers === 6 && e.code === "BracketLeft") {
+      if (isRow || isColumn) return true; // No action on vectors
+
+      let result = [];
+
+      const keys = []; // Check if first row might be considered as object props
+
+      for (let i = 0; i <= cols; i++) {
+        keys[i] = getActiveCellValue(rowStart, colStart + i);
+      }
+
+      for (let i = 0; i <= rows - 1; i++) {
+        let obj = {};
+
+        for (let j = 0; j < keys.length; j++) {
+          obj[keys[j]] = parseCell(rowStart + 1 + i, colStart + j);
+        }
+
+        result[i] = obj;
+      }
+
+      writeData(rowStart + 1, colStart, result);
+
+      tick().then(() => {
+        let blockId = query(blocks).getAt(rowStart + 1 , colStart);
+        const labels = { top: true };
+        let step = { v: 10, vTabSize: 10 };
+
+        changeExpansion(thisSheet, blockId, { labels, step });
+        step = { h: 10, hTabSize: 10 };
+        changeExpansion(thisSheet, blockId, { labels, step });
+      });
+
       return true;
     }
 
@@ -129,6 +207,49 @@
       return true;
     }
     return false;
+  }
+
+  function parseValue(value) {
+    if (value.toLowerCase() === "true") return true;
+    if (value.toLowerCase() === "false") return false;
+
+    if (value.match(/^-?\d+([.,]\d+)?(e[-+]\d+)*$/gim)) {
+      return Number(value.replace(",", ".").toLowerCase());
+    }
+
+    return value;
+  }
+
+  function getActiveCellValue(row, col) {
+    if (!row && !col) [row, col] = selection;
+    const block = blocks.get(query(blocks).getAt(row, col));
+    return block ? (block.node ? `${block.node} = ${block.formula}` : block.formula || block.value) : '';
+  }
+
+  function parseCell(row, col) {
+    return parseValue(getActiveCellValue(row, col));
+  }
+
+  function makeVector(row, col, count, isColumn) {
+    let res = [];
+
+    if (isColumn) {
+      for (let i = 0; i <= count; i++) {
+        res[i] = parseCell(row + i, col);
+      }
+    }
+    else {
+      for (let i = 0; i <= count; i++) {
+        res[i] = parseCell(row, col + i);
+      }
+    }
+
+    return res;
+  }
+
+  function writeData(row, col, data) {
+    clearRange(thisSheet, selection);
+    editCell(thisSheet, row, col, "= " + JSON.stringify(data));
   }
 
 </script>
