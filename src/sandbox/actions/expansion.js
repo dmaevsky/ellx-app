@@ -1,4 +1,4 @@
-import { clearBlock, normalize } from './edit.js';
+import { clearBlock, clearRange, editCell, normalize } from './edit.js';
 import { undoable } from 'tinyx/middleware/undo_redo';
 
 import { getPrimaryKeys, getSecondaryKeys } from '../../runtime/iterate.js';
@@ -328,3 +328,27 @@ export const makeSpace = (thisSheet, blockId, { newHeight, newWidth }) => {
 
   if (h > 0 || v > 0) thisSheet.commit(UNDOABLE_ACTION_END);
 }
+
+export const convertToObject = undoable((thisSheet, selection, value, isArray, isVector, isColumn) => {
+  clearRange(thisSheet, selection);
+
+  let [row, col] = selection;
+
+  if (!isArray) row += 1;
+
+  editCell(thisSheet, row, col, value);
+
+  const blockId = query(thisSheet.get("blocks")).getAt(row, col);
+  const labels = isArray ? { top: false, left: false } : { top: true };
+  let step = { v: 10, vTabSize: 10 };
+
+  if (isArray && isVector) {
+    if (!isColumn) step = { h: 10, hTabSize: 10 };
+    changeExpansion(thisSheet, blockId, { labels, step });
+  }
+  else {
+    changeExpansion(thisSheet, blockId, { labels, step });
+    step = { h: 10, hTabSize: 10 };
+    changeExpansion(thisSheet, blockId, { labels, step });
+  }
+});

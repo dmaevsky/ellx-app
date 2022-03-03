@@ -2,8 +2,8 @@
   import { tick, setContext } from 'svelte';
   import { undo, redo } from 'tinyx/middleware/undo_redo';
   import query from '../blocks.js';
-  import { editCell, clearRange, setSelection } from '../actions/edit.js';
-  import { changeExpansion, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
+  import { editCell, clearRange, setSelection, normalize } from '../actions/edit.js';
+  import { changeExpansion, convertToObject, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, clearClipboard, handleClipboard } from '../actions/copypaste.js';
   import { isMac } from "../../utils/ui.js";
 
@@ -61,10 +61,11 @@
       redo(thisSheet);
     }
 
-    let [rowStart, colStart, rowEnd, colEnd] = selection;
+    let [rowStart, colStart, rowEnd, colEnd] = normalize(selection);
 
     if (e.code === 'Backspace' || e.code === 'Space' || e.code === 'Tab') {
       let direction, shift;
+
       if (modifiers === 0 || modifiers === 6) { // No modifiers or Ctrl+Alt
         shift = shiftCellsH;
 
@@ -94,6 +95,59 @@
       direction = e.code === 'Backspace' ? -1 : 1;
 
       shift(thisSheet, [rowStart, colStart, rowEnd, colEnd], direction);
+      return true;
+    }
+
+    if (e.code === "BracketLeft" && (modifiers === 4 || modifiers === 6)) {
+      const [rows, cols] = [rowEnd - rowStart, colEnd - colStart];
+      const isColumn = !cols;
+      const isRow = !rows;
+      const isVector = isRow || isColumn; // Check array dimension
+      const isArray = modifiers === 4;
+
+      if (isRow && isColumn) return true; // No action on single cell
+      if (modifiers === 6 && (isRow || isColumn)) return true; // Prevent object creation if vector
+
+      const selectionSet = [...query(blocks).getInRange(normalize(selection))];
+      if (!selectionSet.length) return true; // No action if selection is empty
+
+      for (let i = 0; i < selectionSet.length; i++) {
+        if (blocks.get(selectionSet[i]).node) return true; // No action if selection contains formula
+      }
+
+      let result = [];
+
+      if (isArray) {
+        if (isVector) {
+          result = makeVector(rowStart, colStart, isColumn ? rows : cols, isColumn);
+        }
+        else {
+          for (let i = 0; i <= rows; i++) {
+            result[i] = makeVector(rowStart + i, colStart, cols, isColumn);
+          }
+        }
+      }
+      else {
+        const keys = [];
+
+        for (let i = 0; i <= cols; i++) {
+          keys[i] = getActiveCellValue(rowStart, colStart + i);
+        }
+
+        for (let i = 0; i <= rows - 1; i++) {
+          let obj = {};
+          rowStart += 1;
+
+          for (let j = 0; j < keys.length; j++) {
+            obj[keys[j]] = parseCell(rowStart + i, colStart + j);
+          }
+
+          result[i] = obj;
+        }
+      }
+
+      convertToObject(thisSheet, normalize(selection), "= " + JSON.stringify(result), isArray, isVector, isColumn);
+
       return true;
     }
 
@@ -129,6 +183,43 @@
       return true;
     }
     return false;
+  }
+
+  function parseValue(value) {
+    if (value.toLowerCase() === "true") return true;
+    if (value.toLowerCase() === "false") return false;
+
+    if (value.match(/^-?\d+([.,]\d+)?(e[-+]\d+)*$/gim)) {
+      return Number(value.replace(",", ".").toLowerCase());
+    }
+
+    return value;
+  }
+
+  function getActiveCellValue(row, col) {
+    const block = blocks.get(query(blocks).getAt(row, col));
+    return block ? block.formula || block.value : '';
+  }
+
+  function parseCell(row, col) {
+    return parseValue(getActiveCellValue(row, col));
+  }
+
+  function makeVector(row, col, count, isColumn) {
+    let res = [];
+
+    if (isColumn) {
+      for (let i = 0; i <= count; i++) {
+        res[i] = parseCell(row + i, col);
+      }
+    }
+    else {
+      for (let i = 0; i <= count; i++) {
+        res[i] = parseCell(row, col + i);
+      }
+    }
+
+    return res;
   }
 
 </script>
