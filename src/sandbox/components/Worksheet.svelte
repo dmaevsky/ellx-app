@@ -3,6 +3,7 @@
   import { undo, redo } from 'tinyx/middleware/undo_redo';
   import query from '../blocks.js';
   import { editCell, clearRange, setSelection, normalize } from '../actions/edit.js';
+
   import { changeExpansion, convertToObject, shiftCellsH, shiftCellsV } from '../actions/expansion.js';
   import { clipboard, clearClipboard, handleClipboard } from '../actions/copypaste.js';
   import { isMac } from "../../utils/ui.js";
