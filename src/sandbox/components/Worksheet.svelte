@@ -101,8 +101,7 @@
 
     if (e.code === "BracketLeft" && (modifiers === 4 || modifiers === 6)) {
       const [rows, cols] = [rowEnd - rowStart, colEnd - colStart];
-      const isColumn = !cols;
-      const isRow = !rows;
+      const [isColumn, isRow] = [!cols, !rows];
       const isVector = isRow || isColumn; // Check array dimension
       const isArray = modifiers === 4;
 
@@ -119,9 +118,7 @@
       let result = [];
 
       if (isArray) {
-        if (isVector) {
-          result = makeVector(rowStart, colStart, isColumn ? rows : cols, isColumn);
-        }
+        if (isVector)  result = makeVector(rowStart, colStart, isColumn ? rows : cols, isColumn);
         else {
           for (let i = 0; i <= rows; i++) {
             result[i] = makeVector(rowStart + i, colStart, cols, isColumn);
@@ -132,7 +129,7 @@
         const keys = [];
 
         for (let i = 0; i <= cols; i++) {
-          keys[i] = getActiveCellValue(rowStart, colStart + i);
+          keys[i] = getCellValue(rowStart, colStart + i);
         }
 
         for (let i = 0; i <= rows - 1; i++) {
@@ -147,7 +144,10 @@
         }
       }
 
-      convertToObject(thisSheet, normalize(selection), "= " + JSON.stringify(result), isArray, isVector, isColumn);
+      convertToObject(
+        thisSheet, normalize(selection),
+        "= " + JSON.stringify(result),
+        isArray, isVector, isColumn);
 
       return true;
     }
@@ -197,13 +197,13 @@
     return value;
   }
 
-  function getActiveCellValue(row, col) {
+  function getCellValue(row, col) {
     const block = blocks.get(query(blocks).getAt(row, col));
     return block ? block.formula || block.value : '';
   }
 
   function parseCell(row, col) {
-    return parseValue(getActiveCellValue(row, col));
+    return parseValue(getCellValue(row, col));
   }
 
   function makeVector(row, col, count, isColumn) {
