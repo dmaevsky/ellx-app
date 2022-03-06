@@ -16,9 +16,25 @@ const clipboardActions = [
   }
 ];
 
+const conversionActions = [
+  {
+    "title": "Convert to Array",
+    "keys": ["Alt", "BracketLeft"],
+    "tag": "conversion"
+  },
+  {
+    "title": "Convert to Object",
+    "keys": ["Cmd", "Alt", "BracketLeft"],
+    "tag": "conversion"
+  },
+];
+
 export const shortcuts = [
   // Common
   ...clipboardActions,
+
+  // Conversion
+  ...conversionActions,
 
   // Expansion and Labels
   {
@@ -144,6 +160,8 @@ export const helperShortcuts = [
     "keys": ["Shift", "Alt", "KeyZ", "/", "KeyX"],
     "tag": "expansion"
   },
+  // Conversion
+  ...conversionActions,
 
   // Interface
   {

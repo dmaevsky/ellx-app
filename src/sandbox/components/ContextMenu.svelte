@@ -23,6 +23,8 @@
   const menuItems = [
     ...getShortcutsByTag("clipboard"),
     ["-"],
+    ...getShortcutsByTag("conversion"),
+    ["-"],
     ...getShortcutsByTag("grid"),
     ["-"],
     ...getShortcutsByTag("expansion")
