@@ -329,7 +329,7 @@ export const makeSpace = (thisSheet, blockId, { newHeight, newWidth }) => {
   if (h > 0 || v > 0) thisSheet.commit(UNDOABLE_ACTION_END);
 }
 
-export const convertToObject = undoable((thisSheet, selection, value, isArray, isVector, isColumn) => {
+export const convertToObject = undoable((thisSheet, selection, value, isArray, isVector, isColumn, rows, cols) => {
   clearRange(thisSheet, selection);
 
   let [row, col] = selection;
@@ -340,15 +340,15 @@ export const convertToObject = undoable((thisSheet, selection, value, isArray, i
 
   const blockId = query(thisSheet.get("blocks")).getAt(row, col);
   const labels = isArray ? { top: false, left: false } : { top: true };
-  let step = { v: 10, vTabSize: 10 };
+  let step = { v: rows, vTabSize: 10 };
 
   if (isArray && isVector) {
-    if (!isColumn) step = { h: 10, hTabSize: 10 };
+    if (!isColumn) step = { h: cols, hTabSize: 10 };
     changeExpansion(thisSheet, blockId, { labels, step });
   }
   else {
     changeExpansion(thisSheet, blockId, { labels, step });
-    step = { h: 10, hTabSize: 10 };
+    step = { h: cols, hTabSize: 10 };
     changeExpansion(thisSheet, blockId, { labels, step });
   }
 });

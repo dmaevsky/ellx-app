@@ -102,7 +102,7 @@
     if (e.code === "BracketLeft" && (modifiers === 4 || modifiers === 6)) {
       const [rows, cols] = [rowEnd - rowStart, colEnd - colStart];
       const [isColumn, isRow] = [!cols, !rows];
-      const isVector = isRow || isColumn; // Check array dimension
+      let isVector = isRow || isColumn; // Check array dimension
       const isArray = modifiers === 4;
 
       if (isRow && isColumn) return true; // No action on single cell
@@ -132,9 +132,10 @@
           keys[i] = getCellValue(rowStart, colStart + i);
         }
 
+        rowStart += 1;
+
         for (let i = 0; i <= rows - 1; i++) {
           let obj = {};
-          rowStart += 1;
 
           for (let j = 0; j < keys.length; j++) {
             obj[keys[j]] = parseCell(rowStart + i, colStart + j);
@@ -142,12 +143,19 @@
 
           result[i] = obj;
         }
+
+        if (result.length === 1) result = result[0];
       }
 
       convertToObject(
-        thisSheet, normalize(selection),
+        thisSheet,
+        normalize(selection),
         "= " + JSON.stringify(result),
-        isArray, isVector, isColumn);
+        isArray,
+        isVector,
+        isColumn,
+        rows, cols
+      );
 
       return true;
     }
