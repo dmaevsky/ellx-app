@@ -57,7 +57,8 @@ if (mainOptions.command === "start") {
   const wss = new WebSocket.Server({ server, path: "/@@dev" });
 
   wss.on("connection", (ws) => startDevPipe(ws, process.cwd()));
-} else if (mainOptions.command === "deploy") {
+}
+else if (mainOptions.command === "deploy") {
   const deployDefinitions = [
     {
       name: "env",
@@ -78,7 +79,8 @@ if (mainOptions.command === "start") {
   conclude(deploy(process.cwd(), config), (err) => {
     if (err) console.error(err);
   });
-} else {
+}
+else {
   console.log(`Please specify a command:
     start
     login (WIP)
