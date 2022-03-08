@@ -130,7 +130,9 @@ export default class CalcGraph {
     }
     newIdentifier = this.validate(newIdentifier);
 
-    return batch(() => {
+    const renamesInOtherNodes = new Map();
+
+    batch(() => {
       node.initialize(
         newIdentifier,
         newFormula,
@@ -140,14 +142,14 @@ export default class CalcGraph {
       // Rename it in dependent nodes' formulas
       for (let other of this.nodes.values()) if (other !== node && other.parser.dependencies().has(identifier)) {
         other.parser.rename(identifier, newIdentifier);
-        other.emit('update', { formula: other.parser.input });
+        renamesInOtherNodes.set(other.name, other.parser.input);
       }
 
       this.nodes.delete(identifier);         // The dependents will NOT be recalculated
       this.nodes.set(newIdentifier, node);   // If there are any other nodes already referring to newIdentifier they will be recalculated here
-
-      return node;
     });
+
+    return renamesInOtherNodes;
   }
 
   merge(subGraph) {

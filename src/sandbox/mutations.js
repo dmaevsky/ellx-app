@@ -22,23 +22,18 @@ export function UPDATE_BLOCK({ blockId, ...blockUpdate }) {
   return ({ update }) => update('blocks', blockId, block => block && ({ ...block, ...blockUpdate }));
 }
 
-export function UPDATE_CALCULATED({ blockId, ...nodeUpdate }) {
-  return ({ update, apply }) => {
-    const { value, component, ...blockUpdate } = nodeUpdate;
-
-    const calculatedUpdate = {
-      ...('value' in nodeUpdate && { value }),
-      ...('component' in nodeUpdate && { component })
-    };
-
-    if (Object.keys(calculatedUpdate).length) {
-      update('calculated', blockId, calculated => ({ ...calculated, ...calculatedUpdate }));
+export function UPDATE_FORMULAS(newFormulas) {
+  return ({ get, set }) => {
+    for (let [blockId, { node }] of get('blocks')) {
+      if (node && newFormulas.has(node)) {
+        set('blocks', blockId, 'formula', newFormulas.get(node));
+      }
     }
+  }
+}
 
-    if (Object.keys(blockUpdate).length) {
-      apply(UPDATE_BLOCK({ blockId, ...blockUpdate }));
-    }
-  };
+export function UPDATE_CALCULATED({ blockId, ...calculatedUpdate }) {
+  return ({ update }) => update('calculated', blockId, calculated => ({ ...calculated, ...calculatedUpdate }));
 }
 
 export function DELETE_BLOCK({ blockId }) {
@@ -46,7 +41,11 @@ export function DELETE_BLOCK({ blockId }) {
 }
 
 export function DELETE_CALCULATED({ blockId }) {
-  return ({ remove }) => remove('calculated', blockId);
+  return ({ get, remove }) => {
+    const unsubscribe = get('calculated', blockId, 'unsubscribe');
+    unsubscribe();
+    remove('calculated', blockId);
+  }
 }
 
 export function BULK_UPDATE_BLOCKS({ toInsert, toUpdate, toRemove }) {

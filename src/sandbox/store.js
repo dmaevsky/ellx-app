@@ -28,8 +28,8 @@ export const getSheet = (contentId) => applyMiddleware(
 export const contents = select(store, () => ['contents']);
 export const activeContent = select(store, ({ activeContentId }) => ['contents', activeContentId]);
 export const activeContentId = derived(store, s => s.activeContentId);
-export const nodeNavigatorOpen = withWritableTraits(select(store, () => 'nodeNavigatorOpen'));
-export const shortcutsHelperOpen = withWritableTraits(select(store, () => 'shortcutsHelperOpen'));
-export const contextMenuOpen = withWritableTraits(select(store, () => 'contextMenuOpen'));
+export const nodeNavigatorOpen = withWritableTraits(select(store, () => ['nodeNavigatorOpen']));
+export const shortcutsHelperOpen = withWritableTraits(select(store, () => ['shortcutsHelperOpen']));
+export const contextMenuOpen = withWritableTraits(select(store, () => ['contextMenuOpen']));
 
 export const oActiveContentId = toObservable(activeContentId, { name: 'activeContentId' });

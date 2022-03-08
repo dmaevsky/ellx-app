@@ -1,4 +1,5 @@
 import ava from 'ava';
+import { autorun } from 'quarx';
 const test = ava.serial;
 
 import CalcGraph from './calc_graph.js';
@@ -101,16 +102,16 @@ test('subscriptions to the node', t => {
   const updates = [];
 
   cg.insert('a', '5');
-  cg.insert(null, 'a+1').on('update', updated => updates.push(updated));
+  const plus1 = cg.insert(null, 'a+1');
 
-  cg.update('a', '6');
-  cg.rename('a', 'b', '6');
+  const off = autorun(() => updates.push(plus1.currentValue.get()));
 
-  t.deepEqual(updates, [
-    { node: '$1', value: 6, formula: 'a+1' },
-    { value: 7 },
-    { formula: 'b+1' }
-  ]);
+  const renamesInOtherNodes = cg.rename('a', 'b', '11');
+  off();
+
+  t.deepEqual([...renamesInOtherNodes], [['$1', 'b+1']]);
+
+  t.deepEqual(updates, [6, 12]);
 });
 
 test('external constructors', t => {

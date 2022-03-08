@@ -2,23 +2,12 @@ import { observable, computed, batch } from 'quarx';
 import * as environment from './reserved_words.js';
 import { STALE, isStale } from './quack.js';
 import { pull } from './pull.js';
-import EventEmitter  from './event_emitter.js';
 import ProgressiveEval from './progressive_assembly.js';
 
 const getComponent = obj => obj && obj.__EllxMeta__ && obj.__EllxMeta__.component;
 
-export default class CalcNode extends EventEmitter {
+export default class CalcNode {
   constructor(resolve) {
-    super({ onSubscribe: {
-      update: subscriber => {
-        // Report the node's name at subscription: it might have been assigned automatically
-        const payload = { node: this.name, value: this.currentValue.get(), formula: this.parser.input };
-
-        if (this.component) payload.component = this.component;
-        subscriber(payload);
-      }
-    }});
-
     this.resolve = resolve;
 
     this.parser = new ProgressiveEval(environment, identifier => {
@@ -63,8 +52,6 @@ export default class CalcNode extends EventEmitter {
   }
 
   setCurrentValue(value) {
-    this.emit('update', { value });
-
     this.currentValue.set(value);
 
     if (!(value instanceof Error) && !isStale(value)) {
@@ -81,8 +68,6 @@ export default class CalcNode extends EventEmitter {
 
     this.component = component;
     this.valueOverride = valueOverride;
-
-    this.emit('update', { component });
   }
 
   evalFormula() {
