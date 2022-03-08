@@ -22,7 +22,7 @@ export default function mountEllxApp(
         target.innerHTML = '';
         toggleError(target, false);
 
-        target.appendChild(component);
+        target.appendChild(value);
       }
       else {
         target.innerHTML = show(value);
