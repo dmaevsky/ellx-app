@@ -4,8 +4,6 @@ import { STALE, isStale } from './quack.js';
 import { pull } from './pull.js';
 import ProgressiveEval from './progressive_assembly.js';
 
-const getComponent = obj => obj && obj.__EllxMeta__ && obj.__EllxMeta__.component;
-
 export default class CalcNode {
   constructor(resolve) {
     this.resolve = resolve;
@@ -53,21 +51,6 @@ export default class CalcNode {
 
   setCurrentValue(value) {
     this.currentValue.set(value);
-
-    if (!(value instanceof Error) && !isStale(value)) {
-      this.lastValue = value;
-    }
-  }
-
-  setComponent(component, valueOverride = false) {
-    if (this.component === component) return;
-
-    if (this.component && typeof this.component.dispose === 'function') {
-      this.component.dispose();
-    }
-
-    this.component = component;
-    this.valueOverride = valueOverride;
   }
 
   evalFormula() {
@@ -88,38 +71,9 @@ export default class CalcNode {
 
       let result = this.evalFormula();
 
-      const Component = getComponent(result);
-      if (typeof Component === 'function') {
-        if (this.component instanceof Component) {
-          if (typeof this.component.update === 'function') {
-            this.component.update(result);
-          }
-        }
-        else {
-          let component, valueOverride;
-
-          const options = {
-            initState: this.lastValue,
-            output: value => {
-              if (valueOverride && this.component !== component) return; // Ignore output from disposed components
-              valueOverride = true;
-              this.set(value);
-            }
-          };
-
-          component = new Component(result, options);
-          this.setComponent(component, valueOverride);
-        }
-      }
-      else if (isStale(result) && this.component && typeof this.component.stale === 'function') {
-        this.component.stale(result);
-      }
-      else this.setComponent();
-
-      if (!this.valueOverride) this.set(result);
+      this.set(result);
     }
     catch (e) {
-      this.setComponent();        // Clear and dispose component
       this.set(e);
     }
   }
@@ -134,7 +88,6 @@ export default class CalcNode {
     if (this.cancelDistill) {
       this.cancelDistill(); // This will cancel all on-going node distillation
     }
-    this.setComponent(); // Clear and dispose component
 
     if (this.stopCompute) this.stopCompute();
   }
