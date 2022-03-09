@@ -17,8 +17,8 @@ export async function resolveIndex(publicDir, rootDir) {
   }
 
   return indexHTML.replace('</head>', `
-    <script type="module" src="sandbox.js"></script>
-    <link id="stylesheet" rel="stylesheet" type="text/css" href="sandbox.css">
+    <script type="module" src="/sandbox.js"></script>
+    <link id="stylesheet" rel="stylesheet" type="text/css" href="/sandbox.css">
     </head>
   `);
 }
