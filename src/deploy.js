@@ -169,7 +169,7 @@ export function* deploy(rootDir, { env, styles }) {
 
   const indexHtml = (yield resolveIndex(publicDir, rootDir))
     .replace(`<script type="module" src="/sandbox.js"></script>`, injection)
-    .replace('sandbox.css', cssSrc);
+    .replace('/sandbox.css', cssSrc);
 
   toDeploy.set('/index.html', indexHtml);
 
