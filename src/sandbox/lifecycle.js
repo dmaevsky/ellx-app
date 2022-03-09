@@ -53,8 +53,6 @@ export function init(contentId, contents) {
     }
   }
 
-  cg.autoCalc.set(true);
-
   const subscription = thisSheetBlocks.subscribe(blocks => sendContent(contentId, blocks));
 
   autoSave.set(contentId, subscription);

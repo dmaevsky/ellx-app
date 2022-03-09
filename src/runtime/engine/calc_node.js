@@ -27,14 +27,9 @@ export default class CalcNode {
     }, { name: 'circular_check' });
   }
 
-  initialize(identifier, formula, initValue) {
-    batch(() => {
-      this.name = identifier;
-      this.evaluator.set(this.parser.parse(String(formula)));
-
-      if (initValue === STALE) this.compute();
-      else if (initValue !== undefined) this.setCurrentValue(initValue);
-    });
+  initialize(identifier, formula) {
+    this.name = identifier;
+    this.evaluator.set(this.parser.parse(String(formula)));
   }
 
   dependsOn(node, marker = {}) {

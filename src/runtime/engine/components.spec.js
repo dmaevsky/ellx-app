@@ -11,7 +11,6 @@ const cg = new CalcGraph(
 );
 
 test('A simple subscribable', t => {
-  cg.autoCalc.set(true);
   cg.insert('s', 'store');
   cg.insert('plus5', 's + 5');
 

@@ -56,8 +56,7 @@ const cgConnect = cg => (inner) => {
                 subGraph.push({
                   blockId,
                   identifier: newNode.slice(1),
-                  formula: newBlock.formula,
-                  initValue: newBlock.value
+                  formula: newBlock.formula
                 });
                 continue;
               }

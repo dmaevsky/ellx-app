@@ -14,7 +14,6 @@ const noRequire = url => { if (url) throw new Error('No support for require'); }
 export default class CalcGraph {
   constructor(selfId, resolveSibling, require = noRequire) {
     this.nodes = observableMap(new Map(), { name: 'NodesMap' });
-    this.autoCalc = observable.box(false, { name: 'AutoCalcFlag' });
 
     [, this.namespace, this.type] = /^(.+)(\.[^.]+)$/.exec(selfId);
     this.resolveSibling = resolveSibling;
@@ -79,18 +78,17 @@ export default class CalcGraph {
     return identifier;
   }
 
-  insert(identifier, formula, initValue) {
+  insert(identifier, formula) {
     identifier = this.validate(identifier);
 
     const node = new CalcNode(this.resolve.bind(this));
     node.initialize(
       identifier,
-      formula,
-      this.autoCalc.get() ? undefined : initValue
+      formula
     );
 
     node.stopCompute = autorun(() => {
-      if (this.autoCalc.get()) node.compute();
+      node.compute();
     }, { name: `Compute node: ${node.name}`});
 
     this.nodes.set(identifier, node);   // If there are any dependents already referring to identifier they will be recalculated here
@@ -105,8 +103,7 @@ export default class CalcGraph {
 
     node.initialize(
       identifier,
-      formula,
-      this.autoCalc.get() ? undefined : STALE
+      formula
     );
     return node;
   }
@@ -135,8 +132,7 @@ export default class CalcGraph {
     batch(() => {
       node.initialize(
         newIdentifier,
-        newFormula,
-        this.autoCalc.get() ? undefined : STALE
+        newFormula
       );
 
       // Rename it in dependent nodes' formulas
@@ -155,13 +151,12 @@ export default class CalcGraph {
   merge(subGraph) {
     const newNodes = new Map();
 
-    for (let { identifier, formula, initValue } of subGraph) {
+    for (let { identifier, formula } of subGraph) {
       const node = new CalcNode(this.resolve.bind(this));
 
       node.initialize(
         this.validate(this.nodes.has(identifier) ? null : identifier),
-        formula,
-        this.autoCalc.get() ? undefined : initValue
+        formula
       );
 
       newNodes.set(identifier, node);
@@ -189,7 +184,7 @@ export default class CalcGraph {
 
       // Time to set up automatic calculation for newly created nodes
       node.stopCompute = autorun(() => {
-        if (this.autoCalc.get()) node.compute();
+        node.compute();
       }, { name: `Compute node: ${node.name}`});
 
       this.nodes.set(node.name, node);
@@ -201,6 +196,5 @@ export default class CalcGraph {
     for (let node of this.nodes.values()) node.dispose();
     this.nodes.clear();
     this.maxAutoID = 0;
-    this.autoCalc.set(false);
   }
 }

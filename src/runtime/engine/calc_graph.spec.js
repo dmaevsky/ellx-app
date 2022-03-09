@@ -18,7 +18,6 @@ const cg = new CalcGraph(
 test.afterEach(() => cg.dispose());
 
 test('basic graph operations', t => {
-  cg.autoCalc.set(true);
   const a = cg.insert('a', '5');
   cg.insert(undefined, '6');
 
@@ -49,7 +48,6 @@ test('basic graph operations', t => {
 });
 
 test('renaming nodes', t => {
-  cg.autoCalc.set(true);
   cg.insert('a', 5);
 
   const a2 = cg.insert('a2', 'a * a');
@@ -59,18 +57,15 @@ test('renaming nodes', t => {
   t.is(a2.parser.input, 'foo * foo');
 });
 
-test('evaluation error for a node should be cleared after setting the right value for a dependency and turning on autoCalc', t => {
+test('evaluation error for a node should be cleared after setting the right value for a dependency', t => {
   cg.insert('r', '{}');
   cg.insert('qq', 'r.map(i=>i+1)');
   cg.update('r', '[0,1]');
-  cg.autoCalc.set(true);
 
   t.deepEqual(cg.nodes.get('qq').currentValue.get(), [1,2]);
 });
 
 test('that node dependents are not recalculated on rename', t => {
-  cg.autoCalc.set(true);
-
   cg.insert('f', '(a=>x=>a.push(x))([])');
   cg.insert('x', '5');
 
@@ -98,7 +93,6 @@ test('circular dependency detection after dependency has been renamed', t => {
 });
 
 test('subscriptions to the node', t => {
-  cg.autoCalc.set(true);
   const updates = [];
 
   cg.insert('a', '5');
@@ -115,8 +109,6 @@ test('subscriptions to the node', t => {
 });
 
 test('external constructors', t => {
-  cg.autoCalc.set(true);
-
   cg.insert('d', "'2021-02-17'");
   cg.insert('date', 'new TestDate(d)');
 

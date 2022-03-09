@@ -1,5 +1,5 @@
 import { isFlow, inProgress, finished, getResult } from 'conclure';
-import { STALE, STALE_BUNDLE, STALE_REQUIRE, isSubscribable } from './engine/quack.js';
+import { isSubscribable } from './engine/quack.js';
 import { iterate } from './iterate.js';
 
 function constructorName(input) {
@@ -24,9 +24,6 @@ export function show(value, charLimit = 256) {
       if (isSubscribable(input)) {
         return this.print('[Subs]');
       }
-      if (input === STALE) return this.print('...');
-      if (input === STALE_BUNDLE) return this.print('...bundling...');
-      if (input === STALE_REQUIRE) return this.print('...fetching dependencies...');
       if (typeof input === 'function') {
         return this.print(input.name ? `[Function ${input.name}]` : '[Function]');
       }

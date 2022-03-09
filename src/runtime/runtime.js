@@ -10,7 +10,6 @@ export function initializeEllxApp(Module, sheets) {
     url => Module.require(url, htmlContentId)
   );
 
-  htmlCalcGraph.autoCalc.set(true);
   Module.set(htmlContentId, htmlCalcGraph);
 
   // initialize sheets
@@ -27,7 +26,6 @@ export function initializeEllxApp(Module, sheets) {
       cg.insert(name, nodes[name]);
     }
 
-    cg.autoCalc.set(true);
     Module.set(sheetId, cg);
   }
 
