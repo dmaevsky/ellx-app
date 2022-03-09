@@ -112,7 +112,7 @@ export function* deploy(rootDir, { env, styles }) {
     const hashedUrlPath = urlPath.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
 
     toDeploy.set(hashedUrlPath, code);
-    return 'https://' + domain + hashedUrlPath;
+    return hashedUrlPath;
   }
 
   for (let id in modules) {
