@@ -62,7 +62,7 @@
       redo(thisSheet);
     }
 
-    let [rowStart, colStart, rowEnd, colEnd] = normalize(selection);
+    let [rowStart, colStart, rowEnd, colEnd] = selection;
 
     if (e.code === 'Backspace' || e.code === 'Space' || e.code === 'Tab') {
       let direction, shift;
@@ -99,38 +99,72 @@
       return true;
     }
 
-    if (e.code === "BracketLeft" && (modifiers === 4 || modifiers === 6)) {
+    if (modifiers === 4 && (e.code === "BracketLeft" || e.code === "BracketRight" || e.code === "Backslash")) {
+
+      const normalizedSelection = normalize(selection);
+      [rowStart, colStart, rowEnd, colEnd] = normalizedSelection;
+
       const [rows, cols] = [rowEnd - rowStart, colEnd - colStart];
       const [isColumn, isRow] = [!cols, !rows];
       let isVector = isRow || isColumn; // Check array dimension
-      const isArray = modifiers === 4;
 
       if (isRow && isColumn) return true; // No action on single cell
-      if (modifiers === 6 && (isRow || isColumn)) return true; // Prevent object creation if vector
 
-      const selectionSet = [...query(blocks).getInRange(normalize(selection))];
+      const selectionSet = [...query(blocks).getInRange(normalizedSelection)];
       if (!selectionSet.length) return true; // No action if selection is empty
 
       for (let i = 0; i < selectionSet.length; i++) {
-        if (blocks.get(selectionSet[i]).node) return true; // No action if selection contains formula
+        // No action if selection contains formula
+        if (blocks.get(selectionSet[i]).node) return true;
       }
 
       let result = [];
+      let dataType;
 
-      if (isArray) {
-        if (isVector)  result = makeVector(rowStart, colStart, isColumn ? rows : cols, isColumn);
+      if (e.code === "BracketLeft") {
+        if (isVector) {
+          result = makeVector(rowStart, colStart, isColumn ? rows : cols, isColumn);
+        }
         else {
           for (let i = 0; i <= rows; i++) {
             result[i] = makeVector(rowStart + i, colStart, cols, isColumn);
           }
         }
+
+        dataType = "array";
       }
-      else {
+
+      if (e.code === "BracketRight") {
+        if (cols !== 1) return true;
+
+        const keys = [];
+
+        for (let i = 0; i <= rows; i++) {
+          keys[i] = getCellValue(rowStart + i, colStart);
+        }
+
+        if (keys.join("").trim() === "") return true;
+
+        result = {};
+        colStart += 1;
+
+        for (let i = 0; i <= rows; i++) {
+          if (keys[i] !== "") result[keys[i]] = parseCell(rowStart + i, colStart);
+        }
+
+        dataType = "object";
+      }
+
+      if (e.code === "Backslash") {
+        if (rows < 1) return true;
+
         const keys = [];
 
         for (let i = 0; i <= cols; i++) {
           keys[i] = getCellValue(rowStart, colStart + i);
         }
+
+        if (keys.length <= 1 || keys.join("").trim() === "") return true;
 
         rowStart += 1;
 
@@ -138,20 +172,26 @@
           let obj = {};
 
           for (let j = 0; j < keys.length; j++) {
+            if (keys[j] === "") continue;
             obj[keys[j]] = parseCell(rowStart + i, colStart + j);
           }
 
           result[i] = obj;
         }
 
-        if (result.length === 1) result = result[0];
+        if (result.length === 1) {
+          result = result[0];
+          isVector = true;
+        }
+
+        dataType = "frame";
       }
 
       convertToObject(
         thisSheet,
-        normalize(selection),
+        normalizedSelection,
         "= " + JSON.stringify(result),
-        isArray,
+        dataType,
         isVector,
         isColumn,
         rows, cols
@@ -195,6 +235,7 @@
   }
 
   function parseValue(value) {
+    if (value.toLowerCase() === "null") return null;
     if (value.toLowerCase() === "true") return true;
     if (value.toLowerCase() === "false") return false;
 

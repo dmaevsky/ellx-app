@@ -329,26 +329,30 @@ export const makeSpace = (thisSheet, blockId, { newHeight, newWidth }) => {
   if (h > 0 || v > 0) thisSheet.commit(UNDOABLE_ACTION_END);
 }
 
-export const convertToObject = undoable((thisSheet, selection, value, isArray, isVector, isColumn, rows, cols) => {
+export const convertToObject = undoable((thisSheet, selection, value, dataType, isVector, isColumn, rows, cols) => {
   clearRange(thisSheet, selection);
 
   let [row, col] = selection;
-
-  if (!isArray) row += 1;
+  if (dataType === "object") col += 1;
+  if (dataType === "frame") row += 1;
 
   editCell(thisSheet, row, col, value);
 
-  const blockId = query(thisSheet.get("blocks")).getAt(row, col);
-  const labels = isArray ? { top: false, left: false } : { top: true };
+  const blockId = query(thisSheet.get().blocks).getAt(row, col);
+  const labels = { top: dataType !== "array", left: dataType === "object" };
   let step = { v: rows, vTabSize: 10 };
 
-  if (isArray && isVector) {
-    if (!isColumn) step = { h: cols, hTabSize: 10 };
-    changeExpansion(thisSheet, blockId, { labels, step });
-  }
-  else {
-    changeExpansion(thisSheet, blockId, { labels, step });
-    step = { h: cols, hTabSize: 10 };
-    changeExpansion(thisSheet, blockId, { labels, step });
+  if (dataType === "object") changeExpansion(thisSheet, blockId, { labels, step });
+
+  if (dataType === "array" || dataType === "frame") {
+    if (isVector) {
+      if (!isColumn) step = { h: cols, hTabSize: 10 };
+      changeExpansion(thisSheet, blockId, { labels, step });
+    }
+    else {
+      changeExpansion(thisSheet, blockId, { labels, step });
+      step = { h: cols, hTabSize: 10 };
+      changeExpansion(thisSheet, blockId, { labels, step });
+    }
   }
 });

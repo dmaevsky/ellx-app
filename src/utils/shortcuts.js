@@ -24,7 +24,12 @@ const conversionActions = [
   },
   {
     "title": "Convert to Object",
-    "keys": ["Cmd", "Alt", "BracketLeft"],
+    "keys": ["Alt", "BracketRight"],
+    "tag": "conversion"
+  },
+  {
+    "title": "Convert to Data Frame",
+    "keys": ["Alt", "Backslash"],
     "tag": "conversion"
   },
 ];
@@ -160,8 +165,11 @@ export const helperShortcuts = [
     "keys": ["Shift", "Alt", "KeyZ", "/", "KeyX"],
     "tag": "expansion"
   },
-  // Conversion
-  ...conversionActions,
+  {
+    "title": "Convert to Array / Object / Data Frame",
+    "keys": ["Alt", "BracketLeft", "/", "BracketRight", "/", "Backslash"],
+    "tag": "expansion"
+  },
 
   // Interface
   {

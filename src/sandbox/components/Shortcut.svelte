@@ -5,19 +5,22 @@
 
   function substituteKey(key) {
     switch (key) {
-      case "ArrowDown":   return "↓";
-      case "ArrowUp":     return "↑";
-      case "ArrowLeft":   return "←";
-      case "ArrowRight":  return "→";
-      case "KeyC":        return "C";
-      case "KeyD":        return "D";
-      case "KeyV":        return "V";
-      case "KeyX":        return "X";
-      case "KeyZ":        return "Z";
-      case "Slash":       return "/";
-      case "Cmd":         return isMac() ? "⌘" : "Ctrl";
-      case "Alt":         return isMac() ? "⎇" : "Alt";
-      default:            return key;
+      case "ArrowDown":     return "↓";
+      case "ArrowUp":       return "↑";
+      case "ArrowLeft":     return "←";
+      case "ArrowRight":    return "→";
+      case "KeyC":          return "C";
+      case "KeyD":          return "D";
+      case "KeyV":          return "V";
+      case "KeyX":          return "X";
+      case "KeyZ":          return "Z";
+      case "Slash":         return "/";
+      case "BracketLeft":   return "[";
+      case "BracketRight":  return "]";
+      case "Backslash":     return "|";
+      case "Cmd":           return isMac() ? "⌘" : "Ctrl";
+      case "Alt":           return isMac() ? "⎇" : "Alt";
+      default:              return key;
     }
   }
 </script>
