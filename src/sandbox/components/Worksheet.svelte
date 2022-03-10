@@ -111,10 +111,10 @@
       if (isRow && isColumn) return true; // No action on single cell
 
       const selectionSet = [...query(blocks).getInRange(normalizedSelection)];
-      if (!selectionSet.length) return true; // No action if selection is empty
+      if (!selectionSet.length) return true; // Return if selection is empty
 
       for (let i = 0; i < selectionSet.length; i++) {
-        // No action if selection contains formula
+        // Return if selection contains formula
         if (blocks.get(selectionSet[i]).node) return true;
       }
 
@@ -143,20 +143,20 @@
           keys[i] = getCellValue(rowStart + i, colStart);
         }
 
-        if (keys.join("").trim() === "") return true;
+        if (!keys.join("").trim()) return true; // Return if keys is empty
 
         result = {};
         colStart += 1;
 
         for (let i = 0; i <= rows; i++) {
-          if (keys[i] !== "") result[keys[i]] = parseCell(rowStart + i, colStart);
+          if (keys[i]) result[keys[i]] = parseCell(rowStart + i, colStart);
         }
 
         dataType = "object";
       }
 
       if (e.code === "Backslash") {
-        if (rows < 1) return true;
+        if (rows < 1) return true; // No action on single row
 
         const keys = [];
 
@@ -164,7 +164,7 @@
           keys[i] = getCellValue(rowStart, colStart + i);
         }
 
-        if (keys.length <= 1 || keys.join("").trim() === "") return true;
+        if (keys.length <= 1 || !keys.join("").trim()) return true;
 
         rowStart += 1;
 
@@ -190,7 +190,7 @@
       convertToObject(
         thisSheet,
         normalizedSelection,
-        "= " + JSON.stringify(result),
+        `= ${JSON.stringify(result)}`,
         dataType,
         isVector,
         isColumn,
@@ -235,9 +235,11 @@
   }
 
   function parseValue(value) {
-    if (value.toLowerCase() === "null") return null;
-    if (value.toLowerCase() === "true") return true;
-    if (value.toLowerCase() === "false") return false;
+    switch (value.toLowerCase()) {
+      case "null":  return null;
+      case "true":  return true;
+      case "false": return false;
+    }
 
     if (value.match(/^-?\d+([.,]\d+)?(e[-+]\d+)*$/gim)) {
       return Number(value.replace(",", ".").toLowerCase());
