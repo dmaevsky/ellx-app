@@ -112,7 +112,7 @@ export function* deploy(rootDir, { env, styles }) {
     const hashedUrlPath = urlPath.replace(/\.[^.]*$/, ext => '-' + hash.slice(0, 8) + ext);
 
     toDeploy.set(hashedUrlPath, code);
-    return 'https://' + domain + hashedUrlPath;
+    return hashedUrlPath;
   }
 
   for (let id in modules) {
@@ -168,8 +168,8 @@ export function* deploy(rootDir, { env, styles }) {
   const cssSrc = appendFile('/styles.css', yield readFile(twStylesOut, 'utf8'));
 
   const indexHtml = (yield resolveIndex(publicDir, rootDir))
-    .replace(`<script type="module" src="sandbox.js"></script>`, injection)
-    .replace('sandbox.css', cssSrc);
+    .replace(`<script type="module" src="/sandbox.js"></script>`, injection)
+    .replace('/sandbox.css', cssSrc);
 
   toDeploy.set('/index.html', indexHtml);
 

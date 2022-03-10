@@ -1,6 +1,6 @@
 {
   "name": "@ellx/app",
-  "version": "0.0.30",
+  "version": "0.0.33",
   "description": "Ellx app framework",
   "main": "src/index.js",
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev:tailwind": "tailwindcss -c ./tailwind.config.cjs -i ./src/input.css -o ./src/bootstrap/sandbox.css --watch",
-    "dev": "concurrently \"./src/cli.js start\" \"npm run dev:tailwind\"",
+    "dev": "cp -f src/index.ellx.frozen src/index.ellx && concurrently \"./src/cli.js start\" \"npm run dev:tailwind\"",
     "test": "ava -v"
   },
   "ava": {
