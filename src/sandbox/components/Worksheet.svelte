@@ -172,7 +172,7 @@
           let obj = {};
 
           for (let j = 0; j < keys.length; j++) {
-            if (keys[j] === "") continue;
+            if (!keys[j]) continue;
             obj[keys[j]] = parseCell(rowStart + i, colStart + j);
           }
 
