@@ -332,27 +332,26 @@ export const makeSpace = (thisSheet, blockId, { newHeight, newWidth }) => {
 export const convertToObject = undoable((thisSheet, selection, value, dataType, isVector, isColumn, rows, cols) => {
   clearRange(thisSheet, selection);
 
+  const [isObject, isArray, isFrame] = [dataType === "object", dataType === "array", dataType === "frame"];
   let [row, col] = selection;
-  if (dataType === "object") col += 1;
-  if (dataType === "frame") row += 1;
+
+  if (isObject)  col++;
+  if (isFrame)   row++;
 
   editCell(thisSheet, row, col, value);
 
   const blockId = query(thisSheet.get().blocks).getAt(row, col);
-  const labels = { top: dataType !== "array", left: dataType === "object" };
-  let step = { v: rows, vTabSize: 10 };
+  const labels = {
+    top:  !isArray,
+    left: isObject
+  };
+  let step = { v: rows - isFrame };
 
-  if (dataType === "object") changeExpansion(thisSheet, blockId, { labels, step });
+  if (isArray && isVector && !isColumn) step = { h: cols };
+  changeExpansion(thisSheet, blockId, { labels, step });
 
-  if (dataType === "array" || dataType === "frame") {
-    if (isVector) {
-      if (!isColumn) step = { h: cols, hTabSize: 10 };
-      changeExpansion(thisSheet, blockId, { labels, step });
-    }
-    else {
-      changeExpansion(thisSheet, blockId, { labels, step });
-      step = { h: cols, hTabSize: 10 };
-      changeExpansion(thisSheet, blockId, { labels, step });
-    }
+  if (isFrame || isArray) {
+    step = { h: cols || 1 };
+    changeExpansion(thisSheet, blockId, { labels, step });
   }
 });

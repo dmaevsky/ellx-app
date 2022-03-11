@@ -127,7 +127,7 @@
         }
         else {
           for (let i = 0; i <= rows; i++) {
-            result[i] = makeVector(rowStart + i, colStart, cols, isColumn);
+            result[i] = makeVector(rowStart + i, colStart, cols, false);
           }
         }
 
@@ -164,7 +164,7 @@
           keys[i] = getCellValue(rowStart, colStart + i);
         }
 
-        if (keys.length <= 1 || !keys.join("").trim()) return true;
+        if (!keys.join("").trim()) return true;
 
         rowStart += 1;
 
@@ -242,7 +242,7 @@
     }
 
     if (value.match(/^-?\d+([.,]\d+)?(e[-+]\d+)*$/gim)) {
-      return Number(value.replace(",", ".").toLowerCase());
+      return +value.replace(",", ".").toLowerCase();
     }
 
     return value;
