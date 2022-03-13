@@ -29,13 +29,13 @@
     value: blockValue, expansion, node
   }]) => {
     const nodeResult = node && calculated.get(id);
-    const { value, component } = nodeResult || { value: blockValue };
+    const { value } = nodeResult || { value: blockValue };
 
-    if (component && typeof component.render === 'function') {
+    if (value instanceof HTMLElement) {
       acc.push({
         id: id + ':component',
         pos: [firstRow, firstCol, lastRow - firstRow + 1, lastCol - firstCol + 1],
-        component
+        component: value
       });
       return acc;
     }
