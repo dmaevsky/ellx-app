@@ -2,7 +2,7 @@ import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
 import { reactiveFlow } from 'conclure-quarx';
 import { isFlow, isIterator } from 'conclure';
-import { isStale, isSubscribable } from './quack.js';
+import { isSubscribable } from './quack.js';
 import { binaryOp, unaryOp, transpile } from './transpile.js';
 import { pull } from './pull.js';
 
@@ -204,7 +204,7 @@ export default class ProgressiveEval {
       else if (node.name === 'await') {
         node.transpile = () => ({ result, error }, staleClause) => ({
           subscribe: subscriber => pull(error || result, value => {
-            if (isStale(value)) {
+            if (isFlow(value)) {
               try {
                 value = staleClause();
               }

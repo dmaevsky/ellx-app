@@ -1,8 +1,7 @@
-import { observable, autorun, batch, untracked } from 'quarx';
+import { batch, untracked } from 'quarx';
 import { observableMap } from './observable_map.js';
 
 import CalcNode from './calc_node.js';
-import { STALE } from './quack.js';
 import * as environment from './reserved_words.js';
 import * as library from './library.js';
 
@@ -81,15 +80,11 @@ export default class CalcGraph {
   insert(identifier, formula) {
     identifier = this.validate(identifier);
 
-    const node = new CalcNode(this.resolve.bind(this));
-    node.initialize(
+    const node = new CalcNode(
       identifier,
-      formula
+      this.resolve.bind(this)
     );
-
-    node.stopCompute = autorun(() => {
-      node.compute();
-    }, { name: `Compute node: ${node.name}`});
+    node.initialize(formula);
 
     this.nodes.set(identifier, node);   // If there are any dependents already referring to identifier they will be recalculated here
     return node;
@@ -101,10 +96,7 @@ export default class CalcGraph {
       throw new Error(`Node ${identifier} is not found on the graph`);
     }
 
-    node.initialize(
-      identifier,
-      formula
-    );
+    node.initialize(formula);
     return node;
   }
 
@@ -113,11 +105,10 @@ export default class CalcGraph {
     if (!node) return;
 
     this.nodes.delete(identifier);
-    node.dispose();           // Dispose of all reactions and cleanup components
 
     // This will unsubscribe the dependents from this node and subscribe them to the nodes map instead
     // so when a new node with the same name is inserted they will be recalculated
-    node.currentValue.set(new Error());
+    node.evaluator.set(() => new Error());
   }
 
   rename(identifier, newIdentifier, newFormula) {
@@ -125,15 +116,12 @@ export default class CalcGraph {
     if (!node) {
       throw new Error(`Node ${identifier} is not found on the graph`);
     }
-    newIdentifier = this.validate(newIdentifier);
+    node.name = newIdentifier = this.validate(newIdentifier);
 
     const renamesInOtherNodes = new Map();
 
     batch(() => {
-      node.initialize(
-        newIdentifier,
-        newFormula
-      );
+      node.initialize(newFormula);
 
       // Rename it in dependent nodes' formulas
       for (let other of this.nodes.values()) if (other !== node && other.parser.dependencies().has(identifier)) {
@@ -152,12 +140,11 @@ export default class CalcGraph {
     const newNodes = new Map();
 
     for (let { identifier, formula } of subGraph) {
-      const node = new CalcNode(this.resolve.bind(this));
-
-      node.initialize(
+      const node = new CalcNode(
         this.validate(this.nodes.has(identifier) ? null : identifier),
-        formula
+        this.resolve.bind(this)
       );
+      node.initialize(formula);
 
       newNodes.set(identifier, node);
     }
@@ -182,18 +169,12 @@ export default class CalcGraph {
     for (let node of newNodes.values()) {
       rewireDependencies(node);
 
-      // Time to set up automatic calculation for newly created nodes
-      node.stopCompute = autorun(() => {
-        node.compute();
-      }, { name: `Compute node: ${node.name}`});
-
       this.nodes.set(node.name, node);
     }
     return newNodes;
   }
 
   dispose() {
-    for (let node of this.nodes.values()) node.dispose();
     this.nodes.clear();
     this.maxAutoID = 0;
   }

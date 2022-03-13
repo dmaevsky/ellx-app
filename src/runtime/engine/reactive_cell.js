@@ -1,11 +1,9 @@
-import { conclude, whenFinished, isFlow, inProgress } from 'conclure';
-import { createAtom, autorun } from 'quarx';
-
-import { STALE as DEFAULT_STALE, isStale } from './quack.js';
+import { conclude, whenFinished } from 'conclure';
+import { createAtom, autorun, computed } from 'quarx';
+import { pull } from './pull.js';
 
 export function asyncCell(it, options = {}) {
   const {
-    STALE = DEFAULT_STALE,
     name = 'asyncCell'
   } = options;
 
@@ -33,54 +31,52 @@ export function asyncCell(it, options = {}) {
     }
   }));
 
-  throw atom.reportObserved() ? STALE : promise;
+  throw atom.reportObserved() ? it : promise;
 }
 
 export function reactiveCell(evaluate, options = {}) {
-  const STALE = options.STALE || DEFAULT_STALE;
-  let cell = STALE;
+  const name = (options.name || 'reactive') + ':cell';
 
-  const atom = createAtom(start, { name: options.name || 'reactiveCell' });
+  let value, inner, outer;
 
-  function set(value) {
-    if (cell === value) return;
-    cell = value;
-    atom.reportChanged();
-  }
+  const cell = computed(evaluate, options);
 
-  const concludeOne = value => conclude(value, (error, result) => set(error || result));
+  const atom = createAtom(
+    start,
+    { name: 'atom:' + name }
+  );
 
-  let cancel;
-
-  const compute = () => {
+  function computation() {
     try {
-      if (cancel) cancel();
-
-      const value = evaluate();
-
-      cancel = concludeOne(value);
-
-      if (isFlow(value) && inProgress(value)) set(STALE);
+      return cell.get();
     }
-    catch (err) {
-      set(err);
+    catch (e) {
+      return e;
     }
   }
 
   function start() {
-    const off = autorun(compute);
+    outer = autorun(() => {
+      if (inner) inner();
+
+      inner = pull(computation(), v => {
+        value = v;
+        atom.reportChanged();
+      });
+    }, { name });
+
     return () => {
-      off();
-      if (cancel) cancel();
-      cell = STALE;
+      if (inner) inner();
+      if (outer) outer();
     }
   }
 
   return {
     get: () => {
-      atom.reportObserved();
-      if ((cell instanceof Error) || isStale(cell)) throw cell;
-      return cell;
+      if (!atom.reportObserved()) {
+        throw new Error(`${name} unobserved`);
+      };
+      return value;
     }
   };
 }

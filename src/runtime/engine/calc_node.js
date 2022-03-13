@@ -1,11 +1,12 @@
-import { observable, computed, batch } from 'quarx';
+import { observable, computed } from 'quarx';
+import { isFlow } from 'conclure';
 import * as environment from './reserved_words.js';
-import { STALE, isStale } from './quack.js';
-import { pull } from './pull.js';
+import { reactiveCell } from './reactive_cell.js';
 import ProgressiveEval from './progressive_assembly.js';
 
 export default class CalcNode {
-  constructor(resolve) {
+  constructor(initName, resolve) {
+    this.name = initName;
     this.resolve = resolve;
 
     this.parser = new ProgressiveEval(environment, identifier => {
@@ -13,22 +14,31 @@ export default class CalcNode {
       if (! (resolved instanceof CalcNode)) return resolved;
 
       const value = resolved.currentValue.get();
-      if (isStale(value) || value instanceof Error) throw value;
+      if (isFlow(value) || value instanceof Error) throw value;
       return value;
     });
 
     this.evaluator = observable.box(() => undefined, { name: `[${this.name}]:evaluator` });
-    this.currentValue = observable.box(undefined, { name: `[${this.name}]:currentValue` });
 
-    this.circular = computed(() => {
+    const circular = computed(() => {
       if (this.evaluator.get()) { // re-run on evaluator update
         return this.dependsOn(this);
       }
     }, { name: 'circular_check' });
+
+    this.currentValue = reactiveCell(() => {
+      if (circular.get()) {
+        throw new Error('Circular dependency detected');
+      }
+
+      const evaluate = this.evaluator.get();
+      return evaluate();
+    }, {
+      name: `[${this.name}]:currentValue`
+    });
   }
 
-  initialize(identifier, formula) {
-    this.name = identifier;
+  initialize(formula) {
     this.evaluator.set(this.parser.parse(String(formula)));
   }
 
@@ -42,48 +52,5 @@ export default class CalcNode {
       if (resolved === node) return true;
       return (resolved._traversalMarker !== marker && resolved.dependsOn(node, marker));
     });
-  }
-
-  setCurrentValue(value) {
-    this.currentValue.set(value);
-  }
-
-  evalFormula() {
-    try {
-      return this.evaluator.get()();
-    }
-    catch (e) {
-      if (isStale(e)) return e;
-      throw e;
-    }
-  }
-
-  compute() {
-    try {
-      if (this.circular.get()) {
-        throw new Error('Circular dependency detected');
-      }
-
-      let result = this.evalFormula();
-
-      this.set(result);
-    }
-    catch (e) {
-      this.set(e);
-    }
-  }
-
-  set(result) {
-    if (this.cancelDistill) this.cancelDistill();
-
-    this.cancelDistill = pull(result, this.setCurrentValue.bind(this));
-  }
-
-  dispose() {
-    if (this.cancelDistill) {
-      this.cancelDistill(); // This will cancel all on-going node distillation
-    }
-
-    if (this.stopCompute) this.stopCompute();
   }
 }

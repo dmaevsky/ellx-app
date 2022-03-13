@@ -2,7 +2,6 @@ import test from 'ava';
 import { observable, autorun } from 'quarx';
 
 import { reactiveCell, asyncCell } from './reactive_cell.js';
-import { STALE, isStale } from './quack.js';
 
 const evaluator = observable.box();
 
@@ -11,45 +10,28 @@ const cell = reactiveCell(() => {
   return evaluate && evaluate();
 });
 
-function get(obs) {
-  try {
-    return obs.get();
-  }
-  catch (err) {
-    if (isStale(err)) return err;
-    throw err;
-  }
-}
-
 test('reactiveCell', async t => {
-  evaluator.set(() => 42);
-
   const results = [];
-
-  const autoCalc = observable.box(false);
-
-  const off = autorun(() => {
-    if (!autoCalc.get()) return;
-
-    results.push(get(cell));
-  });
-
-  t.is(get(cell), STALE); // cell is not observed yet, so should be STALE
-  t.is(results.length, 0);
-
-  autoCalc.set(true);
-
-  t.is(cell.get(), 42);
-  t.deepEqual(results, [42]);
-
-  results.length = 0;
-
   const promise = Promise.resolve(42);
   evaluator.set(() => promise);
 
-  t.deepEqual(results, [STALE]);
+  const gate = observable.box(false);
+
+  const off = autorun(() => {
+    if (!gate.get()) return;
+
+    results.push(cell.get());
+  });
+
+  t.throws(() => cell.get(), { instanceOf: Error, message: 'reactive:cell unobserved' });
+  t.is(results.length, 0);
+
+  gate.set(true);
+
+  t.deepEqual(results, [promise]);
+
   await promise;
-  t.deepEqual(results, [STALE, 42]);
+  t.deepEqual(results, [promise, 42]);
 
   off();
 });
@@ -75,9 +57,9 @@ test('asyncCell', async t => {
     }
   });
 
-  t.deepEqual(results, [STALE]);
+  t.deepEqual(results, [itAsync]);
   await promise;
-  t.deepEqual(results, [STALE, 'async', 'sync']);
+  t.deepEqual(results, [itAsync, 'async', 'sync']);
 
   off();
 });

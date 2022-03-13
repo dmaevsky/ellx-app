@@ -12,6 +12,8 @@ const cgConnect = cg => (inner) => {
 
     const unsubscribe = autorun(() => {
       inner.commit(UPDATE_CALCULATED, { blockId, value: calcNode.currentValue.get() });
+    }, {
+      name: `Compute node: ${calcNode.name}`
     });
 
     inner.commit(UPDATE_CALCULATED, { blockId, unsubscribe });
