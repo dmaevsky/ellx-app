@@ -4,3 +4,4 @@ dist
 .idea
 .vscode
 src/index.ellx
+src/index.js

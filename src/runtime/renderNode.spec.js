@@ -1,14 +1,21 @@
 import test from 'ava';
+import { conclude } from 'conclure';
 import { show } from './renderNode.js';
-import { STALE, STALE_BUNDLE } from './engine/quack.js';
 
-test('the show function', t => {
+test('the show function', async t => {
   t.is(show(new Error('test')), '#ERR: test');
-  t.is(show(STALE), '...');
-  t.is(show(STALE_BUNDLE), '...bundling...');
   t.is(show(NaN), 'NaN');
   t.is(show(Infinity), 'Infinity');
   t.is(show(-Infinity), '-Infinity');
+
+  const p = Promise.resolve(42);
+  t.is(show(p), '[Flow]');
+
+  conclude(p, () => {});
+  t.is(show(p), '...');
+
+  await p;
+  t.is(show(p), '42');
 });
 
 test('precision for floating point numbers render', t => {

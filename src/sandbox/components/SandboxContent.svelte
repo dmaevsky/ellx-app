@@ -22,7 +22,6 @@
   );
 
   Module.set(htmlContentId, htmlCalcGraph);
-  htmlCalcGraph.autoCalc.set(true);
 
   setActiveContent(htmlContentId);
 

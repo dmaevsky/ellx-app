@@ -1,7 +1,6 @@
 import Parser from 'rd-parse';
 import Grammar from 'rd-parse-jsexpr';
 import { isFlow } from 'conclure';
-import { isStale } from '../runtime/engine/quack.js';
 
 const FUNC_MARKER = '@@@func';
 const ERROR_MARKER = '@@@error';
@@ -50,7 +49,7 @@ export const deserialize = input => {
 
 // We can have functions in the sheet. Make sure they are at least accounted for during serialization
 const replacer = function(key, value) {
-  if (isFlow(value) || isStale(value)) return PENDING_MARKER;
+  if (isFlow(value)) return PENDING_MARKER;
   if (typeof(value) === 'function') return FUNC_MARKER;
   if (value instanceof Error) return ERROR_MARKER;
   // TODO: treat properly Symbols, Dates, etc

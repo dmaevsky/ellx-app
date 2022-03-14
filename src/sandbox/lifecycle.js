@@ -33,7 +33,7 @@ export function init(contentId, contents) {
     contentId,
     // Map(blockId -> { position: [startRow, startCol, endRow, endCol], expansion: { vertical: Bool, secondary: Bool }, (static)value, formula, node })
     blocks: new Map(),
-    // Map(blockId -> { value, component })
+    // Map(blockId -> { value })
     calculated: new Map(),
     nRows: 500,
     nCols: 100,
@@ -52,8 +52,6 @@ export function init(contentId, contents) {
       thisSheet.commit(INSERT_BLOCK, { blockId: objectId(block), block });
     }
   }
-
-  cg.autoCalc.set(true);
 
   const subscription = thisSheetBlocks.subscribe(blocks => sendContent(contentId, blocks));
 

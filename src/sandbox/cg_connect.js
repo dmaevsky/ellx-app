@@ -1,13 +1,23 @@
+import { autorun } from 'quarx';
 import {
   UPDATE_BLOCK,
+  UPDATE_FORMULAS,
   UPDATE_CALCULATED,
   DELETE_CALCULATED
 } from './mutations.js';
 
 const cgConnect = cg => (inner) => {
-  const nodeRenderer = (blockId) => updated => {
-    inner.commit(UPDATE_CALCULATED, { blockId, ...updated });
-  };
+  function nodeRenderer(blockId, calcNode) {
+    inner.commit(UPDATE_BLOCK, { blockId, node: calcNode.name, formula: calcNode.parser.input });
+
+    const unsubscribe = autorun(() => {
+      inner.commit(UPDATE_CALCULATED, { blockId, value: calcNode.currentValue.get() });
+    }, {
+      name: `Compute node: ${calcNode.name}`
+    });
+
+    inner.commit(UPDATE_CALCULATED, { blockId, unsubscribe });
+  }
 
   const logger = process.env.NODE_ENV !== 'production' ? message => console.debug(message) : () => {};
 
@@ -34,9 +44,9 @@ const cgConnect = cg => (inner) => {
         if (oldNode !== undefined && newNode === undefined) {
           // A node has been deleted
           logger(`[cgConnect]: remove node ${oldNode}`);
-          cg.remove(oldNode);
-
           inner.commit(DELETE_CALCULATED, { blockId });
+
+          cg.remove(oldNode);
         }
         else if (newNode !== undefined) {
           try {
@@ -48,8 +58,7 @@ const cgConnect = cg => (inner) => {
                 subGraph.push({
                   blockId,
                   identifier: newNode.slice(1),
-                  formula: newBlock.formula,
-                  initValue: newBlock.value
+                  formula: newBlock.formula
                 });
                 continue;
               }
@@ -57,14 +66,16 @@ const cgConnect = cg => (inner) => {
               // A node has been inserted
               logger(`[cgConnect]: insert node ${newNode}`);
 
-              cg.insert(newNode, newBlock.formula)
-                .on('update', nodeRenderer(blockId));
+              const calcNode = cg.insert(newNode, newBlock.formula);
+              nodeRenderer(blockId, calcNode);
             }
             else if (newNode && oldNode !== newNode) {
               // A node has been renamed
               logger(`[cgConnect]: rename node ${oldNode} to ${newNode}`);
 
-              cg.rename(oldNode, newNode, newBlock.formula);
+              const renamesInOtherNodes = cg.rename(oldNode, newNode, newBlock.formula);
+
+              inner.commit(UPDATE_FORMULAS, renamesInOtherNodes);
             }
             else if (oldBlock.formula !== newBlock.formula || cgRecalculate) {
               // Node's formula changed, or recalculation requested
@@ -76,9 +87,9 @@ const cgConnect = cg => (inner) => {
           catch (e) {
             if (oldNode) {
               logger(`[cgConnect]: remove node ${oldNode}`);
-              cg.remove(oldNode);
-
               inner.commit(DELETE_CALCULATED, { blockId });
+
+              cg.remove(oldNode);
             }
             change.newValue = inner.commit(UPDATE_BLOCK, {
               blockId,
@@ -100,7 +111,7 @@ const cgConnect = cg => (inner) => {
           // A node has been merged
           logger(`[cgConnect]: merged node ${identifier} as ${node.name}`);
 
-          node.on('update', nodeRenderer(blockId));
+          nodeRenderer(blockId, node);
         }
       }
       return changes;

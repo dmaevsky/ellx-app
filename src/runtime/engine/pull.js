@@ -1,5 +1,5 @@
 import { conclude, isFlow, inProgress } from 'conclure';
-import { STALE, isSubscribable } from './quack.js';
+import { isSubscribable } from './quack.js';
 
 export function pull(value, cb) {
   let inner, outer;
@@ -8,7 +8,7 @@ export function pull(value, cb) {
     outer = conclude(value, (error, result) => {
       inner = pull(error || result, cb);
     });
-    if (inProgress(value)) cb(STALE);
+    if (inProgress(value)) cb(value);
   }
   else if (isSubscribable(value)) {
     outer = value.subscribe(result => {

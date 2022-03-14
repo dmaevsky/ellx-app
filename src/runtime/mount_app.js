@@ -1,17 +1,9 @@
+import { autorun } from 'quarx';
 import { show } from './renderNode.js';
 
 function toggleError(target, on) {
   if (on) target.style.color = 'red';
   else target.style.removeProperty('color');
-}
-
-function renderComponent(component, target) {
-  if (!component || typeof component.render !== 'function') return null;
-
-  for (let el of target.childNodes) el.remove();
-  toggleError(target, false);
-
-  component.render(target);
 }
 
 export default function mountEllxApp(
@@ -23,15 +15,18 @@ export default function mountEllxApp(
   try {
     const calcNode = cg.insert(identifier, formula);
 
-    calcNode.on('update', updated => {
-      if ('component' in updated) {
-        renderComponent(updated.component, target);
-      }
-      else if ('value' in updated) {
-        const lastValue = show(updated.value);
-        target.innerHTML = lastValue;
+    autorun(() => {
+      const value = calcNode.currentValue.get();
 
-        toggleError(target, typeof lastValue === 'string' && lastValue.startsWith("#ERR"));
+      if (value instanceof HTMLElement) {
+        target.innerHTML = '';
+        toggleError(target, false);
+
+        target.appendChild(value);
+      }
+      else {
+        target.innerHTML = show(value);
+        toggleError(target, value instanceof Error);
       }
     });
   }

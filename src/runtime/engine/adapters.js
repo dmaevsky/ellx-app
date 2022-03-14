@@ -1,5 +1,4 @@
 import { autorun, createAtom, untracked } from 'quarx';
-import { isStale } from './quack.js';
 
 export function fromObservable(obs, options = {}) {
   return {
@@ -30,7 +29,7 @@ export function toObservable({ subscribe, get }, options = {}) {
   return {
     get: () => {
       if (!atom.reportObserved()) return get();
-      if (value instanceof Error || isStale(value)) throw value;
+      if (value instanceof Error) throw value;
       return value;
     }
   };

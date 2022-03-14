@@ -28,7 +28,7 @@
   $: if (target) {
     // This will run every time a new component is passed
     for (let el of target.childNodes) el.remove();
-    component.render(target);
+    target.appendChild(component);
   }
 
   $: dispatch('resize', { nRows, nCols });    // Dispatch an event if width or height changes
