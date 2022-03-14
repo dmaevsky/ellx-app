@@ -1,21 +1,5 @@
-import { join } from 'path';
 import * as svelte from 'svelte/compiler';
 import { transform as jsx } from 'sucrase';
-
-import { fetchEllxProject } from './ellx_module_loader.js';
-
-const ellxProjectPrefix = 'file:///node_modules/~';
-
-export function* preloadEllxProject(id, rootDir) {
-  if (!id.startsWith(ellxProjectPrefix)) return;
-
-  const [owner, project] = id.slice(ellxProjectPrefix.length).split('/');
-
-  if (!project || ['package.json', 'index.js', 'node_modules'].includes(project)) return;
-
-  const packageDir = join(rootDir, `node_modules/~${owner}/${project}`);
-  yield fetchEllxProject(`${owner}/${project}`, packageDir);
-}
 
 function appendStyle(str) {
   if (!str) return '';

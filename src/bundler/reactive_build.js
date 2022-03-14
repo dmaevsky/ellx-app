@@ -4,7 +4,7 @@ import { allSettled } from 'conclure/combinators';
 import tokamak from 'tokamak';
 import resolver from 'tokamak/resolve';
 import reactiveFS from './reactive_fs.js';
-import { preloadEllxProject, transformModule } from './module_loader.js';
+import { transformModule } from './module_loader.js';
 import autoMemo from '../utils/auto_memoize.js';
 
 export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, updateModules) {
@@ -40,8 +40,6 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
       return '';
     }
 
-    yield preloadEllxProject(url, rootDir);
-
     const body = yield files.get(url);
 
     if (body === undefined) {
@@ -56,7 +54,6 @@ export default function reactiveBuild(getEntryPoints, fsWatcher, rootDir, update
       return true;
     }
 
-    yield preloadEllxProject(url, rootDir);
     return files.has(url);
   }
 
