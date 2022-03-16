@@ -74,7 +74,7 @@ export function reactiveCell(evaluate, options = {}) {
   return {
     get: () => {
       if (!atom.reportObserved()) {
-        throw new Error(`${name} unobserved`);
+        console.warn(`${name} unobserved`);
       };
       return value;
     }
