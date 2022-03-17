@@ -38,6 +38,7 @@ export function reactiveCell(evaluate, options = {}) {
   const name = (options.name || 'reactive') + ':cell';
 
   let value, inner, outer;
+  value = new Promise(() => {});    // indicate stale
 
   const cell = computed(evaluate, options);
 
