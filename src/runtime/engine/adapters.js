@@ -2,7 +2,6 @@ import { autorun, createAtom, untracked } from 'quarx';
 
 export function fromObservable(obs, options = {}) {
   return {
-    get: () => obs.get(),
     subscribe: subscriber => autorun(() => {
       try {
         subscriber(obs.get());

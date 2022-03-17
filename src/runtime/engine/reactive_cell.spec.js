@@ -1,5 +1,6 @@
 import test from 'ava';
 import { observable, autorun } from 'quarx';
+import { isPromise } from 'conclure';
 
 import { reactiveCell, asyncCell } from './reactive_cell.js';
 
@@ -23,7 +24,7 @@ test('reactiveCell', async t => {
     results.push(cell.get());
   });
 
-  t.throws(() => cell.get(), { instanceOf: Error, message: 'reactive:cell unobserved' });
+  t.true(isPromise(cell.get()));  // stale
   t.is(results.length, 0);
 
   gate.set(true);
