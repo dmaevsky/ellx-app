@@ -1,6 +1,7 @@
 import { autorun, Quarx } from 'quarx';
-import { toObservable } from './adapters.js';
+import { toObservable, fromObservable } from './adapters.js';
 import { isSubscribable } from './quack.js';
+import { reactiveCell } from './reactive_cell.js';
 
 const subscribables = new WeakMap();
 const noop = () => {};
@@ -29,7 +30,9 @@ function getObs(subs) {
   if (!obs) {
     obs = toObservable({
       subscribe: subscriber => {
-        const unsubscribe = subs.subscribe(subscriber) || noop;
+        let unsubscribe = subs.subscribe(subscriber);
+        if (typeof unsubscribe !== 'function') unsubscribe = noop;
+
         r.observables.set(id, obs);
 
         return () => {
@@ -48,32 +51,8 @@ function getObs(subs) {
 export const invokeSubs = (fn, ...args) => {
   args = args.map(a => isSubscribable(a) ? getObs(a) : { get: () => a });
 
-  return {
-    subscribe: subscriber => {
-      let inner;
-      const outer = autorun(() => {
-        try {
-          if (inner) inner();
-          const result = fn(...args.map(a => a.get()));
-
-          if (isSubscribable(result)) {
-            inner = result.subscribe(subscriber);
-          }
-          else {
-            inner = undefined;
-            subscriber(result);
-          }
-        }
-        catch (error) {
-          inner = undefined;
-          subscriber(error);
-        }
-      }, { name: fn.toString() });
-
-      return () => {
-        if (inner) inner();
-        outer();
-      }
-    }
-  }
+  return fromObservable(
+    reactiveCell(() => fn(...args.map(a => a.get())), { name: fn.toString() }),
+    { name: 'fromObservable:' + fn.toString() }
+  );
 }

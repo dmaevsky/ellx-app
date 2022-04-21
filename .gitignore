@@ -5,3 +5,4 @@ dist
 .vscode
 src/index.ellx
 src/index.js
+src/index.html

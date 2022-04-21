@@ -60,10 +60,7 @@ export function reactiveCell(evaluate, options = {}) {
     outer = autorun(() => {
       if (inner) inner();
 
-      inner = pull(computation(), v => {
-        value = v;
-        atom.reportChanged();
-      });
+      inner = pull(computation(), set);
     }, { name });
 
     return () => {
@@ -72,12 +69,18 @@ export function reactiveCell(evaluate, options = {}) {
     }
   }
 
+  function set(newValue) {
+    value = newValue;
+    atom.reportChanged();
+  }
+
   return {
     get: () => {
       if (!atom.reportObserved()) {
         console.warn(`${name} unobserved`);
       };
       return value;
-    }
+    },
+    set
   };
 }

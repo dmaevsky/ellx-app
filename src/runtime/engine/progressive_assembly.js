@@ -206,7 +206,7 @@ export default class ProgressiveEval {
           subscribe: subscriber => pull(error || result, value => {
             if (isFlow(value)) {
               try {
-                value = staleClause();
+                value = staleClause(value);
               }
               catch (error) {
                 value = error;
