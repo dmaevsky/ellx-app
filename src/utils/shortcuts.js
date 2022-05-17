@@ -16,9 +16,30 @@ const clipboardActions = [
   }
 ];
 
+const conversionActions = [
+  {
+    "title": "Convert to Array",
+    "keys": ["Alt", "BracketLeft"],
+    "tag": "conversion"
+  },
+  {
+    "title": "Convert to Object",
+    "keys": ["Alt", "BracketRight"],
+    "tag": "conversion"
+  },
+  {
+    "title": "Convert to Data Frame",
+    "keys": ["Alt", "Backslash"],
+    "tag": "conversion"
+  },
+];
+
 export const shortcuts = [
   // Common
   ...clipboardActions,
+
+  // Conversion
+  ...conversionActions,
 
   // Expansion and Labels
   {
@@ -142,6 +163,11 @@ export const helperShortcuts = [
   {
     "title": "Toggle Row / Column Labels",
     "keys": ["Shift", "Alt", "KeyZ", "/", "KeyX"],
+    "tag": "expansion"
+  },
+  {
+    "title": "Convert to Array / Object / Data Frame",
+    "keys": ["Alt", "BracketLeft", "/", "BracketRight", "/", "Backslash"],
     "tag": "expansion"
   },
 

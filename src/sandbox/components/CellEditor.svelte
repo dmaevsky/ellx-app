@@ -153,7 +153,7 @@
       }
     }
 
-    value = node.textContent.replaceAll(/\r|\n|\s{2,}/g, ''); // Allow multiline pasting
+    value = node.textContent;
 
     tick().then(() => {
       autoSizeEditor();
@@ -163,7 +163,8 @@
 
   function handlePaste(e) {
     e.preventDefault();
-    let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    let text = e.clipboardData.getData("text/plain")
+      .replaceAll(/\r|\n|\s{2,}/g, ""); // Allow multiline pasting
     document.execCommand("insertHTML", false, escapeHtml(text));
   }
 
